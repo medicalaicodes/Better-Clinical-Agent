@@ -1,4 +1,4 @@
-# Better Clinical Agent (BCA)
+# Better Clinical Agentic AI framework
 
 > **Evidence-Reliable Multimodal AI Reasoning for Healthcare**
 >
