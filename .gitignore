@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Node / JS
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backups
+backup/
+backup
+*.bak
+
+# Data & PDF files (Excluding raw PDF papers to keep repository lightweight)
+Papers/**/*.pdf
+Artifacts/*.tar.gz
+*.tar.gz
+*.zip
+
+# Temporary & Lock files
+~$*.pptx
+~$*.docx
+*.log
+.DS_Store
+Thumbs.db
+temp_*.txt
+
+# IDE & Environment
+.idea/
+.vscode/
+.gemini/
+.env

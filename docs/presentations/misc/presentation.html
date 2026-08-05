@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Agentic AI: Data Ingestion Layer & Medical Ecosystems</title>
+    <meta name="description" content="A comprehensive study on the Data Ingestion Layer in Agentic AI for Healthcare">
+    <meta name="author" content="AI Agent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Reveal.js core -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+    
+    <!-- Theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/night.min.css" id="theme">
+    
+    <!-- Mermaid styling specifically for dark mode -->
+    <style>
+        .reveal .mermaid {
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 0 auto;
+            max-width: 90%;
+        }
+        .reveal h1, .reveal h2, .reveal h3 {
+            color: #42b983;
+        }
+        .reveal .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .reveal .image-container img {
+            border-radius: 8px;
+            max-height: 350px;
+            object-fit: cover;
+        }
+        .highlight-text {
+            color: #e7ad52;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="reveal">
+    <div class="slides">
+
+        <!-- Title Slide -->
+        <section>
+            <h1>Agentic AI in Healthcare</h1>
+            <h3>The Data Ingestion Layer & MAS Ecosystems</h3>
+            <p><small>A Comprehensive Survey of SOTA Implementations</small></p>
+            <br>
+            <p><strong>Goal:</strong> Handling diverse clinical data types accurately and efficiently.</p>
+        </section>
+
+        <!-- Phase 1: Foundations -->
+        <section>
+            <section>
+                <h2>Phase 1: The Paradigm Shift</h2>
+                <p>From <span class="highlight-text">Static Data Entry</span> to <span class="highlight-text">Active Agentic Perception</span>.</p>
+                <ul>
+                    <li class="fragment"><strong>Old Paradigm:</strong> Software passively waits for clean CSV data. Fails on messy clinical notes.</li>
+                    <li class="fragment"><strong>New Paradigm:</strong> Agent actively searches, reads, and chunks unstructured realities.</li>
+                    <li class="fragment"><strong>The Perceptual Bottleneck:</strong> If an agent is blind to a data modality, its downstream reasoning is fundamentally flawed.</li>
+                </ul>
+            </section>
+        </section>
+
+        <!-- Phase 2: Textual & Structured -->
+        <section>
+            <section>
+                <h2>Phase 2: Textual & Structured Data</h2>
+                <p>Building the patient's historical baseline.</p>
+                <ul>
+                    <li><strong>Natural Language:</strong> Interpreting patient symptoms and multi-turn dialogues.</li>
+                    <li><strong>EHR Databases:</strong> Translating clinical intent into executable code (SQL/FHIR) to query structured tables without token overload.</li>
+                    <li><strong>Clinical Notes:</strong> Algorithmically extracting timestamps to reconstruct longitudinal timelines from 10+ years of messy, fragmented PDFs.</li>
+                </ul>
+            </section>
+
+            <!-- SOTA EHRFlow -->
+            <section>
+                <h3>SOTA Architecture: EHRFlow</h3>
+                <p>LLM-Driven Iterative Multi-Agent EHR Analysis</p>
+                <div class="mermaid">
+                graph TD
+                    User[User Query] --> OuterLoop
+                    subgraph Outer Loop
+                        PlanAgent[PlanAgent: Decomposes Query]
+                    end
+                    OuterLoop --> InnerLoop
+                    subgraph Inner Loop
+                        ToolAgent[ToolAgent: Selects APIs]
+                        CodeAgent[CodeAgent: Executes Python/SQL Locally]
+                        ReviewAgent[ReviewAgent: Checks Output & Feedback]
+                    end
+                    InnerLoop --> |Refines| OuterLoop
+                    InnerLoop --> Result[Final Clinical Finding]
+                </div>
+                <p><small>Bypasses token limits by executing data operations natively inside the hospital sandbox.</small></p>
+            </section>
+        </section>
+
+        <!-- Phase 3: Visual & Spatial -->
+        <section>
+            <section>
+                <h2>Phase 3: Visual & Spatial Data</h2>
+                <p>Encoding pixels into functional embeddings.</p>
+                <div class="image-container">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c8/Chest_Xray_PA_3-8-2010.png" alt="CXR" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/MRI_Head_Sagittal_T1.jpg" alt="MRI" />
+                </div>
+                <ul>
+                    <li><strong>2D Global (X-Ray):</strong> Ingested all at once.</li>
+                    <li><strong>Gigapixel (Pathology WSI):</strong> Active exploration and "Patching".</li>
+                    <li><strong>3D Volumetric (CT/MRI):</strong> Massive token constraints. Requires 3D Positional Encodings to capture cross-slice continuity.</li>
+                </ul>
+            </section>
+
+            <!-- SOTA CPathAgent -->
+            <section>
+                <h3>SOTA Architecture: CPathAgent</h3>
+                <p>Multi-Scale Navigation for Gigapixel Pathology</p>
+                <div class="mermaid">
+                graph LR
+                    WSI[Gigapixel WSI] --> Thumbnail[32x Downsampled View]
+                    Thumbnail --> Supervisor[Supervisor: Identifies Hotspots]
+                    Supervisor --> Explorer1[Zoom 10x: Path Planning]
+                    Explorer1 --> Explorer2[Zoom 40x: Detailed Feature Extraction]
+                    Explorer2 --> Synthesis[Diagnostic Narrative]
+                </div>
+                <p><small>Treats diagnosis as an active visual navigation problem, avoiding O(N²) Transformer memory crashes.</small></p>
+            </section>
+        </section>
+
+        <!-- Phase 4: Time-Series -->
+        <section>
+            <section>
+                <h2>Phase 4: Time-Series & Dynamic Data</h2>
+                <div class="image-container">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/SinusRhythmLabels.svg/1024px-SinusRhythmLabels.svg.png" style="background:white" alt="ECG" />
+                </div>
+                <ul>
+                    <li><strong>The Chaos:</strong> Irregular sampling and heterogeneous frequencies.</li>
+                    <li><strong>CT-RoPE:</strong> Continuous-Time Positional Encoding aligns messy timestamps.</li>
+                    <li><strong>Mixture-of-Experts:</strong> Routes fast signals (ECG) and slow signals (Lab trends) to distinct neural pathways to avoid catastrophic forgetting.</li>
+                </ul>
+            </section>
+
+            <!-- SOTA PHA -->
+            <section>
+                <h3>SOTA Architecture: Personal Health Agent</h3>
+                <p>Wearables Data Analysis via Code Execution</p>
+                <div class="mermaid">
+                flowchart TD
+                    Query[User: "Am I getting more fit?"] --> LLM[LLM Data Science Agent]
+                    LLM --> Plan[Formulates Analytical Plan]
+                    Plan --> Code[Generates Pandas/Scipy Code]
+                    Code --> Exec[Secure Local Execution on Wearable DB]
+                    Exec --> Report[Translates Stats into Natural Language]
+                </div>
+                <p><small>Solves LLM numerical hallucination by offloading math to deterministic local Python interpreters.</small></p>
+            </section>
+        </section>
+
+        <!-- Phase 4: Genomics -->
+        <section>
+            <section>
+                <h2>Phase 4: Symbolic Genomics</h2>
+                <div class="image-container">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/DNA_orbit_animated.gif/400px-DNA_orbit_animated.gif" alt="DNA" />
+                </div>
+                <ul>
+                    <li><strong>Symbolic Abstraction:</strong> Mutations (e.g. KRAS, TP53) lack intrinsic meaning without external retrieval.</li>
+                    <li><strong>Long-Range Dependencies:</strong> A mutation affects genes 50k base-pairs away.</li>
+                    <li><strong>SOTA Models:</strong> Deep Signal Processing (Evo) and Bidirectional State Space Models (JanusDNA) process 1M+ base pairs efficiently.</li>
+                </ul>
+            </section>
+
+            <!-- SOTA HEAL-KGGen -->
+            <section>
+                <h3>SOTA Architecture: HEAL-KGGen</h3>
+                <p>Knowledge Graph Orchestration for Biomarkers</p>
+                <div class="mermaid">
+                graph TD
+                    Biomarker[KRAS Mutation] --> GP[General Practitioner Agent]
+                    GP --> Specialist[Genomics Specialist]
+                    Specialist --> KG[(Dynamic Knowledge Graph)]
+                    KG --> |Maps| Entity[Entity: KRAS]
+                    Entity --> Pathway[Pathway: MAPK]
+                    Pathway --> Disease[Disease: Colorectal Cancer]
+                    Disease --> LLM[LLM: Generates Explainable Hypothesis]
+                </div>
+                <p><small>Prevents factual hallucination by forcing the LLM to traverse verified semantic subgraphs.</small></p>
+            </section>
+        </section>
+
+        <!-- Phase 5: Knowledge Retrieval -->
+        <section>
+            <h2>Phase 5: Knowledge Retrieval (RAG)</h2>
+            <p>Grounding logic in verifiable, external medical evidence.</p>
+            <ul>
+                <li><strong>Joint Latent Space:</strong> Projecting Images ($I$) and Text ($T$) into the same multidimensional universe ($R^d$).</li>
+                <li><strong>Contrastive Learning:</strong> Uses InfoNCE loss to pull correct pairs together and push mismatched pairs apart.</li>
+                <li><strong>Cosine Similarity:</strong> When a new X-Ray is ingested, the system mathematically retrieves the top $K$ most similar historical cases.</li>
+            </ul>
+        </section>
+
+        <!-- Phase 6: Multimodal Fusion & Ecosystems -->
+        <section>
+            <section>
+                <h2>Phase 6: Multi-Agent System (MAS) Ecosystems</h2>
+                <p>The "God Model" is dead. Long live the Virtual Tumor Board.</p>
+                <div class="mermaid">
+                graph TD
+                    Director[Cognitive Orchestrator] --> Vision[Vision Sub-Agent]
+                    Director --> DB[Database Sub-Agent]
+                    Director --> Gen[Genomics Sub-Agent]
+                    Vision --> RAG[(Retrieval/Grounding Library)]
+                    DB --> RAG
+                    Gen --> RAG
+                    Vision --> Board{Verification & Conflict Resolution}
+                    DB --> Board
+                    Gen --> Board
+                    Board --> Output[Unified Clinical Decision]
+                </div>
+            </section>
+            
+            <section>
+                <h3>Conflict Resolution</h3>
+                <p>What happens when modalities disagree?</p>
+                <ul>
+                    <li><em>Text:</em> "X-ray is clear."</li>
+                    <li><em>Vision:</em> "98% Confidence: Consolidation."</li>
+                </ul>
+                <br>
+                <p><strong>SOTA Action:</strong> The Verification Layer demands Saliency Maps from the Vision Agent. If mathematically overwhelming, the Director overrides the Text, flagging human error.</p>
+            </section>
+        </section>
+
+        <!-- Conclusion -->
+        <section>
+            <h2>Conclusion</h2>
+            <ul>
+                <li><strong>Active Perception:</strong> The ingestion layer is dynamic, algorithm-heavy, and specifically tuned per modality.</li>
+                <li><strong>MAS Architecture:</strong> Bypasses token limits and data scarcity by delegating tasks to highly specialized sub-agents.</li>
+                <li><strong>Clinical Safety:</strong> Grounded in RAG, continuous verification, and local execution pipelines.</li>
+            </ul>
+            <br><br>
+            <h3 class="highlight-text">Thank You</h3>
+        </section>
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        center: true,
+        hash: true,
+        transition: 'slide'
+    });
+
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'default',
+        securityLevel: 'loose'
+    });
+    
+    // Slight delay to ensure Mermaid renders properly in Reveal.js slides
+    Reveal.on('ready', event => {
+        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,1454 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation</title>
+<!--Generated on Fri Mar  6 03:49:14 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="stylesheet" href="/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" type="text/css">
+<script src="/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link rel="apple-touch-icon" sizes="180x180"
+  href="/static/browse/0.3.4/images/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32"
+  href="/static/browse/0.3.4/images/icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16"
+  href="/static/browse/0.3.4/images/icons/favicon-16x16.png">
+<link rel="manifest" href="/static/browse/0.3.4/images/icons/site.webmanifest">
+<link rel="mask-icon" href="/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" color="#5bbad5">
+<link rel="stylesheet" type="text/css" media="screen" href="https://use.typekit.net/utz6mli.css"><link rel="stylesheet" type="text/css" media="screen"
+  href="/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626"><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer src="/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+</head>
+<body>
+<dialog id="modal-form" aria-labelledby="modal-title" closedby="any">
+  <form id="modal-form-content" method="dialog" enctype="multipart/form-data">
+    <header class="modal-header">
+      <h5 id="modal-title" class="modal-title">Report GitHub Issue</h5>
+      <button type="submit" formnovalidate class="modal-close" aria-label="Close">×</button>
+    </header>
+
+    <div class="modal-body">
+      <label for="form_title">Title:</label>
+      <input class="form-control" id="form_title" name="form_title" required placeholder="Enter title">
+
+      <p id="selectedTextModalDescription" hidden>Content selection saved. Describe the issue below:</p>
+
+      <label for="description">Description:</label>
+      <textarea class="form-control" id="description" name="description" required maxlength="500"
+        placeholder="500 characters maximum"></textarea>
+    </div>
+
+    <footer class="modal-footer">
+      <button type="submit" value="internal-report" class="sr-only modal-submit">Submit without GitHub</button>
+      <button type="submit" value="github-report" class="modal-submit">Submit in GitHub</button>
+    </footer>
+  </form>
+</dialog><div class="ds-announcement" id="announcement-banner" role="region" aria-label="Announcement"
+    data-banner-name="spinout-nonprofit">
+    <img class="ds-announcement-glyph" src="/static/base/1.0.1/images/icons/smileybones-small.svg" alt="" aria-hidden="true">
+    <span class="ds-announcement-text">arXiv is now an independent nonprofit!</span>
+    <a class="ds-announcement-link" href="https://info.arxiv.org/about">Learn more</a>
+    <button type="button" class="ds-announcement-close" aria-label="Dismiss announcement">&times;</button>
+  </div>
+
+<header class="arxiv-html-header">
+  <div class="html-header-logo">
+    <a href="/"><img alt="arXiv logo" class="logo desktop-only" width="100"
+        src="/static/base/1.0.1/images/arxiv-logo-primary-light.svg">
+      <span class="sr-only">Back to arXiv</span>
+    </a>
+  </div>
+  <!--TOC, dark mode, links-->
+  <nav class="html-header-nav">
+    <a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html"
+      target="_blank">Why HTML?</a>
+    <a class="header-button" title="Report an Issue" href="#" title="Report an issue"
+      onclick="event.preventDefault(); showModalForm();">
+      <svg role="presentation" class="mobile-only toggle-icon" aria-hidden="true" height="1.25rem"
+        viewBox="0 0 640 640">
+        <path
+          d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z" />
+      </svg>
+      <span class="desktop-only">Report Issue</span></a>
+    <!--back to abstract-->
+    <a class="header-button" title="Back to abstract page" aria-label="Back to abstract page"
+      href="/abs/2603.05873v1">
+      <svg class="mobile-only toggle-icon" role="presentation" height="1.25rem" viewBox="0 0 512 512" fill="#ffffff"
+        aria-hidden="true">
+        <path
+          d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+        </path>
+      </svg>
+      <span class="desktop-only">Back to Abstract</span>
+    </a>
+    <!-- PDF download link -->
+    <a class="header-button" title="Download PDF" href="/pdf/2603.05873v1"
+      target="_blank">
+      <svg class="mobile-only toggle-icon" role="presentation" height="1.25rem" viewBox="0 0 576 542">
+        <path
+          d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z" />
+      </svg>
+      <span class="desktop-only">Download PDF</span></a>
+    <!-- navigational table of contents toggle -->
+    <a class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation"
+      aria-label="Toggle navigation">
+      <svg height="1.25rem" role="presentation" viewBox="0 0 512 512">
+        <path
+          d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+        </path>
+      </svg>
+    </a>
+    <!--- collapsable header / reading mode toggle -->
+    <a class="header-button toggle-icon" href="javascript:toggleReadingMode();"
+      title="Disable reading mode, show header and footer">
+      <svg role="presentation" height="1.25rem"
+        viewBox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+        <path
+          d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z" />
+      </svg>
+    </a>
+    <!--- colored theme toggle -->
+    <button type="button" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" aria-label="Toggle color scheme">
+      <span class="toggle-icon automatic-tog" aria-hidden="true">
+        <svg role="presentation" height="1.25rem" viewBox="0 0 24 24">
+          <path
+            d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+          </path>
+        </svg>
+      </span>
+      <span class="toggle-icon light-tog" aria-hidden="true">
+        <svg role="presentation" height="1.25rem" viewBox="0 0 24 24">
+          <path
+            d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+          </path>
+        </svg>
+      </span>
+      <span class="toggle-icon dark-tog" aria-hidden="true">
+        <svg role="presentation" height="1.25rem" viewBox="0 0 24 24">
+          <path
+            d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+          </path>
+        </svg>
+      </span>
+    </button>
+  </nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a href="#abstract1" title="In Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S1" title="In Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S2" title="In Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a href="#S3" title="In Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S3.SS1" title="In 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Overview</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S3.SS2" title="In 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Static Memory via Supervision</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S3.SS3" title="In 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Few-shot Memory</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S3.SS4" title="In 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.4 </span>Test-time Working Memory</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S3.SS5" title="In 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.5 </span>Agentic Memory Controller</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a href="#S4" title="In Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S4.SS1" title="In 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Datasets and Preprocessing</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S4.SS2" title="In 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Implementation Details</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S4.SS3" title="In 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Cross-Domain Generalization</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S4.SS4" title="In 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Evalutation of Static Memory and Test-time Adaptation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a href="#S4.SS5" title="In 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.5 </span>Ablation Study</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a href="#S5" title="In Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a href="#bib" title="In Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div id="infobox" class="infobox">
+  <a id="license-tr" href="https://info.arxiv.org/help/license/index.html#licenses-available">
+    License: arXiv.org perpetual non-exclusive license
+  </a>
+  <div id="watermark-tr">
+arXiv:2603.05873v1 [cs.CV] 06 Mar 2026</div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span id="id1" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">institutetext: </span>Department of Electrical and Computer Engineering, University of California, Santa Barbara, Santa Barbara, CA 93106, USA 
+<br class="ltx_break"></span></span></span><span id="id2" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_note_type">institutetext: </span>College of Engineering, Northeastern University, Boston, MA 02115, USA
+<br class="ltx_break"></span></span></span><span id="id3" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup><span class="ltx_note_type">institutetext: </span>Department of Biomedical Engineering, New Jersey Institute of Technology, Newark, NJ 07102, USA
+<br class="ltx_break"><span id="id3.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup><span class="ltx_note_type">email: </span>lin.zhao.1@njit.edu</span></span></span>
+</span></span></span><span id="id4" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup><span class="ltx_note_type">institutetext: </span>United Imaging Intelligence, Burlington, MA 01803, USA
+</span></span></span><span id="id5" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">5</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">5</sup><span class="ltx_note_type">institutetext: </span>Department of Radiation Oncology, Mayo Clinic, Scottsdale, AZ 85259, USA
+<br class="ltx_break"></span></span></span><span id="id6" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">6</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">6</sup><span class="ltx_note_type">institutetext: </span>Department of Radiology, Massachusetts General Hospital and Harvard Medical School, Boston, MA 02115, USA
+<br class="ltx_break"></span></span></span><span id="id7" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">7</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">7</sup><span class="ltx_note_type">institutetext: </span>School of Computing, University of Georgia, Athens, GA 30602, USA
+<br class="ltx_break"></span></span></span>
+<h1 class="ltx_title ltx_title_document">Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Bowen Chen
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Qiaohui Gao
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Shaowen Wan
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Shanhui Sun
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Wei Liu
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Xiang Li
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Tianming Liu
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Lin Zhao
+</span></span>
+</div>
+
+<div id="abstract1" class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p">Medical image segmentation is fundamental to clinical workflows, yet models trained on a single dataset often fail to generalize across institutions, scanners, or patient populations. While vision foundation models have shown great promise in addressing this challenge, their deployment typically requires task-specific fine-tuning, which introduces substantial communication overhead in federated learning and prevents continuous knowledge evolution during deployment. In this work, we propose a memory-augmented segmentation agent (MemSeg-Agent) that shifts adaptation from weight space to memory space, enabling few-shot learning, federated supervised learning, and test-time adaptation within a unified architecture. MemSeg-Agent conditions a fixed backbone with lightweight static, few-shot, and test-time working memories, which are dynamically composed by an agentic controller. In federated settings, we update compact memory units instead of model parameters, substantially reducing communication overhead. Experiments on four public datasets demonstrate strong performance and robustness to domain shift: Static memory alone matches or surpasses strong supervised baselines with high parameter efficiency, and test-time working memory further improves in-domain and cross-domain performance without fine-tuning. Overall, MemSeg-Agent introduces a new paradigm for scalable and adaptive medical image segmentation in the era of agentic AI.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Medical image segmentation is fundamental to clinical workflows, supporting diagnosis, treatment planning, and intervention guidance <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="A survey on deep learning in medical image analysis" class="ltx_ref">17</a>, <a href="#bib.bib1" title="Medical image segmentation review: the success of u-net" class="ltx_ref">2</a>]</cite>. Over the past decade, numerous deep learning architectures including CNN-based models <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="U-net: convolutional networks for biomedical image segmentation" class="ltx_ref">23</a>, <a href="#bib.bib34" title="NnU-net: a self-configuring method for deep learning-based biomedical image segmentation" class="ltx_ref">10</a>]</cite> and transformer-based models <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="An image is worth 16x16 words: transformers for image recognition at scale" class="ltx_ref">7</a>, <a href="#bib.bib35" title="Swin unetr: swin transformers for semantic segmentation of brain tumors in mri images" class="ltx_ref">9</a>, <a href="#bib.bib38" title="TransUNet: transformers make strong encoders for medical image segmentation" class="ltx_ref">5</a>]</cite> have achieved impressive performance across different modalities <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib51" title="Deep learning techniques for automatic mri cardiac multi-structures segmentation and diagnosis: is the problem solved?" class="ltx_ref">4</a>, <a href="#bib.bib40" title="Deep learning for segmentation using an open large-scale dataset in 2d echocardiography" class="ltx_ref">15</a>, <a href="#bib.bib39" title="CHAOS - Combined (CT-MR) Healthy Abdominal Organ Segmentation Challenge Data" class="ltx_ref">13</a>]</cite>. However, despite the proliferation of increasingly sophisticated models, robust generalization remains unresolved. Models trained on one dataset often experience substantial performance degradation when deployed to new institutions, scanners, or patient populations <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="Can you trust your model’s uncertainty? evaluating predictive uncertainty under dataset shift" class="ltx_ref">21</a>]</cite>. This limitation arises from both the inherent heterogeneity of medical images and the limited scale of annotated datasets, which together hinder the learning of domain-invariant representations.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Large-scale vision foundation models have shown potential in reshaping this landscape <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="Dinov2: learning robust visual features without supervision" class="ltx_ref">20</a>, <a href="#bib.bib24" title="Sam 2: segment anything in images and videos" class="ltx_ref">22</a>, <a href="#bib.bib42" title="Foundational models defining a new era in vision: a survey and outlook" class="ltx_ref">1</a>]</cite>. Pretrained on large-scale natural images or multimodal datasets, foundation models learn more transferable feature representations that support robust generalization and adaptation to medical image segmentation tasks such as few-shot segmentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="Retrieval-augmented few-shot medical image segmentation with foundation models" class="ltx_ref">33</a>]</cite> or real-time segmentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="Adapting vision foundation models for real-time ultrasound image segmentation" class="ltx_ref">32</a>]</cite>. However, most works still require task-specific finetuning of foundation models <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib54" title="Parameter-efficient fine-tuning in large models: a survey of methodologies" class="ltx_ref">26</a>]</cite>. Under data privacy constraints, such adaptation becomes challenging to integrate into federated learning (FL) frameworks due to communication overhead even with parameter-efficient fine-tuning (PEFT) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib48" title="Parameter-efficient fine-tuning for foundation models" class="ltx_ref">31</a>]</cite>. Moreover, the knowledge learned by these models remains largely static after training. Although real-world deployment may provide abundant feedback, there is no efficient mechanism to continuously incorporate them to further adapt the model.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Recent progress on AI agents and agentic memory offers a new promising paradigm <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib44" title="Agentic memory: learning unified long-term and short-term memory management for large language model agents" class="ltx_ref">30</a>, <a href="#bib.bib45" title="Titans: learning to memorize at test time" class="ltx_ref">3</a>, <a href="#bib.bib46" title="A-mem: agentic memory for llm agents" class="ltx_ref">27</a>]</cite>. By decoupling knowledge storage from backbone parameters, a fixed model can operate across heterogeneous contexts while continuously evolving through memory-driven adaptation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="K-decore: facilitating knowledge transfer in continual structured knowledge reasoning via knowledge decoupling" class="ltx_ref">6</a>]</cite>. Motivated by this, we propose a memory-augmented segmentation agent (MemSeg-Agent) that unifies few-shot learning, federated supervised learning, and test-time adaptation within a single SAM2-based architecture. The agent relies only on lightweight memories (static, few-shot, and test-time working), which are dynamically selected and composed by an agentic controller to condition the backbone. This design also allows maintaining multiple task- or site-specific segmentation priors with only a small memory footprint. In privacy-constrained FL settings, we update supervised static memory instead of model weights, substantially reducing communication overhead. Evaluated on four public datasets, MemSeg-Agent demonstrates strong performance and generalization for domain-shift tasks. We also demonstrate that static memory alone matches or outperforms strong baselines, while test-time working memory further boosts both in-domain and cross-domain performance without fine-tuning.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.3" class="ltx_p"><span id="S1.p4.3.1" class="ltx_text ltx_font_bold">Our contributions</span> are as follows: (1) We propose a memory-augmented segmentation agent that unifies few-shot learning, federated supervised learning, and test-time adaptation in a single architecture by shifting adaptation from weights to memory. (2) We propose a scalable lightweight supervised memory that compactly maintains task-/site-specific segmentation priors to plug-and-play condition a fixed backbone, achieving strong performance with minimal additional parameters. (3) We introduce test-time working memory for continual feedback-driven updates, improving both in-domain and cross-domain performance without backbone fine-tuning. (4) We demonstrate communication-efficient federated learning via memory-only updates, reducing per-round communication by <math id="S1.p4.1.m1" class="ltx_Math" alttext="\sim" display="inline" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>74.3<math id="S1.p4.2.m2" class="ltx_Math" alttext="\times" display="inline" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> (<math id="S1.p4.3.m3" class="ltx_Math" alttext="\sim" display="inline" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>98.65%) over updating the SAM2-tiny backbone while preserving segmentation accuracy.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p"><span id="S2.p1.1.1" class="ltx_text ltx_font_bold">Foundation Models in Medical Image Segmentation.</span>
+Large-scale foundation models, such as the Segment Anything Model (SAM) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="Segment anything" class="ltx_ref">14</a>, <a href="#bib.bib24" title="Sam 2: segment anything in images and videos" class="ltx_ref">22</a>]</cite> and DINOv2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="Dinov2: learning robust visual features without supervision" class="ltx_ref">20</a>]</cite>, have been increasingly adopted for medical image segmentation, demonstrating strong performance and generalization across a range of tasks, including promptable image <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="Segment anything in medical images" class="ltx_ref">18</a>]</cite> and video segmentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="Medsam2: segment anything in 3d medical images and videos" class="ltx_ref">19</a>]</cite>, few-shot learning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="Retrieval-augmented few-shot medical image segmentation with foundation models" class="ltx_ref">33</a>]</cite>, and real-time segmentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="Adapting vision foundation models for real-time ultrasound image segmentation" class="ltx_ref">32</a>]</cite>. Instead of relying on parameter-efficient fine-tuning (PEFT), we leverage the memory mechanism to unlock and fully utilize the intrinsic capabilities of these foundation models.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p"><span id="S2.p2.1.1" class="ltx_text ltx_font_bold">Agentic Memory.</span>
+Recently, agentic memory systems have enabled LLM-based agents to retain historical interactions, accumulate experiential knowledge, and progressively refine their decision-making processes over time <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib44" title="Agentic memory: learning unified long-term and short-term memory management for large language model agents" class="ltx_ref">30</a>]</cite>. In the medical domain, emerging efforts have incorporated memory-augmented agents for tasks such as medical question answering (QA) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="Agentic memory-augmented retrieval and evidence grounding for medical question-answering tasks" class="ltx_ref">11</a>]</cite> and chest X-ray (CXR) interpretation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="Medrax: medical reasoning agent for chest x-ray" class="ltx_ref">8</a>]</cite>. However, integrating agentic memory with foundation models for dense prediction tasks remains largely unexplored.</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.1" class="ltx_p"><span id="S2.p3.1.1" class="ltx_text ltx_font_bold">Federated Learning for Foundation Models.</span>
+Federated learning (FL) has emerged as a critical paradigm for the medical domain, enabling collaborative model training across institutions while preserving data privacy and complying with regulatory constraints <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="Federated learning in medicine: facilitating multi-institutional collaborations without sharing patient data" class="ltx_ref">24</a>]</cite>. However, when adapting large-scale foundation models in federated settings, existing strategies, ranging from full fine-tuning to PEFT, still incur substantial communication overhead due to the need for frequent synchronization of millions to billions of model parameters across clients. We restrict cross-site updates to lightweight memories, significantly reducing communication costs while preserving strong performance.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Methodology</h2>
+
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Overview</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">We propose a memory-augmented segmentation framework (Fig. <a href="#S3.F1" title="Figure 1 ‣ 3.1 Overview ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>) built upon a frozen SAM2 backbone <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="Sam 2: segment anything in images and videos" class="ltx_ref">22</a>]</cite>, where task adaptation is achieved through explicitly parameterized memories, including static memory (Section <a href="#S3.SS2" title="3.2 Static Memory via Supervision ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.2</span></a>), few-shot memory (Section <a href="#S3.SS3" title="3.3 Few-shot Memory ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.3</span></a>), and test-time working memory (Section <a href="#S3.SS4" title="3.4 Test-time Working Memory ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.4</span></a>). An agentic memory controller (Section <a href="#S3.SS5" title="3.5 Agentic Memory Controller ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.5</span></a>) selects memories for inference and regulates the interaction between static and working memory, enabling efficient adaptation across supervision levels, domain shifts, and distributed settings.</p>
+</div>
+<figure id="S3.F1" class="ltx_figure"><img src="2603.05873v1/x1.png" id="S3.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="830" height="456" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>MemSeg-Agent framework. The agent retrieves and composes static, few-shot, and test-time working memories to condition a frozen backbone for segmentation. Human corrections are encoded into the working-memory buffer via gated delta updates, while static memory can be federated for communication-efficient adaptation.</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Static Memory via Supervision</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.16" class="ltx_p">SAM2’s memory mechanism implicitly defines a representation space <math id="S3.SS2.p1.1.m1" class="ltx_Math" alttext="\mathcal{M}\subset\mathbb{R}^{d}" display="inline" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">ℳ</mi><mo>⊂</mo><msup><mi>ℝ</mi><mi>d</mi></msup></mrow><annotation encoding="application/x-tex">\mathcal{M}\subset\mathbb{R}^{d}</annotation></semantics></math> that encodes segmentation priors. Given an observation pair <math id="S3.SS2.p1.2.m2" class="ltx_Math" alttext="(x_{i},y_{i})" display="inline" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x_{i},y_{i})</annotation></semantics></math> consisting of an image frame <math id="S3.SS2.p1.3.m3" class="ltx_Math" alttext="x_{i}" display="inline" intent=":literal"><semantics><msub><mi>x</mi><mi>i</mi></msub><annotation encoding="application/x-tex">x_{i}</annotation></semantics></math> and its corresponding label or mask <math id="S3.SS2.p1.4.m4" class="ltx_Math" alttext="y_{i}" display="inline" intent=":literal"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_{i}</annotation></semantics></math>, the memory encoder <math id="S3.SS2.p1.5.m5" class="ltx_Math" alttext="\mathcal{E}_{m}" display="inline" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><annotation encoding="application/x-tex">\mathcal{E}_{m}</annotation></semantics></math> produces a memory token <math id="S3.SS2.p1.6.m6" class="ltx_Math" alttext="\mathbf{m}_{i}=\mathcal{E}_{m}(x_{i},y_{i})\in\mathcal{M}" display="inline" intent=":literal"><semantics><mrow><msub><mi>𝐦</mi><mi>i</mi></msub><mo>=</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>∈</mo><mi class="ltx_font_mathcaligraphic">ℳ</mi></mrow><annotation encoding="application/x-tex">\mathbf{m}_{i}=\mathcal{E}_{m}(x_{i},y_{i})\in\mathcal{M}</annotation></semantics></math> that serves as a prior during inference. In this work, we aim to learn a prior <math id="S3.SS2.p1.7.m7" class="ltx_Math" alttext="\mathbf{m}_{i}" display="inline" intent=":literal"><semantics><msub><mi>𝐦</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\mathbf{m}_{i}</annotation></semantics></math> as task-specific static memory that conditions the backbone for downstream segmentation. Directly optimizing <math id="S3.SS2.p1.8.m8" class="ltx_Math" alttext="\mathbf{m}_{i}" display="inline" intent=":literal"><semantics><msub><mi>𝐦</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\mathbf{m}_{i}</annotation></semantics></math> as free parameters in <math id="S3.SS2.p1.9.m9" class="ltx_Math" alttext="\mathcal{M}" display="inline" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">ℳ</mi><annotation encoding="application/x-tex">\mathcal{M}</annotation></semantics></math> discards the observation–encoding regularization and can produce memories that fall outside the <math id="S3.SS2.p1.10.m10" class="ltx_Math" alttext="\mathcal{E}_{m}" display="inline" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><annotation encoding="application/x-tex">\mathcal{E}_{m}</annotation></semantics></math>-defined representation manifold. Instead, we optimize parameterized pseudo-observations <math id="S3.SS2.p1.11.m11" class="ltx_Math" alttext="\mathbf{z}_{i}=(\hat{x}_{i},\hat{y}_{i})" display="inline" intent=":literal"><semantics><mrow><msub><mi>𝐳</mi><mi>i</mi></msub><mo>=</mo><mrow><mo stretchy="false">(</mo><msub><mover accent="true"><mi>x</mi><mo>^</mo></mover><mi>i</mi></msub><mo>,</mo><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbf{z}_{i}=(\hat{x}_{i},\hat{y}_{i})</annotation></semantics></math>, which are then projected into the memory space via the frozen encoder as <math id="S3.SS2.p1.12.m12" class="ltx_Math" alttext="\mathbf{m}_{i}=\mathcal{E}_{m}(\hat{x}_{i},\hat{y}_{i})" display="inline" intent=":literal"><semantics><mrow><msub><mi>𝐦</mi><mi>i</mi></msub><mo>=</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mover accent="true"><mi>x</mi><mo>^</mo></mover><mi>i</mi></msub><mo>,</mo><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\mathbf{m}_{i}=\mathcal{E}_{m}(\hat{x}_{i},\hat{y}_{i})</annotation></semantics></math>. In this way, <math id="S3.SS2.p1.13.m13" class="ltx_Math" alttext="\mathcal{E}_{m}" display="inline" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><annotation encoding="application/x-tex">\mathcal{E}_{m}</annotation></semantics></math> acts as an implicit regularizer that constrains the learned static memory to reside within the valid memory representation manifold. To construct static memory, we optimize only the pseudo-observations <math id="S3.SS2.p1.14.m14" class="ltx_Math" alttext="\{\mathbf{z}_{i}\}_{i=1}^{N}" display="inline" intent=":literal"><semantics><msubsup><mrow><mo stretchy="false">{</mo><msub><mi>𝐳</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup><annotation encoding="application/x-tex">\{\mathbf{z}_{i}\}_{i=1}^{N}</annotation></semantics></math> while keeping SAM2 backbone <math id="S3.SS2.p1.15.m15" class="ltx_Math" alttext="f_{\theta}" display="inline" intent=":literal"><semantics><msub><mi>f</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">f_{\theta}</annotation></semantics></math> as well as the memory encoder <math id="S3.SS2.p1.16.m16" class="ltx_Math" alttext="\mathcal{E}_{m}" display="inline" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><annotation encoding="application/x-tex">\mathcal{E}_{m}</annotation></semantics></math> fixed by solving</p>
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1" class="ltx_Math" alttext="\min_{\{\mathbf{z}_{i}\}_{i=1}^{N}}\;\mathcal{L}_{\mathrm{seg}}\!\left(f_{\theta}\!\left(x;\{\mathcal{E}_{m}(\mathbf{z}_{i})\}_{i=1}^{N}\right),\,y\right)." display="block" intent=":literal"><semantics><mrow><mrow><mrow><munder><mi>min</mi><msubsup><mrow><mo stretchy="false">{</mo><msub><mi>𝐳</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup></munder><mo lspace="0.447em">⁡</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>seg</mi></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mrow><msub><mi>f</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mi>x</mi><mo>;</mo><msubsup><mrow><mo stretchy="false">{</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>𝐳</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup><mo>)</mo></mrow></mrow><mo rspace="0.337em">,</mo><mi>y</mi><mo>)</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\min_{\{\mathbf{z}_{i}\}_{i=1}^{N}}\;\mathcal{L}_{\mathrm{seg}}\!\left(f_{\theta}\!\left(x;\{\mathcal{E}_{m}(\mathbf{z}_{i})\}_{i=1}^{N}\right),\,y\right).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">We perform slice-wise binary segmentation using Dice Loss plus an auxiliary objectness BCE on foreground-presence logits: <math id="S3.SS2.p2.1.m1" class="ltx_Math" alttext="\mathcal{L}=\mathcal{L}_{dice}(\hat{y},y)+0.3\mathcal{L}_{obj}" display="inline" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">ℒ</mi><mo>=</mo><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mover accent="true"><mi>y</mi><mo>^</mo></mover><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo></mrow></mrow><mo>+</mo><mrow><mn>0.3</mn><mo lspace="0em" rspace="0em">​</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>j</mi></mrow></msub></mrow></mrow></mrow><annotation encoding="application/x-tex">\mathcal{L}=\mathcal{L}_{dice}(\hat{y},y)+0.3\mathcal{L}_{obj}</annotation></semantics></math>.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Few-shot Memory</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.4" class="ltx_p">When labeled data is scarce, directly learning static memory may overfit. Retrieval-augmented few-shot segmentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="Retrieval-augmented few-shot medical image segmentation with foundation models" class="ltx_ref">33</a>]</cite> can be seamlessly integrated into our framework to support few-shot scenarios. Given a support set <math id="S3.SS3.p1.1.m1" class="ltx_Math" alttext="\mathcal{S}=\{(x_{i},y_{i})\}_{i=1}^{K}" display="inline" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒮</mi><mo>=</mo><msubsup><mrow><mo stretchy="false">{</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></msubsup></mrow><annotation encoding="application/x-tex">\mathcal{S}=\{(x_{i},y_{i})\}_{i=1}^{K}</annotation></semantics></math>, we encode each pair into memory <math id="S3.SS3.p1.2.m2" class="ltx_Math" alttext="\mathbf{m}_{i}=\mathcal{E}_{m}(x_{i},y_{i})\in\mathcal{M}" display="inline" intent=":literal"><semantics><mrow><msub><mi>𝐦</mi><mi>i</mi></msub><mo>=</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>,</mo><msub><mi>y</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>∈</mo><mi class="ltx_font_mathcaligraphic">ℳ</mi></mrow><annotation encoding="application/x-tex">\mathbf{m}_{i}=\mathcal{E}_{m}(x_{i},y_{i})\in\mathcal{M}</annotation></semantics></math> as non-parametric priors. At inference, we retrieve relevant memories by similarity <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="Retrieval-augmented few-shot medical image segmentation with foundation models" class="ltx_ref">33</a>]</cite> and condition the frozen backbone for the query <math id="S3.SS3.p1.3.m3" class="ltx_Math" alttext="x_{q}" display="inline" intent=":literal"><semantics><msub><mi>x</mi><mi>q</mi></msub><annotation encoding="application/x-tex">x_{q}</annotation></semantics></math>, i.e., <math id="S3.SS3.p1.4.m4" class="ltx_Math" alttext="\hat{y}_{q}=f_{\theta}(x_{q};\{\mathbf{m}_{i^{*}}\})" display="inline" intent=":literal"><semantics><mrow><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>q</mi></msub><mo>=</mo><mrow><msub><mi>f</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>q</mi></msub><mo>;</mo><mrow><mo stretchy="false">{</mo><msub><mi>𝐦</mi><msup><mi>i</mi><mo>∗</mo></msup></msub><mo stretchy="false">}</mo></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\hat{y}_{q}=f_{\theta}(x_{q};\{\mathbf{m}_{i^{*}}\})</annotation></semantics></math>.</p>
+</div>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>Test-time Working Memory</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.9" class="ltx_p">While static memory encodes stable task priors, it cannot fully handle distribution shifts encountered during inference. When the target domain deviates from the training distribution, relying solely on pre-learned priors may lead to degraded segmentation performance. To address this limitation, we introduce a <em id="S3.SS4.p1.9.1" class="ltx_emph ltx_font_italic">test-time working memory</em> that adapts segmentation priors online during inference. For each test sample <math id="S3.SS4.p1.1.m1" class="ltx_Math" alttext="x_{t}" display="inline" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math>, a human-in-the-loop may provide a corrected annotation <math id="S3.SS4.p1.2.m2" class="ltx_Math" alttext="y_{t}^{*}" display="inline" intent=":literal"><semantics><msubsup><mi>y</mi><mi>t</mi><mo>∗</mo></msubsup><annotation encoding="application/x-tex">y_{t}^{*}</annotation></semantics></math> when the model prediction is unsatisfactory. The corrected observation <math id="S3.SS4.p1.3.m3" class="ltx_Math" alttext="(x_{t},y_{t}^{*})" display="inline" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msubsup><mi>y</mi><mi>t</mi><mo>∗</mo></msubsup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x_{t},y_{t}^{*})</annotation></semantics></math> is then encoded into memory <math id="S3.SS4.p1.4.m4" class="ltx_Math" alttext="\mathbf{m}_{t}=\mathcal{E}_{m}(x_{t},y_{t}^{*})\in\mathcal{M}" display="inline" intent=":literal"><semantics><mrow><msub><mi>𝐦</mi><mi>t</mi></msub><mo>=</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>m</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msubsup><mi>y</mi><mi>t</mi><mo>∗</mo></msubsup><mo stretchy="false">)</mo></mrow></mrow><mo>∈</mo><mi class="ltx_font_mathcaligraphic">ℳ</mi></mrow><annotation encoding="application/x-tex">\mathbf{m}_{t}=\mathcal{E}_{m}(x_{t},y_{t}^{*})\in\mathcal{M}</annotation></semantics></math> and written into a working memory buffer <math id="S3.SS4.p1.5.m5" class="ltx_Math" alttext="\{\mathbf{m}_{j}\}_{j=1}^{B}" display="inline" intent=":literal"><semantics><msubsup><mrow><mo stretchy="false">{</mo><msub><mi>𝐦</mi><mi>j</mi></msub><mo stretchy="false">}</mo></mrow><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></msubsup><annotation encoding="application/x-tex">\{\mathbf{m}_{j}\}_{j=1}^{B}</annotation></semantics></math> via a gated delta-update strategy <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="Gated delta networks: improving mamba2 with delta rule" class="ltx_ref">29</a>]</cite> to adapt segmentation priors while avoiding uncontrolled memory growth and noisy accumulation. We trigger updates only when <math id="S3.SS4.p1.6.m6" class="ltx_Math" alttext="\mathrm{Dice}(y_{t}^{*},y_{t})&lt;\tau_{\mathrm{dice}}" display="inline" intent=":literal"><semantics><mrow><mrow><mi>Dice</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msubsup><mi>y</mi><mi>t</mi><mo>∗</mo></msubsup><mo>,</mo><msub><mi>y</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>&lt;</mo><msub><mi>τ</mi><mi>dice</mi></msub></mrow><annotation encoding="application/x-tex">\mathrm{Dice}(y_{t}^{*},y_{t})&lt;\tau_{\mathrm{dice}}</annotation></semantics></math>, and then compute DINOv3 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib55" title="Dinov3" class="ltx_ref">25</a>]</cite> embedding similarity to existing entries: if <math id="S3.SS4.p1.7.m7" class="ltx_Math" alttext="\max_{j}\mathrm{sim}(\mathbf{m}_{t},\mathbf{m}_{j})&lt;\tau_{\mathrm{sim}}" display="inline" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi>max</mi><mi>j</mi></msub><mo lspace="0.167em">⁡</mo><mi>sim</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>𝐦</mi><mi>t</mi></msub><mo>,</mo><msub><mi>𝐦</mi><mi>j</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>&lt;</mo><msub><mi>τ</mi><mi>sim</mi></msub></mrow><annotation encoding="application/x-tex">\max_{j}\mathrm{sim}(\mathbf{m}_{t},\mathbf{m}_{j})&lt;\tau_{\mathrm{sim}}</annotation></semantics></math>,
+we add <math id="S3.SS4.p1.8.m8" class="ltx_Math" alttext="\mathbf{m}_{t}" display="inline" intent=":literal"><semantics><msub><mi>𝐦</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\mathbf{m}_{t}</annotation></semantics></math> as a new memory; otherwise, we update the matched entry via an exponential moving average (EMA) gated by both similarity and confidence. During inference, top-<math id="S3.SS4.p1.9.m9" class="ltx_Math" alttext="k" display="inline" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> working memory entries are retrieved for each query slice and concatenated with static memory to condition the backbone. After inference, working memory entries in the buffer can be persistently stored and reused as domain-specific priors for future inference.</p>
+</div>
+</section>
+<section id="S3.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.5 </span>Agentic Memory Controller</h3>
+
+<div id="S3.SS5.p1" class="ltx_para">
+<p id="S3.SS5.p1.1" class="ltx_p">We design an <em id="S3.SS5.p1.1.1" class="ltx_emph ltx_font_italic">Agentic Memory Controller</em> to orchestrate memory usage at inference time. Given a test image, the controller first queries static memory by computing DINOv3 similarity to static prototypes. If a sufficiently similar prototype exists, the agent directly conditions the frozen SAM2 backbone with static memory. Otherwise, the agent requests few-shot examples and encodes them as few-shot memory priors. During deployment, the controller then composes static and working memory to handle domain shift, increasing the working memory contribution and update frequency when similarity to static memory is low. Throughout, the backbone is kept frozen and adaptation is realized solely through memory retrieval, composition, and working-memory updates in the shared SAM2 memory space.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Experiments</h2>
+
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Datasets and Preprocessing</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.2" class="ltx_p">We evaluate on three public datasets: <span id="S4.SS1.p1.2.1" class="ltx_text ltx_font_bold">CHAOS</span> abdominal MRI <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib50" title="CHAOS challenge-combined (ct-mr) healthy abdominal organ segmentation" class="ltx_ref">12</a>]</cite> (kidneys, spleen, liver), <span id="S4.SS1.p1.2.2" class="ltx_text ltx_font_bold">ACDC</span> cardiac MRI <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib51" title="Deep learning techniques for automatic mri cardiac multi-structures segmentation and diagnosis: is the problem solved?" class="ltx_ref">4</a>]</cite> (RV/Myo/LV at ED/ES), and <span id="S4.SS1.p1.2.3" class="ltx_text ltx_font_bold">CAMUS</span> 2D echocardiography <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib52" title="Deep learning for segmentation using an open large-scale dataset in 2d echocardiography" class="ltx_ref">16</a>]</cite> (LV/Myo/LA in 2- and 4-chamber views at ED/ES; ED/ES frames only). For cross-domain testing, we additionally use <span id="S4.SS1.p1.2.4" class="ltx_text ltx_font_bold">CardiacUDA</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib53" title="GraphEcho: graph-driven unsupervised domain adaptation for echocardiogram video segmentation" class="ltx_ref">28</a>]</cite> as an external benchmark (8 patients, 428 slices; CAMUS-matched views). All images are resampled to <math id="S4.SS1.p1.1.m1" class="ltx_Math" alttext="0.5\times 0.5" display="inline" intent=":literal"><semantics><mrow><mn>0.5</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">0.5\times 0.5</annotation></semantics></math> mm, center-cropped to <math id="S4.SS1.p1.2.m2" class="ltx_Math" alttext="256\times 256" display="inline" intent=":literal"><semantics><mrow><mn>256</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">256\times 256</annotation></semantics></math>, and intensities are clipped at the top 0.5%. Each dataset is split at the patient level into train/val/test = 3:1:1.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Implementation Details</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.2" class="ltx_p">All experiments were implemented in PyTorch and conducted on an NVIDIA Blackwell PRO 6000 GPU. Unless otherwise specified, UNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="U-net: convolutional networks for biomedical image segmentation" class="ltx_ref">23</a>]</cite>, SwinUNETR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="Swin unetr: swin transformers for semantic segmentation of brain tumors in mri images" class="ltx_ref">9</a>]</cite>, MedSAM2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="Medsam2: segment anything in 3d medical images and videos" class="ltx_ref">19</a>]</cite>, and our proposed method were trained for 200 epochs with a batch size of 8. For nnUNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="NnU-net: a self-configuring method for deep learning-based biomedical image segmentation" class="ltx_ref">10</a>]</cite>, we followed its official configuration and trained for 1000 epochs with a batch size of 2. We used AdamW with a learning rate of <math id="S4.SS2.p1.1.m1" class="ltx_Math" alttext="3\times 10^{-3}" display="inline" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">3\times 10^{-3}</annotation></semantics></math> and weight decay of <math id="S4.SS2.p1.2.m2" class="ltx_Math" alttext="10^{-4}" display="inline" intent=":literal"><semantics><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup><annotation encoding="application/x-tex">10^{-4}</annotation></semantics></math>. All experiments regarding our framework were conducted in a slice-wise setting for both training and inference, while evaluation was performed at the 3D volume level by aggregating slice-wise predictions to compute volume-wise metrics.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Cross-Domain Generalization</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">We evaluate cross-domain robustness by training on CAMUS and testing directly on CardiacUDA under matched anatomical views. As shown in Table <a href="#S4.T1" title="Table 1 ‣ 4.3 Cross-Domain Generalization ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, conventional baselines suffer substantial performance drops under domain shift. MedSAM2 shows relatively stronger generalization (42.75% Avg.), likely because it is fine-tuned on large-scale medical data on top of the SAM2 backbone. In contrast, our method keeps the backbone fixed and performs no medical-domain finetuning: nevertheless, the static-only variant reaches 30.74% average Dice and outperforms nnU-Net, SwinUNETR, and U-Net. More importantly, by enabling test-time adaptation through working memory, MemSeg-Agent improves to 77.30% average Dice, a +46.56% absolute gain over static-only and nearly doubling MedSAM2. These results indicate that MemSeg-Agent provides an effective and scalable alternative to parameter updates for cross-domain adaption.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Cross-domain evaluation (Train: CAMUS <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="Deep learning for segmentation using an open large-scale dataset in 2d echocardiography" class="ltx_ref">15</a>]</cite>, Test: CardiacUDA <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib53" title="GraphEcho: graph-driven unsupervised domain adaptation for echocardiogram video segmentation" class="ltx_ref">28</a>]</cite>) on left ventricle (LV) and left atrium (LA). Dice (%).</figcaption>
+<div id="S4.T1.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:26.5pt;vertical-align:-11.9pt;"><span class="ltx_transformed_inner" style="transform:translate(-185.8pt,11.4pt) scale(0.538499176373141,0.538499176373141) ;">
+<table id="S4.T1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_tt" style="padding-left:3.0pt;padding-right:3.0pt;"></th>
+<th id="S4.T1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:3.0pt;padding-right:3.0pt;">nnU-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="NnU-net: a self-configuring method for deep learning-based biomedical image segmentation" class="ltx_ref">10</a>]</cite>
+</th>
+<th id="S4.T1.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:3.0pt;padding-right:3.0pt;">SwinUNETR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="Swin unetr: swin transformers for semantic segmentation of brain tumors in mri images" class="ltx_ref">9</a>]</cite>
+</th>
+<th id="S4.T1.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:3.0pt;padding-right:3.0pt;">U-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="U-net: convolutional networks for biomedical image segmentation" class="ltx_ref">23</a>]</cite>
+</th>
+<th id="S4.T1.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:3.0pt;padding-right:3.0pt;">MedSAM2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="Medsam2: segment anything in 3d medical images and videos" class="ltx_ref">19</a>]</cite>
+</th>
+<th id="S4.T1.1.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:3.0pt;padding-right:3.0pt;">Ours(Static)</th>
+<th id="S4.T1.1.1.1.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:3.0pt;padding-right:3.0pt;">Ours(Static+WM)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.1.2.1" class="ltx_tr">
+<th id="S4.T1.1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-left:3.0pt;padding-right:3.0pt;">LV</th>
+<td id="S4.T1.1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:3.0pt;padding-right:3.0pt;">14.65</td>
+<td id="S4.T1.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:3.0pt;padding-right:3.0pt;">33.57</td>
+<td id="S4.T1.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:3.0pt;padding-right:3.0pt;">20.30</td>
+<td id="S4.T1.1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:3.0pt;padding-right:3.0pt;">47.26</td>
+<td id="S4.T1.1.1.2.1.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:3.0pt;padding-right:3.0pt;">39.75</td>
+<td id="S4.T1.1.1.2.1.7" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:3.0pt;padding-right:3.0pt;"><span id="S4.T1.1.1.2.1.7.1" class="ltx_text ltx_font_bold">81.53</span></td>
+</tr>
+<tr id="S4.T1.1.1.3.2" class="ltx_tr">
+<th id="S4.T1.1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-left:3.0pt;padding-right:3.0pt;">LA</th>
+<td id="S4.T1.1.1.3.2.2" class="ltx_td ltx_align_center" style="padding-left:3.0pt;padding-right:3.0pt;">30.64</td>
+<td id="S4.T1.1.1.3.2.3" class="ltx_td ltx_align_center" style="padding-left:3.0pt;padding-right:3.0pt;">0.07</td>
+<td id="S4.T1.1.1.3.2.4" class="ltx_td ltx_align_center" style="padding-left:3.0pt;padding-right:3.0pt;">0.03</td>
+<td id="S4.T1.1.1.3.2.5" class="ltx_td ltx_align_center" style="padding-left:3.0pt;padding-right:3.0pt;">38.31</td>
+<td id="S4.T1.1.1.3.2.6" class="ltx_td ltx_align_center" style="padding-left:3.0pt;padding-right:3.0pt;">21.72</td>
+<td id="S4.T1.1.1.3.2.7" class="ltx_td ltx_align_center" style="padding-left:3.0pt;padding-right:3.0pt;"><span id="S4.T1.1.1.3.2.7.1" class="ltx_text ltx_font_bold">73.07</span></td>
+</tr>
+<tr id="S4.T1.1.1.4.3" class="ltx_tr">
+<th id="S4.T1.1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" style="padding-left:3.0pt;padding-right:3.0pt;">Avg.</th>
+<td id="S4.T1.1.1.4.3.2" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:3.0pt;padding-right:3.0pt;">22.65</td>
+<td id="S4.T1.1.1.4.3.3" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:3.0pt;padding-right:3.0pt;">16.82</td>
+<td id="S4.T1.1.1.4.3.4" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:3.0pt;padding-right:3.0pt;">10.15</td>
+<td id="S4.T1.1.1.4.3.5" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:3.0pt;padding-right:3.0pt;">42.75</td>
+<td id="S4.T1.1.1.4.3.6" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:3.0pt;padding-right:3.0pt;">30.74</td>
+<td id="S4.T1.1.1.4.3.7" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:3.0pt;padding-right:3.0pt;"><span id="S4.T1.1.1.4.3.7.1" class="ltx_text ltx_font_bold">77.30</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>Evalutation of Static Memory and Test-time Adaptation</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p">We demonstrate the performance of static memory in Table <a href="#S4.T2" title="Table 2 ‣ 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> and qualitative results in Fig. <a href="#S4.F2" title="Figure 2 ‣ 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. Overall, our method achieves performance largely comparable to fully supervised baselines across datasets and supervision levels, frequently attaining best or second-best results in both Dice and HD95, particularly on the CHAOS (ABD-MRI) dataset, demonstrating the effectiveness of static memory in capturing segmentation priors under limited supervision. In contrast, performance on the CAMUS dataset is relatively modest, likely due to the ambiguous boundaries in ultrasound images, where the edge- and structure-aware features learned by the SAM2 backbone are less transferable; prior work suggests that incorporating semantic cues (e.g., via DINO-based representations) may help mitigate this limitation.</p>
+</div>
+<div id="S4.SS4.p2" class="ltx_para">
+<p id="S4.SS4.p2.3" class="ltx_p">Nevertheless, compared to approaches such as MedSAM2 that require task-specific backbone fine-tuning, our method achieves comparable performance with substantially fewer learnable parameters, enabling scalable plug-and-play deployment without retraining the segmentation model and validating the effectiveness of static memory for encoding segmentation priors. In a simulated four-site FedAvg setting (200 rounds), we update domain priors via memory-only exchange without sharing raw data; updating a 2M-parameter memory instead of the 148.63M SAM2-tiny backbone reduces per-round communication by <math id="S4.SS4.p2.1.m1" class="ltx_Math" alttext="\sim" display="inline" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>74.3<math id="S4.SS4.p2.2.m2" class="ltx_Math" alttext="\times" display="inline" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> (<math id="S4.SS4.p2.3.m3" class="ltx_Math" alttext="\sim" display="inline" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>98.65%) while maintaining competitive performance.</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Quantitative evaluation of single-class segmentation results under different supervision levels on CHAOS (ABD-MRI), ACDC, and CAMUS.</figcaption>
+<div id="S4.T2.20" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:345.0pt;height:86.9pt;vertical-align:-42.5pt;"><span class="ltx_transformed_inner" style="transform:translate(-286.3pt,72.1pt) scale(0.375954990994757,0.375954990994757) ;">
+<table id="S4.T2.20.20" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.20.20.21.1" class="ltx_tr">
+<th id="S4.T2.20.20.21.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_tt" style="padding:0.75pt 3.5pt;"></th>
+<th id="S4.T2.20.20.21.1.2" class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_tt" style="padding:0.75pt 3.5pt;"></th>
+<th id="S4.T2.20.20.21.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding:0.75pt 3.5pt;" colspan="8">CHAOS (ABD-MRI) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="CHAOS - Combined (CT-MR) Healthy Abdominal Organ Segmentation Challenge Data" class="ltx_ref">13</a>]</cite>
+</th>
+<th id="S4.T2.20.20.21.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding:0.75pt 3.5pt;" colspan="6">ACDC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib51" title="Deep learning techniques for automatic mri cardiac multi-structures segmentation and diagnosis: is the problem solved?" class="ltx_ref">4</a>]</cite>
+</th>
+<th id="S4.T2.20.20.21.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding:0.75pt 3.5pt;" colspan="6">CAMUS <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="Deep learning for segmentation using an open large-scale dataset in 2d echocardiography" class="ltx_ref">15</a>]</cite>
+</th>
+</tr>
+<tr id="S4.T2.20.20.22.2" class="ltx_tr">
+<th id="S4.T2.20.20.22.2.1" class="ltx_td ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;"></th>
+<th id="S4.T2.20.20.22.2.2" class="ltx_td ltx_th ltx_th_column ltx_th_row" style="padding:0.75pt 3.5pt;"></th>
+<th id="S4.T2.20.20.22.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">LK</th>
+<th id="S4.T2.20.20.22.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">RK</th>
+<th id="S4.T2.20.20.22.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">Spl.</th>
+<th id="S4.T2.20.20.22.2.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">Liv.</th>
+<th id="S4.T2.20.20.22.2.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">RV</th>
+<th id="S4.T2.20.20.22.2.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">Myo</th>
+<th id="S4.T2.20.20.22.2.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">LV</th>
+<th id="S4.T2.20.20.22.2.10" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">LV</th>
+<th id="S4.T2.20.20.22.2.11" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">Myo</th>
+<th id="S4.T2.20.20.22.2.12" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;" colspan="2">LA</th>
+</tr>
+<tr id="S4.T2.20.20.20" class="ltx_tr">
+<th id="S4.T2.20.20.20.21" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row" style="padding:0.75pt 3.5pt;">Sup.</th>
+<th id="S4.T2.20.20.20.22" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" style="padding:0.75pt 3.5pt;">Method</th>
+<th id="S4.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.1.1.1.1.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.2.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.2.2.2.2.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.3.3.3.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.3.3.3.3.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.4.4.4.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.4.4.4.4.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.5.5.5.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.5.5.5.5.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.6.6.6.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.6.6.6.6.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.7.7.7.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.7.7.7.7.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.8.8.8.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.8.8.8.8.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.9.9.9.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.9.9.9.9.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.10.10.10.10" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.10.10.10.10.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.11.11.11.11" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.11.11.11.11.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.12.12.12.12" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.12.12.12.12.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.13.13.13.13" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.13.13.13.13.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.14.14.14.14" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.14.14.14.14.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.15.15.15.15" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.15.15.15.15.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.16.16.16.16" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.16.16.16.16.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.17.17.17.17" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.17.17.17.17.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.18.18.18.18" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.18.18.18.18.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.19.19.19.19" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">Dice<math id="S4.T2.19.19.19.19.m1" class="ltx_Math" alttext="\uparrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th id="S4.T2.20.20.20.20" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:0.75pt 3.5pt;">HD95<math id="S4.T2.20.20.20.20.m1" class="ltx_Math" alttext="\downarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.20.20.23.1" class="ltx_tr">
+<th id="S4.T2.20.20.23.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" style="padding:0.75pt 3.5pt;" rowspan="6"><span id="S4.T2.20.20.23.1.1.1" class="ltx_text">100%</span></th>
+<th id="S4.T2.20.20.23.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding:0.75pt 3.5pt;">UNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="U-net: convolutional networks for biomedical image segmentation" class="ltx_ref">23</a>]</cite>
+</th>
+<td id="S4.T2.20.20.23.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">76.67</td>
+<td id="S4.T2.20.20.23.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">43.42</td>
+<td id="S4.T2.20.20.23.1.5" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">71.37</td>
+<td id="S4.T2.20.20.23.1.6" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">90.12</td>
+<td id="S4.T2.20.20.23.1.7" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">67.91</td>
+<td id="S4.T2.20.20.23.1.8" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">35.03</td>
+<td id="S4.T2.20.20.23.1.9" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">87.35</td>
+<td id="S4.T2.20.20.23.1.10" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">13.37</td>
+<td id="S4.T2.20.20.23.1.11" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">82.03</td>
+<td id="S4.T2.20.20.23.1.12" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">6.54</td>
+<td id="S4.T2.20.20.23.1.13" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">86.83</td>
+<td id="S4.T2.20.20.23.1.14" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">3.05</td>
+<td id="S4.T2.20.20.23.1.15" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.23.1.15.1" class="ltx_text ltx_framed ltx_framed_underline">92.18</span></td>
+<td id="S4.T2.20.20.23.1.16" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">4.28</td>
+<td id="S4.T2.20.20.23.1.17" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">93.36</td>
+<td id="S4.T2.20.20.23.1.18" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">3.03</td>
+<td id="S4.T2.20.20.23.1.19" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">86.97</td>
+<td id="S4.T2.20.20.23.1.20" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">5.00</td>
+<td id="S4.T2.20.20.23.1.21" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">90.48</td>
+<td id="S4.T2.20.20.23.1.22" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">4.53</td>
+</tr>
+<tr id="S4.T2.20.20.24.2" class="ltx_tr">
+<th id="S4.T2.20.20.24.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">SwinUNETR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="Swin unetr: swin transformers for semantic segmentation of brain tumors in mri images" class="ltx_ref">9</a>]</cite>
+</th>
+<td id="S4.T2.20.20.24.2.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">75.34</td>
+<td id="S4.T2.20.20.24.2.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">94.75</td>
+<td id="S4.T2.20.20.24.2.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">80.98</td>
+<td id="S4.T2.20.20.24.2.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">124.78</td>
+<td id="S4.T2.20.20.24.2.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">72.32</td>
+<td id="S4.T2.20.20.24.2.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">111.60</td>
+<td id="S4.T2.20.20.24.2.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">83.15</td>
+<td id="S4.T2.20.20.24.2.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">54.21</td>
+<td id="S4.T2.20.20.24.2.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">71.06</td>
+<td id="S4.T2.20.20.24.2.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">49.87</td>
+<td id="S4.T2.20.20.24.2.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">79.67</td>
+<td id="S4.T2.20.20.24.2.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">51.16</td>
+<td id="S4.T2.20.20.24.2.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">80.69</td>
+<td id="S4.T2.20.20.24.2.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">46.57</td>
+<td id="S4.T2.20.20.24.2.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">93.32</td>
+<td id="S4.T2.20.20.24.2.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">2.91</td>
+<td id="S4.T2.20.20.24.2.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.24.2.18.1" class="ltx_text ltx_font_bold">94.76</span></td>
+<td id="S4.T2.20.20.24.2.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.24.2.19.1" class="ltx_text ltx_font_bold">1.62</span></td>
+<td id="S4.T2.20.20.24.2.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.24.2.20.1" class="ltx_text ltx_font_bold">96.22</span></td>
+<td id="S4.T2.20.20.24.2.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.24.2.21.1" class="ltx_text ltx_font_bold">1.64</span></td>
+</tr>
+<tr id="S4.T2.20.20.25.3" class="ltx_tr">
+<th id="S4.T2.20.20.25.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">nnUNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="NnU-net: a self-configuring method for deep learning-based biomedical image segmentation" class="ltx_ref">10</a>]</cite>
+</th>
+<td id="S4.T2.20.20.25.3.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">89.15</td>
+<td id="S4.T2.20.20.25.3.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">14.57</td>
+<td id="S4.T2.20.20.25.3.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">84.91</td>
+<td id="S4.T2.20.20.25.3.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">15.73</td>
+<td id="S4.T2.20.20.25.3.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">82.82</td>
+<td id="S4.T2.20.20.25.3.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">11.36</td>
+<td id="S4.T2.20.20.25.3.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">89.26</td>
+<td id="S4.T2.20.20.25.3.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">10.76</td>
+<td id="S4.T2.20.20.25.3.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.10.1" class="ltx_text ltx_font_bold">90.53</span></td>
+<td id="S4.T2.20.20.25.3.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.11.1" class="ltx_text ltx_font_bold">1.62</span></td>
+<td id="S4.T2.20.20.25.3.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.12.1" class="ltx_text ltx_font_bold">90.36</span></td>
+<td id="S4.T2.20.20.25.3.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.13.1" class="ltx_text ltx_font_bold">1.12</span></td>
+<td id="S4.T2.20.20.25.3.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.14.1" class="ltx_text ltx_font_bold">94.94</span></td>
+<td id="S4.T2.20.20.25.3.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.15.1" class="ltx_text ltx_font_bold">1.20</span></td>
+<td id="S4.T2.20.20.25.3.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.16.1" class="ltx_text ltx_font_bold">94.61</span></td>
+<td id="S4.T2.20.20.25.3.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.17.1" class="ltx_text ltx_font_bold">1.97</span></td>
+<td id="S4.T2.20.20.25.3.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.18.1" class="ltx_text ltx_framed ltx_framed_underline">89.94</span></td>
+<td id="S4.T2.20.20.25.3.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.19.1" class="ltx_text ltx_framed ltx_framed_underline">3.01</span></td>
+<td id="S4.T2.20.20.25.3.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.20.1" class="ltx_text ltx_framed ltx_framed_underline">92.67</span></td>
+<td id="S4.T2.20.20.25.3.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.25.3.21.1" class="ltx_text ltx_framed ltx_framed_underline">3.01</span></td>
+</tr>
+<tr id="S4.T2.20.20.26.4" class="ltx_tr">
+<th id="S4.T2.20.20.26.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">MedSAM2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="Medsam2: segment anything in 3d medical images and videos" class="ltx_ref">19</a>]</cite>
+</th>
+<td id="S4.T2.20.20.26.4.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">85.42</td>
+<td id="S4.T2.20.20.26.4.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">23.05</td>
+<td id="S4.T2.20.20.26.4.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">87.49</td>
+<td id="S4.T2.20.20.26.4.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">18.90</td>
+<td id="S4.T2.20.20.26.4.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">77.45</td>
+<td id="S4.T2.20.20.26.4.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">37.08</td>
+<td id="S4.T2.20.20.26.4.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">88.65</td>
+<td id="S4.T2.20.20.26.4.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">15.62</td>
+<td id="S4.T2.20.20.26.4.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.26.4.10.1" class="ltx_text ltx_framed ltx_framed_underline">87.89</span></td>
+<td id="S4.T2.20.20.26.4.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">6.27</td>
+<td id="S4.T2.20.20.26.4.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.26.4.12.1" class="ltx_text ltx_framed ltx_framed_underline">88.03</span></td>
+<td id="S4.T2.20.20.26.4.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.26.4.13.1" class="ltx_text ltx_framed ltx_framed_underline">1.37</span></td>
+<td id="S4.T2.20.20.26.4.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">92.05</td>
+<td id="S4.T2.20.20.26.4.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.13</td>
+<td id="S4.T2.20.20.26.4.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.26.4.16.1" class="ltx_text ltx_framed ltx_framed_underline">93.62</span></td>
+<td id="S4.T2.20.20.26.4.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.26.4.17.1" class="ltx_text ltx_framed ltx_framed_underline">2.34</span></td>
+<td id="S4.T2.20.20.26.4.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">87.75</td>
+<td id="S4.T2.20.20.26.4.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.05</td>
+<td id="S4.T2.20.20.26.4.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">90.39</td>
+<td id="S4.T2.20.20.26.4.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.59</td>
+</tr>
+<tr id="S4.T2.20.20.27.5" class="ltx_tr">
+<th id="S4.T2.20.20.27.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.1.1" class="ltx_text ltx_font_bold">Ours - Static Memory</span></th>
+<td id="S4.T2.20.20.27.5.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.2.1" class="ltx_text ltx_font_bold">92.99</span></td>
+<td id="S4.T2.20.20.27.5.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.3.1" class="ltx_text ltx_framed ltx_framed_underline">3.76</span></td>
+<td id="S4.T2.20.20.27.5.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.4.1" class="ltx_text ltx_font_bold">94.10</span></td>
+<td id="S4.T2.20.20.27.5.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.5.1" class="ltx_text ltx_framed ltx_framed_underline">2.32</span></td>
+<td id="S4.T2.20.20.27.5.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.6.1" class="ltx_text ltx_framed ltx_framed_underline">88.59</span></td>
+<td id="S4.T2.20.20.27.5.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.7.1" class="ltx_text ltx_font_bold">1.95</span></td>
+<td id="S4.T2.20.20.27.5.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.8.1" class="ltx_text ltx_framed ltx_framed_underline">90.21</span></td>
+<td id="S4.T2.20.20.27.5.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.9.1" class="ltx_text ltx_framed ltx_framed_underline">3.40</span></td>
+<td id="S4.T2.20.20.27.5.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">85.26</td>
+<td id="S4.T2.20.20.27.5.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.27.5.11.1" class="ltx_text ltx_framed ltx_framed_underline">2.83</span></td>
+<td id="S4.T2.20.20.27.5.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">84.74</td>
+<td id="S4.T2.20.20.27.5.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">1.78</td>
+<td id="S4.T2.20.20.27.5.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">91.75</td>
+<td id="S4.T2.20.20.27.5.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">2.00</td>
+<td id="S4.T2.20.20.27.5.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">92.66</td>
+<td id="S4.T2.20.20.27.5.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">3.05</td>
+<td id="S4.T2.20.20.27.5.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">85.75</td>
+<td id="S4.T2.20.20.27.5.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.96</td>
+<td id="S4.T2.20.20.27.5.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">90.12</td>
+<td id="S4.T2.20.20.27.5.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.27</td>
+</tr>
+<tr id="S4.T2.20.20.28.6" class="ltx_tr">
+<th id="S4.T2.20.20.28.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.1.1" class="ltx_text ltx_font_bold">Ours - Static Memory - FL</span></th>
+<td id="S4.T2.20.20.28.6.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.2.1" class="ltx_text ltx_framed ltx_framed_underline">92.08</span></td>
+<td id="S4.T2.20.20.28.6.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.3.1" class="ltx_text ltx_font_bold">3.20</span></td>
+<td id="S4.T2.20.20.28.6.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.4.1" class="ltx_text ltx_framed ltx_framed_underline">93.14</span></td>
+<td id="S4.T2.20.20.28.6.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.5.1" class="ltx_text ltx_font_bold">1.25</span></td>
+<td id="S4.T2.20.20.28.6.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.6.1" class="ltx_text ltx_font_bold">90.27</span></td>
+<td id="S4.T2.20.20.28.6.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.7.1" class="ltx_text ltx_framed ltx_framed_underline">2.60</span></td>
+<td id="S4.T2.20.20.28.6.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.8.1" class="ltx_text ltx_font_bold">91.71</span></td>
+<td id="S4.T2.20.20.28.6.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.9.1" class="ltx_text ltx_font_bold">2.93</span></td>
+<td id="S4.T2.20.20.28.6.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">79.54</td>
+<td id="S4.T2.20.20.28.6.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">2.98</td>
+<td id="S4.T2.20.20.28.6.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">83.03</td>
+<td id="S4.T2.20.20.28.6.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">1.70</td>
+<td id="S4.T2.20.20.28.6.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">91.39</td>
+<td id="S4.T2.20.20.28.6.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.28.6.15.1" class="ltx_text ltx_framed ltx_framed_underline">1.60</span></td>
+<td id="S4.T2.20.20.28.6.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">92.34</td>
+<td id="S4.T2.20.20.28.6.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">3.14</td>
+<td id="S4.T2.20.20.28.6.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">85.43</td>
+<td id="S4.T2.20.20.28.6.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.97</td>
+<td id="S4.T2.20.20.28.6.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">89.67</td>
+<td id="S4.T2.20.20.28.6.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.88</td>
+</tr>
+<tr id="S4.T2.20.20.29.7" class="ltx_tr">
+<th id="S4.T2.20.20.29.7.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" style="padding:0.75pt 3.5pt;" rowspan="5"><span id="S4.T2.20.20.29.7.1.1" class="ltx_text">30%</span></th>
+<th id="S4.T2.20.20.29.7.2" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding:0.75pt 3.5pt;">UNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="U-net: convolutional networks for biomedical image segmentation" class="ltx_ref">23</a>]</cite>
+</th>
+<td id="S4.T2.20.20.29.7.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">58.33</td>
+<td id="S4.T2.20.20.29.7.4" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">58.94</td>
+<td id="S4.T2.20.20.29.7.5" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">61.06</td>
+<td id="S4.T2.20.20.29.7.6" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">100.93</td>
+<td id="S4.T2.20.20.29.7.7" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">53.10</td>
+<td id="S4.T2.20.20.29.7.8" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">59.73</td>
+<td id="S4.T2.20.20.29.7.9" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">74.10</td>
+<td id="S4.T2.20.20.29.7.10" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">26.05</td>
+<td id="S4.T2.20.20.29.7.11" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">75.80</td>
+<td id="S4.T2.20.20.29.7.12" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">15.21</td>
+<td id="S4.T2.20.20.29.7.13" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">82.33</td>
+<td id="S4.T2.20.20.29.7.14" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">4.97</td>
+<td id="S4.T2.20.20.29.7.15" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">89.63</td>
+<td id="S4.T2.20.20.29.7.16" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">9.33</td>
+<td id="S4.T2.20.20.29.7.17" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">92.49</td>
+<td id="S4.T2.20.20.29.7.18" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">4.03</td>
+<td id="S4.T2.20.20.29.7.19" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">85.57</td>
+<td id="S4.T2.20.20.29.7.20" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">6.34</td>
+<td id="S4.T2.20.20.29.7.21" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">88.98</td>
+<td id="S4.T2.20.20.29.7.22" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">6.43</td>
+</tr>
+<tr id="S4.T2.20.20.30.8" class="ltx_tr">
+<th id="S4.T2.20.20.30.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">SwinUNETR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="Swin unetr: swin transformers for semantic segmentation of brain tumors in mri images" class="ltx_ref">9</a>]</cite>
+</th>
+<td id="S4.T2.20.20.30.8.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">44.62</td>
+<td id="S4.T2.20.20.30.8.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">129.70</td>
+<td id="S4.T2.20.20.30.8.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">56.90</td>
+<td id="S4.T2.20.20.30.8.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">138.12</td>
+<td id="S4.T2.20.20.30.8.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">35.50</td>
+<td id="S4.T2.20.20.30.8.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">139.67</td>
+<td id="S4.T2.20.20.30.8.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">65.13</td>
+<td id="S4.T2.20.20.30.8.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">59.24</td>
+<td id="S4.T2.20.20.30.8.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">49.53</td>
+<td id="S4.T2.20.20.30.8.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">71.14</td>
+<td id="S4.T2.20.20.30.8.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">54.90</td>
+<td id="S4.T2.20.20.30.8.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">70.96</td>
+<td id="S4.T2.20.20.30.8.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">69.17</td>
+<td id="S4.T2.20.20.30.8.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">83.78</td>
+<td id="S4.T2.20.20.30.8.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">92.08</td>
+<td id="S4.T2.20.20.30.8.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.23</td>
+<td id="S4.T2.20.20.30.8.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">85.11</td>
+<td id="S4.T2.20.20.30.8.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">6.23</td>
+<td id="S4.T2.20.20.30.8.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.30.8.20.1" class="ltx_text ltx_framed ltx_framed_underline">89.38</span></td>
+<td id="S4.T2.20.20.30.8.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">6.01</td>
+</tr>
+<tr id="S4.T2.20.20.31.9" class="ltx_tr">
+<th id="S4.T2.20.20.31.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">nnUNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="NnU-net: a self-configuring method for deep learning-based biomedical image segmentation" class="ltx_ref">10</a>]</cite>
+</th>
+<td id="S4.T2.20.20.31.9.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.2.1" class="ltx_text ltx_font_bold">87.69</span></td>
+<td id="S4.T2.20.20.31.9.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.3.1" class="ltx_text ltx_framed ltx_framed_underline">7.58</span></td>
+<td id="S4.T2.20.20.31.9.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.4.1" class="ltx_text ltx_framed ltx_framed_underline">86.20</span></td>
+<td id="S4.T2.20.20.31.9.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">
+<span id="S4.T2.20.20.31.9.5.1" class="ltx_text ltx_framed ltx_framed_underline"></span>5.72</td>
+<td id="S4.T2.20.20.31.9.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.6.1" class="ltx_text ltx_font_bold">81.50</span></td>
+<td id="S4.T2.20.20.31.9.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.7.1" class="ltx_text ltx_framed ltx_framed_underline">17.23</span></td>
+<td id="S4.T2.20.20.31.9.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.8.1" class="ltx_text ltx_font_bold">87.41</span></td>
+<td id="S4.T2.20.20.31.9.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.9.1" class="ltx_text ltx_font_bold">5.59</span></td>
+<td id="S4.T2.20.20.31.9.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.10.1" class="ltx_text ltx_font_bold">87.75</span></td>
+<td id="S4.T2.20.20.31.9.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.11.1" class="ltx_text ltx_font_bold">2.87</span></td>
+<td id="S4.T2.20.20.31.9.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.12.1" class="ltx_text ltx_font_bold">87.32</span></td>
+<td id="S4.T2.20.20.31.9.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">2.80</td>
+<td id="S4.T2.20.20.31.9.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.14.1" class="ltx_text ltx_font_bold">93.37</span></td>
+<td id="S4.T2.20.20.31.9.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.15.1" class="ltx_text ltx_font_bold">1.60</span></td>
+<td id="S4.T2.20.20.31.9.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.16.1" class="ltx_text ltx_font_bold">93.64</span></td>
+<td id="S4.T2.20.20.31.9.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.17.1" class="ltx_text ltx_font_bold">2.52</span></td>
+<td id="S4.T2.20.20.31.9.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.18.1" class="ltx_text ltx_font_bold">87.80</span></td>
+<td id="S4.T2.20.20.31.9.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.19.1" class="ltx_text ltx_font_bold">3.99</span></td>
+<td id="S4.T2.20.20.31.9.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.20.1" class="ltx_text ltx_font_bold">91.61</span></td>
+<td id="S4.T2.20.20.31.9.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.31.9.21.1" class="ltx_text ltx_font_bold">3.96</span></td>
+</tr>
+<tr id="S4.T2.20.20.32.10" class="ltx_tr">
+<th id="S4.T2.20.20.32.10.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">MedSAM2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="Medsam2: segment anything in 3d medical images and videos" class="ltx_ref">19</a>]</cite>
+</th>
+<td id="S4.T2.20.20.32.10.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">44.30</td>
+<td id="S4.T2.20.20.32.10.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">103.71</td>
+<td id="S4.T2.20.20.32.10.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">78.16</td>
+<td id="S4.T2.20.20.32.10.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">42.02</td>
+<td id="S4.T2.20.20.32.10.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.6.1" class="ltx_text ltx_framed ltx_framed_underline">69.15</span></td>
+<td id="S4.T2.20.20.32.10.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">51.21</td>
+<td id="S4.T2.20.20.32.10.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">82.73</td>
+<td id="S4.T2.20.20.32.10.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">28.37</td>
+<td id="S4.T2.20.20.32.10.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.10.1" class="ltx_text ltx_framed ltx_framed_underline">83.06</span></td>
+<td id="S4.T2.20.20.32.10.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">11.48</td>
+<td id="S4.T2.20.20.32.10.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.12.1" class="ltx_text ltx_framed ltx_framed_underline">86.17</span></td>
+<td id="S4.T2.20.20.32.10.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.13.1" class="ltx_text ltx_font_bold">1.98</span></td>
+<td id="S4.T2.20.20.32.10.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.14.1" class="ltx_text ltx_framed ltx_framed_underline">91.78</span></td>
+<td id="S4.T2.20.20.32.10.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">4.12</td>
+<td id="S4.T2.20.20.32.10.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.16.1" class="ltx_text ltx_framed ltx_framed_underline">92.86</span></td>
+<td id="S4.T2.20.20.32.10.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.17.1" class="ltx_text ltx_framed ltx_framed_underline">3.01</span></td>
+<td id="S4.T2.20.20.32.10.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.18.1" class="ltx_text ltx_framed ltx_framed_underline">86.29</span></td>
+<td id="S4.T2.20.20.32.10.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.19.1" class="ltx_text ltx_framed ltx_framed_underline">5.32</span></td>
+<td id="S4.T2.20.20.32.10.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">89.15</td>
+<td id="S4.T2.20.20.32.10.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.32.10.21.1" class="ltx_text ltx_framed ltx_framed_underline">4.48</span></td>
+</tr>
+<tr id="S4.T2.20.20.33.11" class="ltx_tr">
+<th id="S4.T2.20.20.33.11.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.1.1" class="ltx_text ltx_font_bold">Ours - Static Memory</span></th>
+<td id="S4.T2.20.20.33.11.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.2.1" class="ltx_text ltx_framed ltx_framed_underline">84.32</span></td>
+<td id="S4.T2.20.20.33.11.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.3.1" class="ltx_text ltx_font_bold">5.32</span></td>
+<td id="S4.T2.20.20.33.11.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.4.1" class="ltx_text ltx_font_bold">86.63</span></td>
+<td id="S4.T2.20.20.33.11.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.5.1" class="ltx_text ltx_font_bold">2.74</span></td>
+<td id="S4.T2.20.20.33.11.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">65.78</td>
+<td id="S4.T2.20.20.33.11.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.7.1" class="ltx_text ltx_font_bold">6.56</span></td>
+<td id="S4.T2.20.20.33.11.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.8.1" class="ltx_text ltx_framed ltx_framed_underline">84.55</span></td>
+<td id="S4.T2.20.20.33.11.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.9.1" class="ltx_text ltx_framed ltx_framed_underline">8.37</span></td>
+<td id="S4.T2.20.20.33.11.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">78.60</td>
+<td id="S4.T2.20.20.33.11.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.11.1" class="ltx_text ltx_framed ltx_framed_underline">3.27</span></td>
+<td id="S4.T2.20.20.33.11.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">81.79</td>
+<td id="S4.T2.20.20.33.11.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.13.1" class="ltx_text ltx_framed ltx_framed_underline">2.35</span></td>
+<td id="S4.T2.20.20.33.11.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">90.70</td>
+<td id="S4.T2.20.20.33.11.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.33.11.15.1" class="ltx_text ltx_framed ltx_framed_underline">2.35</span></td>
+<td id="S4.T2.20.20.33.11.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">91.63</td>
+<td id="S4.T2.20.20.33.11.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">3.85</td>
+<td id="S4.T2.20.20.33.11.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">83.65</td>
+<td id="S4.T2.20.20.33.11.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">6.33</td>
+<td id="S4.T2.20.20.33.11.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">87.39</td>
+<td id="S4.T2.20.20.33.11.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">6.03</td>
+</tr>
+<tr id="S4.T2.20.20.34.12" class="ltx_tr">
+<th id="S4.T2.20.20.34.12.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb ltx_border_t" style="padding:0.75pt 3.5pt;" rowspan="5"><span id="S4.T2.20.20.34.12.1.1" class="ltx_text">10%</span></th>
+<th id="S4.T2.20.20.34.12.2" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding:0.75pt 3.5pt;">UNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="U-net: convolutional networks for biomedical image segmentation" class="ltx_ref">23</a>]</cite>
+</th>
+<td id="S4.T2.20.20.34.12.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">47.59</td>
+<td id="S4.T2.20.20.34.12.4" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">88.74</td>
+<td id="S4.T2.20.20.34.12.5" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">50.74</td>
+<td id="S4.T2.20.20.34.12.6" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">102.75</td>
+<td id="S4.T2.20.20.34.12.7" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">21.30</td>
+<td id="S4.T2.20.20.34.12.8" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">107.76</td>
+<td id="S4.T2.20.20.34.12.9" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">37.83</td>
+<td id="S4.T2.20.20.34.12.10" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">63.64</td>
+<td id="S4.T2.20.20.34.12.11" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">43.20</td>
+<td id="S4.T2.20.20.34.12.12" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">74.20</td>
+<td id="S4.T2.20.20.34.12.13" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">64.59</td>
+<td id="S4.T2.20.20.34.12.14" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">35.93</td>
+<td id="S4.T2.20.20.34.12.15" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">74.51</td>
+<td id="S4.T2.20.20.34.12.16" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">39.44</td>
+<td id="S4.T2.20.20.34.12.17" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">90.87</td>
+<td id="S4.T2.20.20.34.12.18" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">6.40</td>
+<td id="S4.T2.20.20.34.12.19" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">83.02</td>
+<td id="S4.T2.20.20.34.12.20" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">8.86</td>
+<td id="S4.T2.20.20.34.12.21" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">85.98</td>
+<td id="S4.T2.20.20.34.12.22" class="ltx_td ltx_align_center ltx_border_t" style="padding:0.75pt 3.5pt;">11.78</td>
+</tr>
+<tr id="S4.T2.20.20.35.13" class="ltx_tr">
+<th id="S4.T2.20.20.35.13.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">SwinUNETR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="Swin unetr: swin transformers for semantic segmentation of brain tumors in mri images" class="ltx_ref">9</a>]</cite>
+</th>
+<td id="S4.T2.20.20.35.13.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">33.07</td>
+<td id="S4.T2.20.20.35.13.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">145.09</td>
+<td id="S4.T2.20.20.35.13.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">31.54</td>
+<td id="S4.T2.20.20.35.13.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">157.03</td>
+<td id="S4.T2.20.20.35.13.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">12.15</td>
+<td id="S4.T2.20.20.35.13.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">134.64</td>
+<td id="S4.T2.20.20.35.13.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">38.79</td>
+<td id="S4.T2.20.20.35.13.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">69.20</td>
+<td id="S4.T2.20.20.35.13.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">50.04</td>
+<td id="S4.T2.20.20.35.13.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">75.02</td>
+<td id="S4.T2.20.20.35.13.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">55.01</td>
+<td id="S4.T2.20.20.35.13.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">73.91</td>
+<td id="S4.T2.20.20.35.13.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">70.40</td>
+<td id="S4.T2.20.20.35.13.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">82.64</td>
+<td id="S4.T2.20.20.35.13.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">90.51</td>
+<td id="S4.T2.20.20.35.13.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">6.25</td>
+<td id="S4.T2.20.20.35.13.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">81.93</td>
+<td id="S4.T2.20.20.35.13.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">9.55</td>
+<td id="S4.T2.20.20.35.13.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">86.73</td>
+<td id="S4.T2.20.20.35.13.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">9.89</td>
+</tr>
+<tr id="S4.T2.20.20.36.14" class="ltx_tr">
+<th id="S4.T2.20.20.36.14.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">nnUNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="NnU-net: a self-configuring method for deep learning-based biomedical image segmentation" class="ltx_ref">10</a>]</cite>
+</th>
+<td id="S4.T2.20.20.36.14.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.2.1" class="ltx_text ltx_font_bold">76.83</span></td>
+<td id="S4.T2.20.20.36.14.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.3.1" class="ltx_text ltx_framed ltx_framed_underline">32.82</span></td>
+<td id="S4.T2.20.20.36.14.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.4.1" class="ltx_text ltx_framed ltx_framed_underline">78.19</span></td>
+<td id="S4.T2.20.20.36.14.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.5.1" class="ltx_text ltx_framed ltx_framed_underline">36.02</span></td>
+<td id="S4.T2.20.20.36.14.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.6.1" class="ltx_text ltx_font_bold">68.35</span></td>
+<td id="S4.T2.20.20.36.14.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.7.1" class="ltx_text ltx_framed ltx_framed_underline">48.09</span></td>
+<td id="S4.T2.20.20.36.14.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.8.1" class="ltx_text ltx_font_bold">84.20</span></td>
+<td id="S4.T2.20.20.36.14.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.9.1" class="ltx_text ltx_framed ltx_framed_underline">28.09</span></td>
+<td id="S4.T2.20.20.36.14.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.10.1" class="ltx_text ltx_font_bold">81.72</span></td>
+<td id="S4.T2.20.20.36.14.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.11.1" class="ltx_text ltx_framed ltx_framed_underline">6.64</span></td>
+<td id="S4.T2.20.20.36.14.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.12.1" class="ltx_text ltx_font_bold">83.41</span></td>
+<td id="S4.T2.20.20.36.14.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.13.1" class="ltx_text ltx_font_bold">2.60</span></td>
+<td id="S4.T2.20.20.36.14.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.14.1" class="ltx_text ltx_font_bold">90.19</span></td>
+<td id="S4.T2.20.20.36.14.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.15.1" class="ltx_text ltx_font_bold">3.75</span></td>
+<td id="S4.T2.20.20.36.14.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.16.1" class="ltx_text ltx_font_bold">92.88</span></td>
+<td id="S4.T2.20.20.36.14.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.17.1" class="ltx_text ltx_font_bold">3.25</span></td>
+<td id="S4.T2.20.20.36.14.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.18.1" class="ltx_text ltx_font_bold">86.23</span></td>
+<td id="S4.T2.20.20.36.14.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.19.1" class="ltx_text ltx_font_bold">4.93</span></td>
+<td id="S4.T2.20.20.36.14.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.20.1" class="ltx_text ltx_font_bold">90.45</span></td>
+<td id="S4.T2.20.20.36.14.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.36.14.21.1" class="ltx_text ltx_font_bold">5.30</span></td>
+</tr>
+<tr id="S4.T2.20.20.37.15" class="ltx_tr">
+<th id="S4.T2.20.20.37.15.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:0.75pt 3.5pt;">MedSAM2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="Medsam2: segment anything in 3d medical images and videos" class="ltx_ref">19</a>]</cite>
+</th>
+<td id="S4.T2.20.20.37.15.2" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">58.96</td>
+<td id="S4.T2.20.20.37.15.3" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">76.46</td>
+<td id="S4.T2.20.20.37.15.4" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">70.25</td>
+<td id="S4.T2.20.20.37.15.5" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">59.99</td>
+<td id="S4.T2.20.20.37.15.6" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.6.1" class="ltx_text ltx_framed ltx_framed_underline">62.21</span></td>
+<td id="S4.T2.20.20.37.15.7" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">81.03</td>
+<td id="S4.T2.20.20.37.15.8" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.8.1" class="ltx_text ltx_framed ltx_framed_underline">78.53</span></td>
+<td id="S4.T2.20.20.37.15.9" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">38.85</td>
+<td id="S4.T2.20.20.37.15.10" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.10.1" class="ltx_text ltx_framed ltx_framed_underline">79.81</span></td>
+<td id="S4.T2.20.20.37.15.11" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">13.54</td>
+<td id="S4.T2.20.20.37.15.12" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.12.1" class="ltx_text ltx_framed ltx_framed_underline">81.61</span></td>
+<td id="S4.T2.20.20.37.15.13" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.13.1" class="ltx_text ltx_framed ltx_framed_underline">3.41</span></td>
+<td id="S4.T2.20.20.37.15.14" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.14.1" class="ltx_text ltx_framed ltx_framed_underline">88.76</span></td>
+<td id="S4.T2.20.20.37.15.15" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">6.24</td>
+<td id="S4.T2.20.20.37.15.16" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.16.1" class="ltx_text ltx_framed ltx_framed_underline">91.85</span></td>
+<td id="S4.T2.20.20.37.15.17" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.17.1" class="ltx_text ltx_framed ltx_framed_underline">4.12</span></td>
+<td id="S4.T2.20.20.37.15.18" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.18.1" class="ltx_text ltx_framed ltx_framed_underline">83.46</span></td>
+<td id="S4.T2.20.20.37.15.19" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">8.75</td>
+<td id="S4.T2.20.20.37.15.20" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.37.15.20.1" class="ltx_text ltx_framed ltx_framed_underline">87.57</span></td>
+<td id="S4.T2.20.20.37.15.21" class="ltx_td ltx_align_center" style="padding:0.75pt 3.5pt;">7.23</td>
+</tr>
+<tr id="S4.T2.20.20.38.16" class="ltx_tr">
+<th id="S4.T2.20.20.38.16.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.1.1" class="ltx_text ltx_font_bold">Ours - Static Memory</span></th>
+<td id="S4.T2.20.20.38.16.2" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.2.1" class="ltx_text ltx_framed ltx_framed_underline">66.29</span></td>
+<td id="S4.T2.20.20.38.16.3" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.3.1" class="ltx_text ltx_font_bold">10.69</span></td>
+<td id="S4.T2.20.20.38.16.4" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.4.1" class="ltx_text ltx_font_bold">80.10</span></td>
+<td id="S4.T2.20.20.38.16.5" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.5.1" class="ltx_text ltx_font_bold">5.21</span></td>
+<td id="S4.T2.20.20.38.16.6" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">56.18</td>
+<td id="S4.T2.20.20.38.16.7" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.7.1" class="ltx_text ltx_font_bold">11.17</span></td>
+<td id="S4.T2.20.20.38.16.8" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">65.34</td>
+<td id="S4.T2.20.20.38.16.9" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.9.1" class="ltx_text ltx_font_bold">15.05</span></td>
+<td id="S4.T2.20.20.38.16.10" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">72.71</td>
+<td id="S4.T2.20.20.38.16.11" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.11.1" class="ltx_text ltx_font_bold">6.30</span></td>
+<td id="S4.T2.20.20.38.16.12" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">78.00</td>
+<td id="S4.T2.20.20.38.16.13" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">3.72</td>
+<td id="S4.T2.20.20.38.16.14" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">87.92</td>
+<td id="S4.T2.20.20.38.16.15" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.15.1" class="ltx_text ltx_framed ltx_framed_underline">5.50</span></td>
+<td id="S4.T2.20.20.38.16.16" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">90.38</td>
+<td id="S4.T2.20.20.38.16.17" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">4.81</td>
+<td id="S4.T2.20.20.38.16.18" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">81.30</td>
+<td id="S4.T2.20.20.38.16.19" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.19.1" class="ltx_text ltx_framed ltx_framed_underline">8.24</span></td>
+<td id="S4.T2.20.20.38.16.20" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;">85.99</td>
+<td id="S4.T2.20.20.38.16.21" class="ltx_td ltx_align_center ltx_border_bb" style="padding:0.75pt 3.5pt;"><span id="S4.T2.20.20.38.16.21.1" class="ltx_text ltx_framed ltx_framed_underline">7.00</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<figure id="S4.F2" class="ltx_figure"><img src="2603.05873v1/x2.png" id="S4.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="660" height="215" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>
+Qualitative segmentation results on CHAOS, ACDC, and CAMUS under 100% and 30% supervision.
+Average Dice scores are shown below each prediction. </figcaption>
+</figure>
+<figure id="S4.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F5.3" class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_center ltx_align_top" style="width:138.8pt;"><img src="2603.05873v1/x3.png" id="S4.F5.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="830" height="525" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Test-time Dice progression under cross-domain evaluation (CHAOS<math id="S4.F5.3.2.m1" class="ltx_Math" alttext="\rightarrow" display="inline" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math>ACDC).</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F5.4" class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_center ltx_align_top" style="width:138.8pt;"><img src="2603.05873v1/x4.png" id="S4.F5.4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="830" height="581" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Ablation study on static and adaptive memory components</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F5.7" class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_center ltx_align_top" style="width:138.8pt;"><img src="2603.05873v1/x5.png" id="S4.F5.5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="831" height="524" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Effect of working memory size (Top-<math id="S4.F5.7.2.m1" class="ltx_Math" alttext="k" display="inline" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> retrieval).</figcaption>
+</figure>
+</div>
+</div>
+</figure>
+<div id="S4.SS4.p3" class="ltx_para">
+<p id="S4.SS4.p3.1" class="ltx_p">To further evaluate the test-time adaptation capability of our framework, we visualize the cross-domain inference process when static memory trained on CHAOS is directly applied to ACDC. As shown in Fig. <a href="#S4.F5" title="Figure 5 ‣ 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, static memory alone leads to severely degraded performance under distribution shift, whereas enabling the Agent-driven test-time working memory progressively improves segmentation accuracy during inference. This indicates that working memory can dynamically absorb domain-specific information from test samples and compensate for cross-domain discrepancies without updating backbone parameters.</p>
+</div>
+</section>
+<section id="S4.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span>Ablation Study</h3>
+
+<div id="S4.SS5.p1" class="ltx_para">
+<p id="S4.SS5.p1.3" class="ltx_p">We conduct ablation experiments to evaluate the contributions of static and test-time working memory in our framework. As shown in Fig. <a href="#S4.F5" title="Figure 5 ‣ 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, removing either static or test-time working memory leads to performance degradation across all datasets, with a significantly larger drop observed when only working memory is retained, highlighting the necessity of supervised static priors. We further analyze the effect of test-time working memory size by varying the number of retrieved samples <math id="S4.SS5.p1.1.m1" class="ltx_Math" alttext="k" display="inline" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>. As shown in Fig. <a href="#S4.F5" title="Figure 5 ‣ 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, when static memory is well-aligned with the target distribution (in-domain), performance peaks at small <math id="S4.SS5.p1.2.m2" class="ltx_Math" alttext="k" display="inline" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> and gradually degrades with larger memory sizes due to redundant aggregation. In contrast, under cross-domain settings, increasing <math id="S4.SS5.p1.3.m3" class="ltx_Math" alttext="k" display="inline" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> consistently improves performance, suggesting that larger working memory capacity facilitates progressive domain adaptation by absorbing target-specific representations.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">We propose MemSeg-Agent, a SAM2-based segmentation agent that shifts adaptation from weights to lightweight memories, unifying few-shot, federated learning, and test-time adaptation without finetuning. It improves cross-domain robustness and reduces FL communication by updating compact memory units instead of model parameters, enabling scalable deployment under domain shift and privacy constraints.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul id="bib.L1" class="ltx_biblist">
+<li id="bib.bib42" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Awais, M. Naseer, S. Khan, R. M. Anwer, H. Cholakkal, M. Shah, M. Yang, and F. S. Khan</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Foundational models defining a new era in vision: a survey and outlook</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2307.13721</span>,
+<a href="https://arxiv.org/abs/2307.13721" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p2.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib1" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. Azad, E. K. Aghdam, A. Rauland, Y. Jia, A. H. Avval, A. Bozorgpour, S. Karimijafarbigloo, J. P. Cohen, E. Adeli, and D. Merhof</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Medical image segmentation review: the success of u-net</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Pattern Analysis and Machine Intelligence</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib45" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Behrouz, P. Zhong, and V. Mirrokni</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Titans: learning to memorize at test time</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2501.00663</span>,
+<a href="https://arxiv.org/abs/2501.00663" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p3.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib51" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">O. Bernard, A. Lalande, C. Zotti, F. Cervenansky, X. Yang, P. Heng, I. Cetin, K. Lekadir, O. Camara, M. A. G. Ballester, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep learning techniques for automatic mri cardiac multi-structures segmentation and diagnosis: is the problem solved?</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE transactions on medical imaging</span> <span class="ltx_text ltx_bib_volume">37</span> (<span class="ltx_text ltx_bib_number">11</span>), <span class="ltx_text ltx_bib_pages"> pp. 2514–2525</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S4.SS1.p1.2" title="4.1 Datasets and Preprocessing ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.1</span></a>,
+<a href="#S4.T2.20.20.21.1.4" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Chen <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">TransUNet: transformers make strong encoders for medical image segmentation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">MICCAI</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib47" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Chen, Y. Huang, Y. Liu, S. Zhang, J. He, T. Wu, G. Qi, and T. Wu</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">K-decore: facilitating knowledge transfer in continual structured knowledge reasoning via knowledge decoupling</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2509.16929</span>,
+<a href="https://arxiv.org/abs/2509.16929" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p3.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Dosovitskiy <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An image is worth 16x16 words: transformers for image recognition at scale</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ICLR</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Fallahpour, J. Ma, A. Munim, H. Lyu, and B. Wang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Medrax: medical reasoning agent for chest x-ray</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2502.02673</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p2.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Hatamizadeh, V. Nath, Y. Tang, D. Yang, H. Roth, and D. Xu</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Swin unetr: swin transformers for semantic segmentation of brain tumors in mri images</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2201.01266</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S4.SS2.p1.2" title="4.2 Implementation Details ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.2</span></a>,
+<a href="#S4.T1.1.1.1.1.3" title="In 4.3 Cross-Domain Generalization ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a href="#S4.T2.20.20.24.2.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.30.8.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.35.13.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">F. Isensee, P. F. Jaeger, S. A. A. Kohl, J. Petersen, and K. H. Maier-Hein</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">NnU-net: a self-configuring method for deep learning-based biomedical image segmentation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature Methods</span> <span class="ltx_text ltx_bib_volume">18</span>, <span class="ltx_text ltx_bib_pages"> pp. 203–211</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a href="https://dx.doi.org/10.1038/s41592-020-01008-z" title="" class="ltx_ref doi ltx_bib_external">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S4.SS2.p1.2" title="4.2 Implementation Details ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.2</span></a>,
+<a href="#S4.T1.1.1.1.1.2" title="In 4.3 Cross-Domain Generalization ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a href="#S4.T2.20.20.25.3.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.31.9.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.36.14.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Jia, S. Bit, V. H. Jasodanand, Y. Liu, and V. B. Kolachalama</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Agentic memory-augmented retrieval and evidence grounding for medical question-answering tasks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">International Journal of Medical Informatics</span>, <span class="ltx_text ltx_bib_pages"> pp. 106339</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p2.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib50" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. E. Kavur, N. S. Gezer, M. Barış, S. Aslan, P. Conze, V. Groza, D. D. Pham, S. Chatterjee, P. Ernst, S. Özkan, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">CHAOS challenge-combined (ct-mr) healthy abdominal organ segmentation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Medical image analysis</span> <span class="ltx_text ltx_bib_volume">69</span>, <span class="ltx_text ltx_bib_pages"> pp. 101950</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S4.SS1.p1.2" title="4.1 Datasets and Preprocessing ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem ltx_bib_dataset">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S4.T2.20.20.21.1.3" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Kirillov <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Segment anything</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proceedings of the IEEE/CVF International Conference on Computer Vision</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p1.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Leclerc, E. Smistad, J. Pedrosa, A. Østvik, F. Cervenansky, F. Espinosa, T. Espeland, E. A. R. Berg, P. Jodoin, T. Grenier, C. Lartizien, J. D’hooge, L. Lovstakken, and O. Bernard</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep learning for segmentation using an open large-scale dataset in 2d echocardiography</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Medical Imaging</span> <span class="ltx_text ltx_bib_volume">38</span> (<span class="ltx_text ltx_bib_number">9</span>), <span class="ltx_text ltx_bib_pages"> pp. 2198–2210</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a href="https://dx.doi.org/10.1109/TMI.2019.2900516" title="" class="ltx_ref doi ltx_bib_external">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S4.T1" title="In 4.3 Cross-Domain Generalization ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a href="#S4.T2.20.20.21.1.5" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li id="bib.bib52" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Leclerc, E. Smistad, J. Pedrosa, A. Østvik, F. Cervenansky, F. Espinosa, T. Espeland, E. A. R. Berg, P. Jodoin, T. Grenier, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep learning for segmentation using an open large-scale dataset in 2d echocardiography</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE transactions on medical imaging</span> <span class="ltx_text ltx_bib_volume">38</span> (<span class="ltx_text ltx_bib_number">9</span>), <span class="ltx_text ltx_bib_pages"> pp. 2198–2210</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S4.SS1.p1.2" title="4.1 Datasets and Preprocessing ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Litjens <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A survey on deep learning in medical image analysis</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Medical Image Analysis</span> <span class="ltx_text ltx_bib_volume">42</span>, <span class="ltx_text ltx_bib_pages"> pp. 60–88</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Ma, Y. He, F. Li, L. Han, C. You, and B. Wang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Segment anything in medical images</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature communications</span> <span class="ltx_text ltx_bib_volume">15</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 654</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p1.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Ma, Z. Yang, S. Kim, B. Chen, M. Baharoon, A. Fallahpour, R. Asakereh, H. Lyu, and B. Wang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Medsam2: segment anything in 3d medical images and videos</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2504.03600</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p1.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a href="#S4.SS2.p1.2" title="4.2 Implementation Details ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.2</span></a>,
+<a href="#S4.T1.1.1.1.1.5" title="In 4.3 Cross-Domain Generalization ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a href="#S4.T2.20.20.26.4.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.32.10.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.37.15.1" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Oquab, T. Darcet, T. Moutakanni, H. Vo, M. Szafraniec, V. Khalidov, P. Fernandez, D. Haziza, F. Massa, A. El-Nouby, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dinov2: learning robust visual features without supervision</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2304.07193</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p2.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S2.p1.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Ovadia <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Can you trust your model’s uncertainty? evaluating predictive uncertainty under dataset shift</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">NeurIPS</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Ravi, V. Gabeur, Y. Hu, R. Hu, C. Ryali, T. Ma, H. Khedr, R. Rädle, C. Rolland, L. Gustafson, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sam 2: segment anything in images and videos</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2408.00714</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p2.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S2.p1.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a href="#S3.SS1.p1.1" title="3.1 Overview ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">O. Ronneberger, P. Fischer, and T. Brox</span><span class="ltx_text ltx_bib_year"> (2015)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">U-net: convolutional networks for biomedical image segmentation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">MICCAI</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p1.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S4.SS2.p1.2" title="4.2 Implementation Details ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.2</span></a>,
+<a href="#S4.T1.1.1.1.1.4" title="In 4.3 Cross-Domain Generalization ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a href="#S4.T2.20.20.23.1.2" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.29.7.2" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>,
+<a href="#S4.T2.20.20.34.12.2" title="In 4.4 Evalutation of Static Memory and Test-time Adaptation ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. J. Sheller <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Federated learning in medicine: facilitating multi-institutional collaborations without sharing patient data</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Scientific Reports</span> <span class="ltx_text ltx_bib_volume">10</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 12598</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S2.p3.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib55" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">O. Siméoni, H. V. Vo, M. Seitzer, F. Baldassarre, M. Oquab, C. Jose, V. Khalidov, M. Szafraniec, S. Yi, M. Ramamonjisoa, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dinov3</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2508.10104</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S3.SS4.p1.9" title="3.4 Test-time Working Memory ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§3.4</span></a>.
+</span>
+</li>
+<li id="bib.bib54" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Wang, S. Chen, L. Jiang, S. Pan, R. Cai, S. Yang, and F. Yang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Parameter-efficient fine-tuning in large models: a survey of methodologies</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2410.19878</span>,
+<a href="https://arxiv.org/abs/2410.19878" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p2.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib46" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Xu, Z. Liang, K. Mei, H. Gao, J. Tan, and Y. Zhang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A-mem: agentic memory for llm agents</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2502.12110</span>,
+<a href="https://arxiv.org/abs/2502.12110" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p3.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib53" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Yang, X. Ding, Z. Zheng, X. Xu, and X. Li</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">GraphEcho: graph-driven unsupervised domain adaptation for echocardiogram video segmentation</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2309.11145</span>,
+<a href="https://arxiv.org/abs/2309.11145" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S4.SS1.p1.2" title="4.1 Datasets and Preprocessing ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§4.1</span></a>,
+<a href="#S4.T1" title="In 4.3 Cross-Domain Generalization ‣ 4 Experiments ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Table 1</span></a>.
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Yang, J. Kautz, and A. Hatamizadeh</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Gated delta networks: improving mamba2 with delta rule</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">The Thirteenth International Conference on Learning Representations</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a href="https://openreview.net/forum?id=r8H7xhYPwz" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S3.SS4.p1.9" title="3.4 Test-time Working Memory ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§3.4</span></a>.
+</span>
+</li>
+<li id="bib.bib44" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Yu, L. Yao, Y. Xie, Q. Tan, J. Feng, Y. Li, and L. Wu</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Agentic memory: learning unified long-term and short-term memory management for large language model agents</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2601.01885</span>,
+<a href="https://arxiv.org/abs/2601.01885" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p3.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S2.p2.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib48" class="ltx_bibitem ltx_bib_misc">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Zhang, T. Feng, L. Xue, Y. Wang, Y. Dong, and J. Tang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Parameter-efficient fine-tuning for foundation models</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2501.13787</span>,
+<a href="https://arxiv.org/abs/2501.13787" title="" class="ltx_ref ltx_bib_external">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p2.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem ltx_bib_inproceedings">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Zhang, E. Z. Chen, L. Zhao, X. Chen, Y. Liu, B. Maihe, J. S. Duncan, T. Chen, and S. Sun</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Adapting vision foundation models for real-time ultrasound image segmentation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Medical Image Computing and Computer-Assisted Intervention</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 24–34</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p2.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S2.p1.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem ltx_bib_article">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Zhao, X. Chen, E. Z. Chen, Y. Liu, T. Chen, and S. Sun</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Retrieval-augmented few-shot medical image segmentation with foundation models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Neural Networks and Learning Systems</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a href="#S1.p2.1" title="1 Introduction ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a href="#S2.p1.1" title="2 Related Work ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a href="#S3.SS3.p1.4" title="3.3 Few-shot Memory ‣ 3 Methodology ‣ Shifting Adaptation from Weight Space to Memory Space: A Memory-Augmented Agent for Medical Image Segmentation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+  <div class="ltx_page_logo">
+    Experimental support, please
+    <a href="./2603.05873v1/__stdout.txt" class="ltx_ref"
+    target="_blank" rel="nofollow">view the build logs</a>
+    for errors. Generated by
+    <a href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank" class="ltx_ref ltx_LaTeXML_logo">
+      <span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+      </span>
+      <span class="ltx_font_smallcaps">xml</span>
+      <img alt="[LOGO]"
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==">
+    </a>.
+  </div>
+  <div class="keyboard-glossary">
+    <h2>Instructions for reporting errors</h2>
+    <p>We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</p>
+    <ul>
+      <li>Click the "Report Issue" <span class="mobile-only">(<svg role="presentation"
+            style="display: inline-block; vertical-align: middle; fill: var(--text-color);" aria-hidden="true"
+            height="1em" viewBox="0 0 640 640">
+            <path
+              d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z" />
+          </svg>)</span> button, located in the page header.</li>
+    </ul>
+    <p><strong>Tip:</strong> You can select the relevant text first, to include it in your report.</p>
+    <p>Our team has already identified <a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues"
+        target="_blank">the following issues</a>. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</p>
+    <p>Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a <a
+        class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML"
+        target="_blank">list of packages that need conversion</a>, and welcome <a class="ltx_ref"
+        href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+  </div>
+</footer><footer class="ds-site-footer">
+  <div class="ds-site-footer-grid">
+    <div class="ds-site-footer-main">
+      <div class="ds-site-footer-ack">
+        We gratefully acknowledge support from
+        our <strong>major funders</strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong>member institutions</strong></a><span class="ack-member-inline" hidden>, <strong></strong></span>,
+        and all contributors.
+      </div>
+      <nav class="ds-site-footer-links" aria-label="Site navigation">
+        <a href="https://info.arxiv.org/about">About</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help">Help</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/contact.html">Contact</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/subscribe">Subscribe</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/license/index.html">Copyright</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/policies/privacy_policy.html">Privacy</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://info.arxiv.org/help/web_accessibility.html">Accessibility</a>
+        <span class="ds-site-footer-sep" aria-hidden="true">&middot;</span>
+        <a href="https://status.arxiv.org" target="_blank" rel="noopener noreferrer">Operational Status<span class="is-sr-only"> (opens in new tab)</span></a>
+      </nav>
+    </div>
+
+    <div class="ds-site-footer-funders" aria-label="Major funders">
+      <div class="ds-site-footer-funders-label">Major funding support from</div>
+      <div class="ds-site-footer-funders-logos">
+        <img class="ds-funder-logo" src="/static/base/1.0.1/images/funders/simons-foundation.png" alt="Simons Foundation">
+        <img class="ds-funder-logo" src="/static/base/1.0.1/images/funders/schmidt-sciences.png" alt="Schmidt Sciences">
+      </div>
+    </div>
+  </div>
+</footer><div id="fixed-buttons-container">
+  <a id="disable-reading-mode-btn" class="header-button" href="javascript:toggleReadingMode();"
+    title="Disable reading mode, show header and footer">
+    <svg role="presentation" height="1.25rem"
+      viewBox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+      <path
+        d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z" />
+    </svg>
+  </a>
+</div></body>
+</html>

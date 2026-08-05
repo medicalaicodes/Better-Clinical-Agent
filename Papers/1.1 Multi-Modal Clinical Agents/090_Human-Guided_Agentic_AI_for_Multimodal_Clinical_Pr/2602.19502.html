@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title>Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark</title>
+<!--Generated on Mon Feb 23 04:32:32 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="/static/browse/0.3.4/css/arxiv-html-papers-20250916.css" rel="stylesheet" type="text/css"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.3/html2canvas.min.js"></script>
+<script src="/static/browse/0.3.4/js/addons_new.js"></script>
+<script src="/static/browse/0.3.4/js/feedbackOverlay.js"></script>
+<base href="/html/2602.19502v1/"/></head>
+<body>
+<nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1" title="In Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S2" title="In Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Methodology</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S2.SS1" title="In II Methodology ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span> </span><span class="ltx_text ltx_font_italic">Challenge 1: 30-Day Readmission Prediction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S2.SS2" title="In II Methodology ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-B</span> </span><span class="ltx_text ltx_font_italic">Challenge 2: ED Cost Forecasting</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S2.SS3" title="In II Methodology ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-C</span> </span><span class="ltx_text ltx_font_italic">Challenge 3: Discharge Readiness Assessment</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3" title="In Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Results</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.SS1" title="In III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">Overall Performance</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.SS2" title="In III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">Ablation Studies: Impact of Human Decisions</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.SS3" title="In III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-C</span> </span><span class="ltx_text ltx_font_italic">Cross-Task Analysis: Generalizable Patterns</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S4" title="In Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Discussion</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S4.SS1" title="In IV Discussion ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-A</span> </span><span class="ltx_text ltx_font_italic">Key Lessons Learned</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S4.SS2" title="In IV Discussion ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span> </span><span class="ltx_text ltx_font_italic">Cross-Task Insights</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S4.SS3" title="In IV Discussion ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-C</span> </span><span class="ltx_text ltx_font_italic">Limitations</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S4.SS4" title="In IV Discussion ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-D</span> </span><span class="ltx_text ltx_font_italic">Implications for Healthcare ML Practice</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S4.SS5" title="In IV Discussion ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-E</span> </span><span class="ltx_text ltx_font_italic">Future Work</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S5" title="In Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Conclusion</span></span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Lalitha Pranathi Pulavarthy,
+Raajitha Muthyala,
+Aravind V Kuruvikkattil,
+<br class="ltx_break"/>Zhenan Yin,
+Rashmita Kudamala,
+and Saptarshi Purkayastha
+</span></span>
+</div>
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p" id="id1.id1">Agentic AI systems are increasingly capable of autonomous data science workflows, yet clinical prediction tasks demand domain expertise that purely automated approaches struggle to provide. We investigate how human guidance of agentic AI can improve multimodal clinical prediction, presenting our approach to all three AgentDS Healthcare benchmark challenges: 30-day hospital readmission prediction (Macro-F1 = 0.8986), emergency department cost forecasting (MAE = $465.13), and discharge readiness assessment (Macro-F1 = 0.7939). Across these tasks, human analysts directed the agentic workflow at key decision points, multimodal feature engineering from clinical notes, scanned PDF billing receipts, and time-series vital signs; task-appropriate model selection; and clinically informed validation strategies. Our approach ranked 5th overall in the healthcare domain, with a 3rd-place finish on the discharge readiness task. Ablation studies reveal that human-guided decisions compounded to a cumulative gain of +0.065 F1 over automated baselines, with multimodal feature extraction contributing the largest single improvement (+0.041 F1). We distill three generalizable lessons: (1) domain-informed feature engineering at each pipeline stage yields compounding gains that outperform extensive automated search; (2) multimodal data integration requires task-specific human judgment that no single extraction strategy generalizes across clinical text, PDFs, and time-series; and (3) deliberate ensemble diversity with clinically motivated model configurations outperforms random hyperparameter search. These findings offer practical guidance for teams deploying agentic AI in healthcare settings where interpretability, reproducibility, and clinical validity are essential.</p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1">Introduction</span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1">Hospital readmissions cost the U.S. healthcare system over $26 billion annually <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib1" title="Predicting readmission among high-risk discharged patients using a machine learning model with nursing data: retrospective study">13</a>]</cite>, while emergency department overcrowding and suboptimal discharge timing continue to degrade patient outcomes and hospital efficiency <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib2" title="Multimodal machine learning for prediction of 30-day readmission risk in elderly population">10</a>]</cite>. Machine learning has shown considerable promise for predicting these clinical events. Multimodal approaches that combine structured electronic health record (EHR) data with unstructured clinical notes and time-series vital signs have demonstrated superior predictive performance over unimodal baselines, achieving AUROCs above 0.90 for 30-day readmission prediction in elderly populations <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib2" title="Multimodal machine learning for prediction of 30-day readmission risk in elderly population">10</a>]</cite> and enabling earlier identification of discharge-ready patients by 5-13 hours compared with physician judgment <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib3" title="Exploring timely and safe discharge from icu: a comparative study of machine learning predictions and clinical practices">19</a>]</cite>. Graph neural network architectures that jointly model EHR tabular data, clinical imaging, and patient similarity have further improved readmission prediction by capturing spatiotemporal dependencies across admissions <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib4" title="Predicting 30-day all-cause hospital readmission using multimodal spatiotemporal graph neural networks">18</a>]</cite>. Yet despite these advances, the practical deployment of such models remains constrained by the need to balance automated optimization with clinical interpretability, reproducibility, and the integration of domain expertise, a challenge that existing benchmarks have only partially addressed.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1">The recent emergence of Agentic AI systems, autonomous agents capable of planning, reasoning, and executing multi-step workflows, offers a new paradigm for healthcare data science <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib5" title="Next-generation agentic ai for transforming healthcare">7</a>, <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib6" title="AI with agency: a vision for adaptive, efficient, and ethical healthcare">5</a>]</cite>. Unlike conventional machine learning pipelines that require manual orchestration, agentic systems powered by large language models (LLMs) can autonomously perform data loading, feature engineering, model training, and evaluation <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib7" title="Llm-based data science agents: a survey of capabilities, challenges, and future directions">15</a>]</cite>. In the clinical domain, multi-agent LLM frameworks such as MDAgents have demonstrated that adaptive collaboration structures can improve medical decision-making accuracy by up to 11.8% on diagnostic benchmarks <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib8" title="Mdagents: an adaptive collaboration of llms for medical decision-making">9</a>]</cite>, while EHRAgent has shown that LLM agents equipped with code generation capabilities can outperform traditional baselines by up to 29.6% on complex EHR reasoning tasks <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib9" title="Ehragent: code empowers large language models for few-shot complex tabular reasoning on electronic health records">16</a>]</cite>. More broadly, surveys of LLM-based data science agents identify healthcare as a high-stakes application domain where fairness, explainability, and reproducibility requirements impose additional constraints on agent design <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib7" title="Llm-based data science agents: a survey of capabilities, challenges, and future directions">15</a>, <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib12" title="Evaluating the reasoning capabilities of large language models for medical coding and hospital readmission risk stratification: zero-shot prompting approach">12</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1">However, fully autonomous agentic workflows face well-documented limitations in clinical prediction contexts. Clinical prediction tasks demand domain expertise that purely automated approaches struggle to provide: selecting appropriate text extraction strategies for heterogeneous clinical documents, engineering physiologically meaningful features from vital sign time series, and making informed trade-offs between model complexity and sample size <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib10" title="Exploring agentic ai in healthcare: a study on its working mechanism and swot analysis">17</a>]</cite>. Prior work on discharge readiness prediction has shown that handcrafted features informed by clinical knowledge, such as statistical representations of early warning scores and domain-specific temporal features, are critical for accurate predictions <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib13" title="Improving patient flow during infectious disease outbreaks using machine learning for real-time prediction of patient readiness for discharge">2</a>]</cite>. Studies on ED cost forecasting emphasize that billing code structures and cross-source feature engineering require human judgment to interpret correctly <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib14" title="A machine learning model to predict heart failure readmission: toward optimal feature set">6</a>]</cite>. Furthermore, recent analyses of agentic AI in healthcare caution that autonomous systems require robust governance frameworks, human oversight, and interdisciplinary collaboration to ensure patient safety <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib5" title="Next-generation agentic ai for transforming healthcare">7</a>, <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib15" title="Artificial intelligence index report 2025">11</a>]</cite>. These observations suggest that the most effective paradigm may not be fully autonomous agentic AI, but rather a human-AI collaboration loop in which domain experts guide the agent’s decisions at critical junctures <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib17" title="Measuring impact of radiologist-ai collaboration: efficiency, accuracy, and clinical impact">14</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1">The AgentDS Healthcare Data Challenge provides a rigorous framework for evaluating such human-AI collaboration through three standardized clinical prediction tasks: (1) 30-day readmission prediction (binary classification, N=5,000 train), (2) 3-year ED cost forecasting (regression, N=2,000 train), and (3) day-11 discharge readiness assessment (binary classification, N=1,000 train). The benchmark evaluates human-AI collaboration using multimodal data-structured admission records, unstructured clinical notes, scanned PDF receipts, and time-series vital signs with standardized metrics (Macro-F1 for classification, MAE for regression), ensuring reproducible comparison. This design addresses a critical gap in existing benchmarks, which typically evaluate either autonomous agent capabilities in isolation <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib18" title="Readmission prediction using deep learning on electronic health records">1</a>]</cite> or purely manual modeling approaches, without systematically measuring the value added by human guidance at each pipeline stage <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib7" title="Llm-based data science agents: a survey of capabilities, challenges, and future directions">15</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1">Our approach combines domain-guided feature engineering with transparent model selection, achieving 5th place overall in the healthcare domain on the public leaderboard, including a 3rd-place finish on the discharge readiness task. Rather than complex neural architectures or extensive hyperparameter tuning, which prior work has shown to be less effective than feature engineering on modest clinical sample sizes <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib2" title="Multimodal machine learning for prediction of 30-day readmission risk in elderly population">10</a>, <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib18" title="Readmission prediction using deep learning on electronic health records">1</a>]</cite>. We focused on: (1) clinical knowledge-informed multimodal feature extraction, (2) task-appropriate model selection balancing performance and interpretability, and (3) rigorous validation strategies. Critically, we document all human decision points to maintain reproducibility, following the principle that in healthcare ML, transparency and auditability are as important as raw predictive performance <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib15" title="Artificial intelligence index report 2025">11</a>, <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib19" title="Effective hospital readmission prediction models using machine-learned features">3</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="ltx_text ltx_font_bold" id="S1.p6.1.1">Contributions.</span> (1) We demonstrate practical multimodal feature engineering strategies across text, PDFs, and time-series data with ablation studies quantifying impact, showing that human-guided multimodal extraction contributes +0.041 F1, the single largest improvement category. (2) We identify which modeling decisions generalize across tasks versus require task-specific adaptation, providing evidence that no single extraction strategy works across all clinical data types. (3) We show that systematic domain-informed decisions outperform extensive automated search, achieving competitive results (within 0.006 F1 of top-performing systems on readmission prediction) while maintaining interpretability, a finding consistent with recent evidence that tree-based models with domain features remain competitive with deep learning on moderate-scale clinical datasets <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib18" title="Readmission prediction using deep learning on electronic health records">1</a>, <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib20" title="Explainable time-series deep learning models for the prediction of mortality, prolonged length of stay and 30-day readmission in intensive care patients">4</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1">Our results demonstrate that principled human-AI collaboration yields strong, reproducible performance across diverse healthcare prediction tasks, with human decisions contributing a cumulative +0.065 F1 improvement over agentic baselines.</p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1">Methodology</span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1">Our approach follows an iterative human-AI collaboration workflow in which an Agentic AI system handled routine data science operations, data loading, preprocessing, initial model training, and hyperparameter search via Bayesian optimization, while human analysts intervened at critical decision points to redirect the pipeline. Each challenge progressed through multiple iterations: the agentic system produced a baseline, human analysts diagnosed limitations through cross-validation error analysis and clinical reasoning, and then guided the next iteration. We describe each challenge below, highlighting the specific human decision points that drove performance gains and distinguishing them from automated steps.</p>
+</div>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS1.5.1.1">II-A</span> </span><span class="ltx_text ltx_font_italic" id="S2.SS1.6.2">Challenge 1: 30-Day Readmission Prediction</span>
+</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="S2.SS1.p1.1.1">Task Overview.</span> The readmission prediction task required binary classification of whether an inpatient admission would be followed by a readmission within 30 days. The training set comprised 5,000 admissions (2,479 non-readmit, 2,521 readmit; approximately balanced classes). We integrated data from three sources via left joins on patient and admission identifiers: (1) structured admission records (length of stay, acuity level, Charlson comorbidity band, 6-month ED visits, discharge weekday, primary diagnosis); (2) patient demographics (age, sex, insurance type); and (3) 5-year ED cost history (prior ED visits, prior ED costs). Each admission was also linked to an unstructured discharge note summary. The evaluation metric was Macro-F1.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S2.SS1.p2.1.1">Human-Guided Feature Engineering.</span> Our feature engineering strategy progressed through two iterations informed by domain analysis. The agentic system’s initial approach trained a single Optuna-tuned XGBoost (n=957, lr=0.28, depth=8) with one-hot encoding and 200 unigram TF-IDF features, achieving CV Macro-F1=0.846. Human analysis of per-class errors and clinical literature identified two limitations: (1) unigram TF-IDF missed multi-word clinical phrases critical for readmission risk, and (2) a single model could not simultaneously capture the diverse decision boundaries present in structured versus text features. This guided the second iteration with expanded features and an ensemble architecture.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p3">
+<p class="ltx_p" id="S2.SS1.p3.13"><span class="ltx_text ltx_font_italic" id="S2.SS1.p3.13.1">Structured features (21 engineered + one-hot dummies):</span> We created domain-informed features organized by clinical hypothesis: (1) <span class="ltx_text ltx_font_italic" id="S2.SS1.p3.13.2">temporal discharge patterns</span>, weekend discharge flag and specific weekday indicators (Monday, Friday), motivated by studies showing discharge timing affects readmission risk; (2) <span class="ltx_text ltx_font_italic" id="S2.SS1.p3.13.3">non-linear age and comorbidity effects</span>: age<sup class="ltx_sup" id="S2.SS1.p3.13.4">2</sup>, Charlson<sup class="ltx_sup" id="S2.SS1.p3.13.5">2</sup>, and threshold flags for elderly (<math alttext="\geq" class="ltx_Math" display="inline" id="S2.SS1.p3.3.m3" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>65) and very elderly (<math alttext="\geq" class="ltx_Math" display="inline" id="S2.SS1.p3.4.m4" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>80) patients; (3) <span class="ltx_text ltx_font_italic" id="S2.SS1.p3.13.6">ED utilization patterns</span>: cost-per-visit ratio with Laplace smoothing, recent-to-historical visit ratio (6-month / 5-year), frequent ED user flags (<math alttext="\geq" class="ltx_Math" display="inline" id="S2.SS1.p3.5.m5" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>2, <math alttext="\geq" class="ltx_Math" display="inline" id="S2.SS1.p3.6.m6" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>3 visits), and new-patient indicator; (4) <span class="ltx_text ltx_font_italic" id="S2.SS1.p3.13.7">length-of-stay features</span>: log-transformed LOS and long-stay flag (<math alttext="\geq" class="ltx_Math" display="inline" id="S2.SS1.p3.7.m7" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>5 days); (5) <span class="ltx_text ltx_font_italic" id="S2.SS1.p3.13.8">interaction terms</span>: age<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p3.8.m8" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>Charlson, age<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p3.9.m9" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>ED visits, Charlson<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p3.10.m10" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>ED visits, and LOS<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p3.11.m11" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>ED visits; and (6) <span class="ltx_text ltx_font_italic" id="S2.SS1.p3.13.9">composite risk scores</span>: two weighted combinations mimicking clinical stratification (e.g., age/100 + 0.5<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p3.12.m12" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>Charlson + 0.3<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p3.13.m13" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>ED visits).</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p4">
+<p class="ltx_p" id="S2.SS1.p4.1"><span class="ltx_text ltx_font_italic" id="S2.SS1.p4.1.1">Text features (850 TF-IDF):</span> We applied TF-IDF vectorization with trigrams (ngram_range=(1,3), max_features=850, min_df=3, max_df=0.95, sublinear_tf=True). Expanding from the baseline’s 200 unigram features was a key human decision: domain analysis revealed that discharge notes contain multi-word clinical phrases (“ambulating without assistance”, “wound care instructions”) requiring higher-order n-grams and greater dimensionality to capture.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p5">
+<p class="ltx_p" id="S2.SS1.p5.1"><span class="ltx_text ltx_font_bold" id="S2.SS1.p5.1.1">Model Architecture: Stacking Ensemble.</span> We employed a stacking ensemble with five base learners and 8-fold stratified internal cross-validation (stack_method=‘predict_proba’, passthrough=False):</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p6">
+<p class="ltx_p" id="S2.SS1.p6.1"><span class="ltx_text ltx_font_italic" id="S2.SS1.p6.1.1">Base Models:</span></p>
+<ul class="ltx_itemize" id="S2.I1">
+<li class="ltx_item" id="S2.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I1.i1.p1">
+<p class="ltx_p" id="S2.I1.i1.p1.7"><span class="ltx_text ltx_font_bold" id="S2.I1.i1.p1.7.1">XGBoost-Optimized</span> (<math alttext="n=771" class="ltx_Math" display="inline" id="S2.I1.i1.p1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>771</mn></mrow><annotation encoding="application/x-tex">n=771</annotation></semantics></math>, <math alttext="lr=0.030" class="ltx_Math" display="inline" id="S2.I1.i1.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi></mrow><mo>=</mo><mn>0.030</mn></mrow><annotation encoding="application/x-tex">lr=0.030</annotation></semantics></math>, <math alttext="depth=7" class="ltx_Math" display="inline" id="S2.I1.i1.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi></mrow><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">depth=7</annotation></semantics></math>, <math alttext="subsample=0.68" class="ltx_Math" display="inline" id="S2.I1.i1.p1.4.m4" intent=":literal"><semantics><mrow><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>u</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>0.68</mn></mrow><annotation encoding="application/x-tex">subsample=0.68</annotation></semantics></math>, <math alttext="colsample\_bytree=0.81" class="ltx_Math" display="inline" id="S2.I1.i1.p1.5.m5" intent=":literal"><semantics><mrow><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>0.81</mn></mrow><annotation encoding="application/x-tex">colsample\_bytree=0.81</annotation></semantics></math>, <math alttext="\gamma=3.42" class="ltx_Math" display="inline" id="S2.I1.i1.p1.6.m6" intent=":literal"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>3.42</mn></mrow><annotation encoding="application/x-tex">\gamma=3.42</annotation></semantics></math>): Hyperparameters selected via Optuna Bayesian optimization; <math alttext="random\_state=42" class="ltx_Math" display="inline" id="S2.I1.i1.p1.7.m7" intent=":literal"><semantics><mrow><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>42</mn></mrow><annotation encoding="application/x-tex">random\_state=42</annotation></semantics></math>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I1.i2.p1">
+<p class="ltx_p" id="S2.I1.i2.p1.8"><span class="ltx_text ltx_font_bold" id="S2.I1.i2.p1.8.1">XGBoost-Deep</span> (<math alttext="n=1500" class="ltx_Math" display="inline" id="S2.I1.i2.p1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1500</mn></mrow><annotation encoding="application/x-tex">n=1500</annotation></semantics></math>, <math alttext="lr=0.015" class="ltx_Math" display="inline" id="S2.I1.i2.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi></mrow><mo>=</mo><mn>0.015</mn></mrow><annotation encoding="application/x-tex">lr=0.015</annotation></semantics></math>, <math alttext="depth=6" class="ltx_Math" display="inline" id="S2.I1.i2.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi></mrow><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">depth=6</annotation></semantics></math>, <math alttext="subsample=0.75" class="ltx_Math" display="inline" id="S2.I1.i2.p1.4.m4" intent=":literal"><semantics><mrow><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>u</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>0.75</mn></mrow><annotation encoding="application/x-tex">subsample=0.75</annotation></semantics></math>,
+<math alttext="colsample\_bytree=0.85" class="ltx_Math" display="inline" id="S2.I1.i2.p1.5.m5" intent=":literal"><semantics><mrow><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>0.85</mn></mrow><annotation encoding="application/x-tex">colsample\_bytree=0.85</annotation></semantics></math>, <math alttext="\gamma=2.0" class="ltx_Math" display="inline" id="S2.I1.i2.p1.6.m6" intent=":literal"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>2.0</mn></mrow><annotation encoding="application/x-tex">\gamma=2.0</annotation></semantics></math>, <math alttext="min\_child\_weight=2" class="ltx_Math" display="inline" id="S2.I1.i2.p1.7.m7" intent=":literal"><semantics><mrow><mrow><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>w</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">min\_child\_weight=2</annotation></semantics></math>): Conservative learning rate
+with more iterations; <math alttext="random\_state=999" class="ltx_Math" display="inline" id="S2.I1.i2.p1.8.m8" intent=":literal"><semantics><mrow><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>999</mn></mrow><annotation encoding="application/x-tex">random\_state=999</annotation></semantics></math>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I1.i3.p1">
+<p class="ltx_p" id="S2.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i3.p1.1.1">XGBoost-Shallow</span> (n=1200, lr=0.02, depth=5, subsample=0.8, colsample_bytree=0.9, <math alttext="\gamma" class="ltx_Math" display="inline" id="S2.I1.i3.p1.1.m1" intent=":literal"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>=1.0): Shallower trees for broader decision boundaries; random_state=555.</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I1.i4.p1">
+<p class="ltx_p" id="S2.I1.i4.p1.4"><span class="ltx_text ltx_font_bold" id="S2.I1.i4.p1.4.1">Logistic Regression-L2</span> (<math alttext="C=0.5" class="ltx_Math" display="inline" id="S2.I1.i4.p1.1.m1" intent=":literal"><semantics><mrow><mi>C</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">C=0.5</annotation></semantics></math>, <math alttext="solver=\text{saga}" class="ltx_Math" display="inline" id="S2.I1.i4.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>v</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi></mrow><mo>=</mo><mtext>saga</mtext></mrow><annotation encoding="application/x-tex">solver=\text{saga}</annotation></semantics></math>, <math alttext="class\_weight=\text{balanced}" class="ltx_Math" display="inline" id="S2.I1.i4.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>w</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow><mo>=</mo><mtext>balanced</mtext></mrow><annotation encoding="application/x-tex">class\_weight=\text{balanced}</annotation></semantics></math>): Preceded by <span class="ltx_text ltx_font_italic" id="S2.I1.i4.p1.4.2">StandardScaler</span>; <math alttext="random\_state=42" class="ltx_Math" display="inline" id="S2.I1.i4.p1.4.m4" intent=":literal"><semantics><mrow><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>42</mn></mrow><annotation encoding="application/x-tex">random\_state=42</annotation></semantics></math>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I1.i5.p1">
+<p class="ltx_p" id="S2.I1.i5.p1.4"><span class="ltx_text ltx_font_bold" id="S2.I1.i5.p1.4.1">Logistic Regression-L1</span> (<math alttext="C=0.3" class="ltx_Math" display="inline" id="S2.I1.i5.p1.1.m1" intent=":literal"><semantics><mrow><mi>C</mi><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">C=0.3</annotation></semantics></math>, <math alttext="solver=\text{saga}" class="ltx_Math" display="inline" id="S2.I1.i5.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>v</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi></mrow><mo>=</mo><mtext>saga</mtext></mrow><annotation encoding="application/x-tex">solver=\text{saga}</annotation></semantics></math>, <math alttext="class\_weight=\text{balanced}" class="ltx_Math" display="inline" id="S2.I1.i5.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>w</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow><mo>=</mo><mtext>balanced</mtext></mrow><annotation encoding="application/x-tex">class\_weight=\text{balanced}</annotation></semantics></math>): Sparse feature selection; <math alttext="random\_state=777" class="ltx_Math" display="inline" id="S2.I1.i5.p1.4.m4" intent=":literal"><semantics><mrow><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>777</mn></mrow><annotation encoding="application/x-tex">random\_state=777</annotation></semantics></math>.</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S2.SS1.p7">
+<p class="ltx_p" id="S2.SS1.p7.2">All XGBoost models used <span class="ltx_text ltx_font_typewriter" id="S2.SS1.p7.2.1">tree_method=‘hist‘</span> with <math alttext="scale\_pos\_weight" class="ltx_Math" display="inline" id="S2.SS1.p7.1.m1" intent=":literal"><semantics><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>w</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">scale\_pos\_weight</annotation></semantics></math> computed from training class frequencies (<math alttext="\approx 0.98" class="ltx_Math" display="inline" id="S2.SS1.p7.2.m2" intent=":literal"><semantics><mrow><mi></mi><mo>≈</mo><mn>0.98</mn></mrow><annotation encoding="application/x-tex">\approx 0.98</annotation></semantics></math> given the nearly balanced classes). Different random seeds across variants ensured initialization diversity, while deliberately varied depth and learning rate profiles created complementary decision boundaries.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p8">
+<p class="ltx_p" id="S2.SS1.p8.1"><span class="ltx_text ltx_font_italic" id="S2.SS1.p8.1.1">Meta-learner:</span> Logistic regression (<math alttext="C=1.5" class="ltx_Math" display="inline" id="S2.SS1.p8.1.m1" intent=":literal"><semantics><mrow><mi>C</mi><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">C=1.5</annotation></semantics></math>, class_weight = balanced, solver = lbfgs) trained on 10-dimensional out-of-fold probability vectors (two class probabilities per base model).</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p9">
+<p class="ltx_p" id="S2.SS1.p9.1"><span class="ltx_text ltx_font_bold" id="S2.SS1.p9.1.1">Rationale for Human Decisions.</span> The human-guided second iteration lifted CV F1 from 0.846 to 0.896 (+0.050). Key choices included: (1) <span class="ltx_text ltx_font_italic" id="S2.SS1.p9.1.2">multi-table integration</span>: the agentic system initially used only admission records; human analysts directed it to join patient demographics and ED cost history, providing cross-domain features (e.g., cost-per-visit ratio) unavailable in any single table; (2) <span class="ltx_text ltx_font_italic" id="S2.SS1.p9.1.3">TF-IDF expansion</span>: upgrading from 200 unigrams to 850 trigrams captured multi-word medical phrases (“ambulating without assistance,” “wound care instructions”); (3) <span class="ltx_text ltx_font_italic" id="S2.SS1.p9.1.4">deliberate ensemble diversity</span>: the agentic system’s single-model approach was replaced with three XGBoost variants with different complexity profiles (depth 5/6/7, learning rates 0.02/0.015/0.03) plus two regularized linear models (L1/L2), ensuring complementary feature usage; (4) <span class="ltx_text ltx_font_italic" id="S2.SS1.p9.1.5">8-fold stacking CV</span>: reduced meta-learner training variance while maintaining sufficient per-fold training size (N<math alttext="\approx" class="ltx_Math" display="inline" id="S2.SS1.p9.1.m1" intent=":literal"><semantics><mo>≈</mo><annotation encoding="application/x-tex">\approx</annotation></semantics></math>625).</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p10">
+<p class="ltx_p" id="S2.SS1.p10.2"><span class="ltx_text ltx_font_bold" id="S2.SS1.p10.2.1">Validation Strategy.</span> We used a nested cross-validation scheme: an outer 5-fold stratified CV for score estimation, with each outer fold training the full stacking pipeline (including an 8-fold inner CV for generating stacked features). This produced 200 base model fits total (5 outer <math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p10.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> 8 inner <math alttext="\times" class="ltx_Math" display="inline" id="S2.SS1.p10.2.m2" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> 5 base models). Outer CV Macro-F1 was 0.8956 (accuracy 0.90), with per-class F1 of 0.89 (non-readmit) and 0.90 (readmit). Final test predictions achieved Macro-F1 = 0.8986 on the public leaderboard, ranking 5th overall.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p11">
+<p class="ltx_p" id="S2.SS1.p11.1"><span class="ltx_text ltx_font_bold" id="S2.SS1.p11.1.1">Implementation Details.</span> All models were implemented using scikit-learn and XGBoost. Code, hyperparameters, and random seeds are publicly available<span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>GitHub repository: https://github.com/iupui-soic/agentds-challenge-2025</span></span></span> for full reproducibility.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS2.5.1.1">II-B</span> </span><span class="ltx_text ltx_font_italic" id="S2.SS2.6.2">Challenge 2: ED Cost Forecasting</span>
+</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.SS2.p1.1.1">Task Overview.</span> The ED cost forecasting task required predicting total emergency department costs over the next 3 years (regression). The training set comprised 2,000 patients with structured features (primary chronic condition, prior 5-year ED visits, prior 5-year ED costs) and one PDF billing receipt per patient containing detailed line-item charges with CPT codes. The evaluation metric was Mean Absolute Error (MAE) in dollars.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S2.SS2.p2.1.1">Human-Guided Feature Engineering.</span> The agentic system’s initial approach used structured features with basic PDF extraction (29 features) and a single XGBoost regressor, yielding a 5-fold CV MAE of $467. Human analysts identified two shortcomings: the PDF parser captured only raw totals without clinical detail, and a single model was unstable across folds (<math alttext="\pm" class="ltx_Math" display="inline" id="S2.SS2.p2.1.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>$22 MAE). This guided an enhanced iteration with richer cross-source features and a weighted ensemble, yielding approximately 40 features across three groups.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.2"><span class="ltx_text ltx_font_italic" id="S2.SS2.p3.1.1">Structured features (<math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS2.p3.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>12):</span> Beyond raw prior cost and visit counts, we engineered: (1) <span class="ltx_text ltx_font_italic" id="S2.SS2.p3.2.3">cost-per-visit ratio</span> with Laplace smoothing; (2) <span class="ltx_text ltx_font_italic" id="S2.SS2.p3.2.4">log, square root, and squared transformations</span> of prior costs and visits to handle right-skewed distributions; (3) <span class="ltx_text ltx_font_italic" id="S2.SS2.p3.2.2">cost<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS2.p3.2.2.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>visit interaction</span>; and (4) one-hot encoding for primary chronic condition (HF, DiabetesComp, Pneumonia).</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p4">
+<p class="ltx_p" id="S2.SS2.p4.1"><span class="ltx_text ltx_font_italic" id="S2.SS2.p4.1.1">PDF-extracted features (<math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS2.p4.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>16):</span> We developed a PDF parsing pipeline using PyPDF2 with regex-based CPT code and cost extraction. Features included: (1) <span class="ltx_text ltx_font_italic" id="S2.SS2.p4.1.2">total billed amount</span> and <span class="ltx_text ltx_font_italic" id="S2.SS2.p4.1.3">line item count</span>; (2) <span class="ltx_text ltx_font_italic" id="S2.SS2.p4.1.4">visit complexity</span>, counts of high-complexity (CPT 99284/99285), medium-complexity (99283), and total ED visit codes (9928x prefix); (3) <span class="ltx_text ltx_font_italic" id="S2.SS2.p4.1.5">service utilization</span>, laboratory test count (CPT 80000-89999) and imaging count (CPT 70000-79999); (4) <span class="ltx_text ltx_font_italic" id="S2.SS2.p4.1.6">cost statistics</span>, average, maximum, minimum, and standard deviation of per-line costs; (5) <span class="ltx_text ltx_font_italic" id="S2.SS2.p4.1.7">insurance type</span> extracted from receipt text (private, Medicare, Medicaid binary indicators); and (6) 3-digit ZIP code.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p5">
+<p class="ltx_p" id="S2.SS2.p5.1"><span class="ltx_text ltx_font_italic" id="S2.SS2.p5.1.1">Cross-source and derived features (<math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS2.p5.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>14):</span> A key human decision was engineering features that cross-referenced PDF and structured data: (1) <span class="ltx_text ltx_font_italic" id="S2.SS2.p5.1.2">cost consistency ratio</span> (PDF total / structured prior cost); (2) <span class="ltx_text ltx_font_italic" id="S2.SS2.p5.1.3">cost and visit discrepancies</span> between PDF and structured data; (3) <span class="ltx_text ltx_font_italic" id="S2.SS2.p5.1.4">complexity ratios</span>: high-complexity and medium-complexity visits as fractions of total visits; (4) <span class="ltx_text ltx_font_italic" id="S2.SS2.p5.1.5">per-visit service rates</span>: lab tests and imaging per ED visit; (5) <span class="ltx_text ltx_font_italic" id="S2.SS2.p5.1.6">cost variability</span>: line-item cost standard deviation normalized by mean; (6) <span class="ltx_text ltx_font_italic" id="S2.SS2.p5.1.7">service intensity score</span> weighted composite of complexity, lab, and imaging counts per visit; and (7) log-transformed PDF cost features.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p6">
+<p class="ltx_p" id="S2.SS2.p6.1"><span class="ltx_text ltx_font_bold" id="S2.SS2.p6.1.1">Model Architecture: Weighted Ensemble.</span> We employed a five-model weighted ensemble with manually assigned weights reflecting model reliability:</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p7">
+<ul class="ltx_itemize" id="S2.I2">
+<li class="ltx_item" id="S2.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I2.i1.p1">
+<p class="ltx_p" id="S2.I2.i1.p1.5"><span class="ltx_text ltx_font_bold" id="S2.I2.i1.p1.5.1">XGBoost</span> (35%): <math alttext="n=700" class="ltx_Math" display="inline" id="S2.I2.i1.p1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>700</mn></mrow><annotation encoding="application/x-tex">n=700</annotation></semantics></math>, <math alttext="lr=0.03" class="ltx_Math" display="inline" id="S2.I2.i1.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi></mrow><mo>=</mo><mn>0.03</mn></mrow><annotation encoding="application/x-tex">lr=0.03</annotation></semantics></math>, <math alttext="depth=8" class="ltx_Math" display="inline" id="S2.I2.i1.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi></mrow><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">depth=8</annotation></semantics></math>, <math alttext="subsample=0.8" class="ltx_Math" display="inline" id="S2.I2.i1.p1.4.m4" intent=":literal"><semantics><mrow><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>u</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">subsample=0.8</annotation></semantics></math>, <math alttext="colsample\_bytree=0.8" class="ltx_Math" display="inline" id="S2.I2.i1.p1.5.m5" intent=":literal"><semantics><mrow><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">colsample\_bytree=0.8</annotation></semantics></math>; <span class="ltx_text ltx_font_italic" id="S2.I2.i1.p1.5.2">StandardScaler</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I2.i2.p1">
+<p class="ltx_p" id="S2.I2.i2.p1.4"><span class="ltx_text ltx_font_bold" id="S2.I2.i2.p1.4.1">Gradient Boosting</span> (30%): <math alttext="n=500" class="ltx_Math" display="inline" id="S2.I2.i2.p1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">n=500</annotation></semantics></math>, <math alttext="lr=0.03" class="ltx_Math" display="inline" id="S2.I2.i2.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi></mrow><mo>=</mo><mn>0.03</mn></mrow><annotation encoding="application/x-tex">lr=0.03</annotation></semantics></math>, <math alttext="depth=7" class="ltx_Math" display="inline" id="S2.I2.i2.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi></mrow><mo>=</mo><mn>7</mn></mrow><annotation encoding="application/x-tex">depth=7</annotation></semantics></math>, <math alttext="subsample=0.8" class="ltx_Math" display="inline" id="S2.I2.i2.p1.4.m4" intent=":literal"><semantics><mrow><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>u</mi><mo lspace="0em" rspace="0em">​</mo><mi>b</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>=</mo><mn>0.8</mn></mrow><annotation encoding="application/x-tex">subsample=0.8</annotation></semantics></math>; <span class="ltx_text ltx_font_italic" id="S2.I2.i2.p1.4.2">StandardScaler</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I2.i3.p1">
+<p class="ltx_p" id="S2.I2.i3.p1.3"><span class="ltx_text ltx_font_bold" id="S2.I2.i3.p1.3.1">Random Forest</span> (15%): <math alttext="n=500" class="ltx_Math" display="inline" id="S2.I2.i3.p1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">n=500</annotation></semantics></math>, <math alttext="depth=20" class="ltx_Math" display="inline" id="S2.I2.i3.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi></mrow><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">depth=20</annotation></semantics></math>, <math alttext="min\_samples\_split=6" class="ltx_Math" display="inline" id="S2.I2.i3.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">min\_samples\_split=6</annotation></semantics></math>; unscaled features</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I2.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I2.i4.p1">
+<p class="ltx_p" id="S2.I2.i4.p1.3"><span class="ltx_text ltx_font_bold" id="S2.I2.i4.p1.3.1">Extra Trees</span> (15%): <math alttext="n=500" class="ltx_Math" display="inline" id="S2.I2.i4.p1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">n=500</annotation></semantics></math>, <math alttext="depth=20" class="ltx_Math" display="inline" id="S2.I2.i4.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>h</mi></mrow><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">depth=20</annotation></semantics></math>, <math alttext="min\_samples\_split=6" class="ltx_Math" display="inline" id="S2.I2.i4.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi mathvariant="normal">_</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">min\_samples\_split=6</annotation></semantics></math>; unscaled features</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I2.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I2.i5.p1">
+<p class="ltx_p" id="S2.I2.i5.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I2.i5.p1.1.1">Ridge Regression</span> (5%): <math alttext="\alpha=5.0" class="ltx_Math" display="inline" id="S2.I2.i5.p1.1.m1" intent=":literal"><semantics><mrow><mi>α</mi><mo>=</mo><mn>5.0</mn></mrow><annotation encoding="application/x-tex">\alpha=5.0</annotation></semantics></math>; <span class="ltx_text ltx_font_italic" id="S2.I2.i5.p1.1.2">StandardScaler</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S2.SS2.p8">
+<p class="ltx_p" id="S2.SS2.p8.1">Human decision rationale: (1) <span class="ltx_text ltx_font_italic" id="S2.SS2.p8.1.1">Weighted averaging over stacking</span>: the agentic system initially proposed a stacking meta-learner, but human analysts overrode this: with only N=2,000 samples, a learned meta-learner risked overfitting; manually assigned weights based on hold-out MAE provided more stable combination. (2) <span class="ltx_text ltx_font_italic" id="S2.SS2.p8.1.2">Higher weight for boosting models</span>: hold-out validation showed XGBoost (MAE $435) and Gradient Boosting (MAE $450) consistently outperformed RF ($466), ET ($468), and Ridge ($507), justifying 65% combined weight for boosting. (3) <span class="ltx_text ltx_font_italic" id="S2.SS2.p8.1.3">Selective scaling</span>: tree-based models (RF, ET) were trained on raw features since they are scale-invariant, while boosting and linear models used StandardScaler. (4) <span class="ltx_text ltx_font_italic" id="S2.SS2.p8.1.4">Cross-source features</span>: human-designed features linking PDF and structured data (cost consistency ratio, visit discrepancies) captured billing patterns invisible to either source alone.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p9">
+<p class="ltx_p" id="S2.SS2.p9.1"><span class="ltx_text ltx_font_bold" id="S2.SS2.p9.1.1">Validation Strategy.</span> We used both 80/20 hold-out validation for rapid iteration and 5-fold CV (KFold, shuffle=True) for final estimation. CV MAE was $458.51 <math alttext="\pm" class="ltx_Math" display="inline" id="S2.SS2.p9.1.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> $19.93, with per-fold MAEs ranging from $435 to $478. The final ensemble achieved MAE = $465.13 on the public leaderboard, ranking 6th.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p10">
+<p class="ltx_p" id="S2.SS2.p10.1"><span class="ltx_text ltx_font_bold" id="S2.SS2.p10.1.1">Implementation Details.</span> Models implemented using scikit-learn and XGBoost with Python 3.11. PDF parsing used PyPDF2 with fallback error handling for unreadable PDFs (replaced with zero features). Training time: <math alttext="\approx" class="ltx_Math" display="inline" id="S2.SS2.p10.1.m1" intent=":literal"><semantics><mo>≈</mo><annotation encoding="application/x-tex">\approx</annotation></semantics></math>2 minutes on CPU.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS3.5.1.1">II-C</span> </span><span class="ltx_text ltx_font_italic" id="S2.SS3.6.2">Challenge 3: Discharge Readiness Assessment</span>
+</h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="ltx_text ltx_font_bold" id="S2.SS3.p1.1.1">Task Overview.</span> The discharge readiness task required predicting whether a patient would be ready for discharge by day 11 of their hospital stay (binary classification). The training set comprised 1,000 hospital stays (656 discharge-ready, 344 not ready; 65.6%/34.4% class split) with structured features (unit type, admission reason) and multimodal time-series data: 10 days of vital signs (HR, SBP, DBP, temperature, respiratory rate) plus daily progress notes. We additionally merged patient demographics, admission records, and ED cost history via shared identifiers. The evaluation metric was Macro-F1.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.1"><span class="ltx_text ltx_font_bold" id="S2.SS3.p2.1.1">Human-Guided Feature Engineering.</span> This challenge required the most extensive human-AI iteration, progressing through five rounds. The agentic system’s baseline used only two categorical features (unit type, admission reason) with a Random Forest, achieving CV F1 = 0.49. Human-guided iterations added feature groups incrementally: (i) vital sign statistics (+0.18 F1 to 0.67), (ii) NLP keyword features (no gain, prompting strategy revision), (iii) derived physiological composites (+0.01), (iv) cross-dataset integration of admission records and ED cost history (+0.05 to 0.73). The final model used <math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS3.p2.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>120 features. Missing numeric values were imputed with training-set medians.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p3">
+<p class="ltx_p" id="S2.SS3.p3.1"><span class="ltx_text ltx_font_italic" id="S2.SS3.p3.1.1">Structured features (<math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS3.p3.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>15):</span> One-hot encoding for unit_type, admission_reason, sex, insurance, primary diagnosis, and primary chronic condition, plus numeric age, prior 5-year ED visits, and prior 5-year ED costs. Merging across stays, patients, admissions, and ED cost tables, a human decision to exploit cross-dataset signal, added features unavailable in any single source.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p4">
+<p class="ltx_p" id="S2.SS3.p4.5"><span class="ltx_text ltx_font_italic" id="S2.SS3.p4.1.1">Vital sign features (<math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS3.p4.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>57):</span> For each of five vital signs across 10 days, we computed: (1) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.2">endpoint values</span>: first and last day readings; (2) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.3">distributional statistics</span>: mean, median, standard deviation, min, max, and range; (3) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.4">higher-order statistics</span>: coefficient of variation, skewness, and kurtosis for HR and temperature; (4) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.5">trend indicators</span>, linear regression slope via scipy.stats.linregress; (5) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.6">change metrics</span>: absolute and percent change (last minus first); (6) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.7">recent-window features</span>: last-3-day means for key vitals; (7) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.8">volatility</span>: rolling 3-day standard deviation for HR; and (8) <span class="ltx_text ltx_font_italic" id="S2.SS3.p4.5.9">clinical threshold crossings</span>: days with HR<math alttext="&gt;" class="ltx_Math" display="inline" id="S2.SS3.p4.2.m1" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math>100, HR<math alttext="&lt;" class="ltx_Math" display="inline" id="S2.SS3.p4.3.m2" intent=":literal"><semantics><mo>&lt;</mo><annotation encoding="application/x-tex">&lt;</annotation></semantics></math>60, temperature<math alttext="&gt;" class="ltx_Math" display="inline" id="S2.SS3.p4.4.m3" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math>37.5°C, and SBP<math alttext="&gt;" class="ltx_Math" display="inline" id="S2.SS3.p4.5.m4" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math>140.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p5">
+<p class="ltx_p" id="S2.SS3.p5.5"><span class="ltx_text ltx_font_italic" id="S2.SS3.p5.1.1">Derived physiological features (<math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS3.p5.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>22):</span> We computed clinically meaningful composites: (1) <span class="ltx_text ltx_font_italic" id="S2.SS3.p5.5.2">hemodynamic features</span>: mean and last pulse pressure (SBP<math alttext="-" class="ltx_Math" display="inline" id="S2.SS3.p5.2.m1" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math>DBP), pulse pressure change, mean arterial pressure (DBP + PP/3); (2) <span class="ltx_text ltx_font_italic" id="S2.SS3.p5.5.3">stability composites</span>: vitals stability score (negative sum of HR, SBP, temperature, and RR standard deviations) and volatility score (sum of HR and temperature CVs); (3) <span class="ltx_text ltx_font_italic" id="S2.SS3.p5.5.4">binary improving flags</span>: whether HR, temperature, SBP, and overall vital trends were improving; (4) <span class="ltx_text ltx_font_italic" id="S2.SS3.p5.5.5">normal-range flags</span>: whether last-day HR (60-100), temperature (36.5-37.5°C), and SBP (90-140) fell within normal limits, plus a count of vitals in normal range; and (5) <span class="ltx_text ltx_font_italic" id="S2.SS3.p5.5.6">age interactions</span>: age<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS3.p5.3.m2" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>HR, age<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS3.p5.4.m3" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>stability, age<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS3.p5.5.m4" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>temperature, capturing how age modulates vital sign significance.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p6">
+<p class="ltx_p" id="S2.SS3.p6.1"><span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.1">NLP features (<math alttext="\sim" class="ltx_Math" display="inline" id="S2.SS3.p6.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>37):</span> We extracted clinical indicators from the 10 daily progress notes using domain-specific keyword matching (with partial stemming, e.g., “ambulat” for ambulatory/ambulating). Feature groups included: (1) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.2">positive/negative sentiment</span>, keyword counts across 15 positive terms (stable, improved, ambulatory, afebrile, tolerating, etc.) and 15 negative terms (confused, fever, unstable, worsening, decline, etc.); (2) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.3">mobility and independence</span>, counts for 7 mobility and 5 independence keywords, with last-day, mean, and trend (linear slope) aggregations; (3) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.4">discharge readiness</span>, mentions of discharge-related terms (discharge, home, ready, cleared, planning); (4) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.5">complication indicators</span>, mentions of complication, setback, concern, deterioration; (5) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.6">therapy progress</span>, physical/occupational therapy mentions; (6) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.7">pain trajectory</span>, pain keyword trend; (7) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.8">cognitive status</span>, mean score from alert/oriented/responsive keywords; (8) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.9">temporal aggregations</span>, last-3-day sentiment, note length trend, and composite scores combining sentiment with mobility; and (9) <span class="ltx_text ltx_font_italic" id="S2.SS3.p6.1.10">meta-features</span>, total note count and average note length.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p7">
+<p class="ltx_p" id="S2.SS3.p7.1">Human decision: The agentic system initially applied generic TF-IDF to the daily notes, as it had for discharge summaries in Challenge 1. Human analysts observed that this yielded no improvement (iteration ii above) because daily notes were short (10-20 words) and lacked the lexical diversity that TF-IDF exploits. They redirected the system to use domain-specific clinical keyword matching with partial stemming (“ambulat,” “discharge”) targeting discharge criteria terminology, which improved recall and, when combined with temporal aggregation, contributed to the final gains.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p8">
+<p class="ltx_p" id="S2.SS3.p8.1"><span class="ltx_text ltx_font_bold" id="S2.SS3.p8.1.1">Model Architecture: Five-Model Stacking Ensemble.</span> We employed a stacking classifier with five base models and a logistic regression meta-learner, trained via 5-fold stratified internal CV:</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p9">
+<ul class="ltx_itemize" id="S2.I3">
+<li class="ltx_item" id="S2.I3.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I3.i1.p1">
+<p class="ltx_p" id="S2.I3.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I3.i1.p1.1.1">XGBoost-A</span> (n=400, lr=0.02, depth=7, subsample=0.85, colsample_bytree=0.85): Primary gradient boosting model; random_state=42</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I3.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I3.i2.p1">
+<p class="ltx_p" id="S2.I3.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I3.i2.p1.1.1">XGBoost-B</span> (n=300, lr=0.03, depth=9, subsample=0.8, colsample_bytree=0.9): Deeper variant with slightly inflated scale_pos_weight (<math alttext="\times" class="ltx_Math" display="inline" id="S2.I3.i2.p1.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>1.1) for minority class; random_state=43</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I3.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I3.i3.p1">
+<p class="ltx_p" id="S2.I3.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I3.i3.p1.1.1">Random Forest</span> (n=400, depth=25, min_samples_split=3, class_weight=balanced): Robust bagging baseline</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I3.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I3.i4.p1">
+<p class="ltx_p" id="S2.I3.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I3.i4.p1.1.1">Extra Trees</span> (n=300, depth=20, class_weight=balanced): Randomized splitting for diversity</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I3.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S2.I3.i5.p1">
+<p class="ltx_p" id="S2.I3.i5.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I3.i5.p1.1.1">Gradient Boosting</span> (n=300, lr=0.03, depth=7, subsample=0.85): Complementary sequential learner</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S2.SS3.p10">
+<p class="ltx_p" id="S2.SS3.p10.1"><span class="ltx_text ltx_font_italic" id="S2.SS3.p10.1.1">Meta-Learner:</span> Logistic regression (class_weight=balanced, max_iter=1000) trained on out-of-fold predictions via predict_proba.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p11">
+<p class="ltx_p" id="S2.SS3.p11.2"><span class="ltx_text ltx_font_bold" id="S2.SS3.p11.2.1">Rationale for Human Decisions.</span> The five iterations moved CV F1 from 0.49 to 0.73 (+0.24), with human decisions at each checkpoint: (1) <span class="ltx_text ltx_font_italic" id="S2.SS3.p11.2.2">Statistical aggregation over raw time series</span> (iteration i): the agentic system proposed feeding raw 10<math alttext="\times" class="ltx_Math" display="inline" id="S2.SS3.p11.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>5 vital matrices to an LSTM; human analysts redirected to statistical aggregation, recognizing that N=1,000 would cause sequence model overfitting. This single decision yielded the largest gain (+0.18 F1). (2) <span class="ltx_text ltx_font_italic" id="S2.SS3.p11.2.3">NLP strategy pivot</span> (iteration ii<math alttext="\rightarrow" class="ltx_Math" display="inline" id="S2.SS3.p11.2.m2" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math>iii): when TF-IDF produced no improvement, human analysts diagnosed the failure (short notes, specialized vocabulary) and substituted clinical keyword matching, ultimately contributing via temporal aggregation in later iterations. (3) <span class="ltx_text ltx_font_italic" id="S2.SS3.p11.2.4">Cross-dataset integration</span> (iteration iv): merging admission and ED cost data added predictive context (diagnosis, prior utilization) absent from stays data alone, this was the key insight of the final iteration (+0.05 F1). (4) <span class="ltx_text ltx_font_italic" id="S2.SS3.p11.2.5">Physiological composites:</span> Mean arterial pressure, pulse pressure, and vitals stability scores encode clinical knowledge about hemodynamic status that raw vitals do not capture individually. (5) <span class="ltx_text ltx_font_italic" id="S2.SS3.p11.2.6">Five-model stacking:</span> With class imbalance (34.4% minority), diverse models with balanced class weights and probability-based stacking improved minority class recall from 0.58 to 0.67.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p12">
+<p class="ltx_p" id="S2.SS3.p12.1"><span class="ltx_text ltx_font_bold" id="S2.SS3.p12.1.1">Validation Strategy.</span> We used 5-fold stratified CV with Macro-F1 throughout all iterations. The final model achieved CV F1 = 0.732 <math alttext="\pm" class="ltx_Math" display="inline" id="S2.SS3.p12.1.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 0.018 (per-class: 0.65 not-ready, 0.81 ready). Feature importance analysis confirmed that avg_note_length (0.194), HR-related features, and sentiment trends dominated, validating the multimodal engineering approach. Final test predictions achieved Macro-F1 = 0.7939 on the public leaderboard, ranking 3rd.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p13">
+<p class="ltx_p" id="S2.SS3.p13.1"><span class="ltx_text ltx_font_bold" id="S2.SS3.p13.1.1">Implementation Details.</span> Models were implemented using scikit-learn and XGBoost. Vital sign trends computed via scipy.stats.linregress. NLP features used Python regex with partial-stem keyword matching. Training time: <math alttext="\approx" class="ltx_Math" display="inline" id="S2.SS3.p13.1.m1" intent=":literal"><semantics><mo>≈</mo><annotation encoding="application/x-tex">\approx</annotation></semantics></math>3 minutes on CPU.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1">Results</span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1">We present performance results across all three AgentDS Healthcare challenges, ablation studies quantifying the impact of human decisions, and cross-task analysis revealing generalizable patterns in human-AI collaboration for healthcare prediction.</p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.5.1.1">III-A</span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.6.2">Overall Performance</span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1">Table <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.T1" title="TABLE I ‣ III-A Overall Performance ‣ III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">I</span></a> summarizes our final leaderboard performance across all three challenges. To contextualize these results, we contrast them with the agentic system’s unguided baselines: Challenge 1 improved from CV F1 = 0.846 (single Optuna-tuned XGBoost) to 0.896 after human-guided feature expansion and ensemble design; Challenge 2 from CV MAE $467 (single model, basic PDF parsing) to $459 with enriched cross-source features and weighted ensembling; and Challenge 3 from CV F1 = 0.49 (two categorical features) to 0.73 through four rounds of human-directed iteration. These gains, +0.050 F1, -$8 MAE, and +0.24 F1 respectively, quantify the value added by human guidance at each stage.</p>
+</div>
+<figure class="ltx_table" id="S3.T1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Performance on AgentDS Healthcare Public Leaderboard</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.1.1" style="font-size:90%;">Challenge</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.2.1" style="font-size:90%;">Metric</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.3.1" style="font-size:90%;">Our Score</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.4.1" style="font-size:90%;">Rank</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.5"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.5.1" style="font-size:90%;">1st Place</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T1.1.2.1.1"><span class="ltx_text" id="S3.T1.1.2.1.1.1" style="font-size:90%;">Challenge 1: Readmission</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.2.1.2"><span class="ltx_text" id="S3.T1.1.2.1.2.1" style="font-size:90%;">Macro-F1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.2.1.3"><span class="ltx_text" id="S3.T1.1.2.1.3.1" style="font-size:90%;">0.8986</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.2.1.4"><span class="ltx_text" id="S3.T1.1.2.1.4.1" style="font-size:90%;">5th</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.2.1.5"><span class="ltx_text" id="S3.T1.1.2.1.5.1" style="font-size:90%;">0.9044</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.3.2.1"><span class="ltx_text" id="S3.T1.1.3.2.1.1" style="font-size:90%;">Challenge 2: ED Cost</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.3.2.2"><span class="ltx_text" id="S3.T1.1.3.2.2.1" style="font-size:90%;">MAE (USD)</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.3.2.3"><span class="ltx_text" id="S3.T1.1.3.2.3.1" style="font-size:90%;">$465.13</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.3.2.4"><span class="ltx_text" id="S3.T1.1.3.2.4.1" style="font-size:90%;">6th</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.3.2.5"><span class="ltx_text" id="S3.T1.1.3.2.5.1" style="font-size:90%;">$448.75</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.4.3.1"><span class="ltx_text" id="S3.T1.1.4.3.1.1" style="font-size:90%;">Challenge 3: Discharge</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.4.3.2"><span class="ltx_text" id="S3.T1.1.4.3.2.1" style="font-size:90%;">Macro-F1</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.4.3.3"><span class="ltx_text" id="S3.T1.1.4.3.3.1" style="font-size:90%;">0.7939</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.4.3.4"><span class="ltx_text" id="S3.T1.1.4.3.4.1" style="font-size:90%;">3rd</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.4.3.5"><span class="ltx_text" id="S3.T1.1.4.3.5.1" style="font-size:90%;">0.8006</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S3.T1.1.5.4.1"><span class="ltx_text ltx_font_bold" id="S3.T1.1.5.4.1.1" style="font-size:90%;">Domain Score</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.T1.1.5.4.2"><span class="ltx_text ltx_font_bold" id="S3.T1.1.5.4.2.1" style="font-size:90%;">Aggregate</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.T1.1.5.4.3"><span class="ltx_text ltx_font_bold" id="S3.T1.1.5.4.3.1" style="font-size:90%;">0.8430</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.T1.1.5.4.4"><span class="ltx_text ltx_font_bold" id="S3.T1.1.5.4.4.1" style="font-size:90%;">5th</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.T1.1.5.4.5"><span class="ltx_text ltx_font_bold" id="S3.T1.1.5.4.5.1" style="font-size:90%;">0.9426</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.p2.1.1">Key Observations:</span> (1) <span class="ltx_text ltx_font_italic" id="S3.SS1.p2.1.2">Cross-task consistency:</span> We ranked 5th overall in the healthcare domain, with per-challenge rankings of 5th, 6th, and 3rd, respectively, demonstrating that the same human-guided workflow, iterative error analysis, domain-informed feature engineering, deliberate ensemble diversity, transfers across classification, regression, and multimodal data types without task-specific redesign. (2) <span class="ltx_text ltx_font_italic" id="S3.SS1.p2.1.3">Competitive with minimal automation:</span> Our readmission prediction (0.8986) was within 0.0058 F1 of the top score (0.9044), and discharge readiness (0.7939) ranked 3rd, despite using only tree-based models and manual feature engineering, no neural architectures or automated feature search. (3) <span class="ltx_text ltx_font_italic" id="S3.SS1.p2.1.4">Validation alignment:</span> Test scores closely matched or exceeded cross-validation estimates (Challenge 1: CV 0.896 vs test 0.899; Challenge 2: CV $459 vs test $465; Challenge 3: CV 0.732 vs test 0.794), confirming that human-guided validation strategies (stratified CV, appropriate metrics) prevented overfitting.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.5.1.1">III-B</span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.6.2">Ablation Studies: Impact of Human Decisions</span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1">To isolate the value of each human intervention, we conducted counterfactual ablation studies: for each decision category, we reverted to what the agentic system would have done without human guidance and measured the resulting performance change. Table <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.T2" title="TABLE II ‣ III-B Ablation Studies: Impact of Human Decisions ‣ III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">II</span></a> presents 5-fold cross-validation results on training sets.</p>
+</div>
+<figure class="ltx_table" id="S3.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE II: </span>Ablation Study: Quantifying Impact of Human Decisions</figcaption><div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<table class="ltx_tabular ltx_centering ltx_figure_panel ltx_guessed_headers ltx_align_middle" id="S3.T2.1">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt" id="S3.T2.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.1.1.1" style="font-size:80%;">Configuration</span></th>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S3.T2.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.1.2.1" style="font-size:80%;">Ch1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S3.T2.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.1.3.1" style="font-size:80%;">Ch2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S3.T2.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.1.4.1" style="font-size:80%;">Ch3</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.2.2">
+<th class="ltx_td ltx_th ltx_th_row" id="S3.T2.1.2.2.1"></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.2.2.2"><span class="ltx_text ltx_font_bold" id="S3.T2.1.2.2.2.1" style="font-size:80%;">(F1)</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.2.2.3"><span class="ltx_text ltx_font_bold" id="S3.T2.1.2.2.3.1" style="font-size:80%;">(MAE)</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.2.2.4"><span class="ltx_text ltx_font_bold" id="S3.T2.1.2.2.4.1" style="font-size:80%;">(F1)</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T2.1.3.3.1"><span class="ltx_text ltx_font_bold" id="S3.T2.1.3.3.1.1" style="font-size:80%;">Full Approach</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.1.3.3.2"><span class="ltx_text ltx_font_bold" id="S3.T2.1.3.3.2.1" style="font-size:80%;">0.895</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.1.3.3.3"><span class="ltx_text ltx_font_bold" id="S3.T2.1.3.3.3.1" style="font-size:80%;">$458</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.1.3.3.4"><span class="ltx_text ltx_font_bold" id="S3.T2.1.3.3.4.1" style="font-size:80%;">0.785</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="4" id="S3.T2.1.4.4.1"><span class="ltx_text ltx_font_italic" id="S3.T2.1.4.4.1.1" style="font-size:80%;">Multimodal Feature Ablations:</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.5.5.1"><span class="ltx_text" id="S3.T2.1.5.5.1.1" style="font-size:80%;">Text/PDF/TS features</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.5.5.2"><span class="ltx_text" id="S3.T2.1.5.5.2.1" style="font-size:80%;">0.858</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.5.5.3"><span class="ltx_text" id="S3.T2.1.5.5.3.1" style="font-size:80%;">$478</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.5.5.4"><span class="ltx_text" id="S3.T2.1.5.5.4.1" style="font-size:80%;">0.720</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.6.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.6.6.1"><span class="ltx_text" id="S3.T2.1.6.6.1.1" style="font-size:80%;">Only multimodal</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.6.6.2"><span class="ltx_text" id="S3.T2.1.6.6.2.1" style="font-size:80%;">0.812</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.6.6.3"><span class="ltx_text" id="S3.T2.1.6.6.3.1" style="font-size:80%;">$495</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.6.6.4"><span class="ltx_text" id="S3.T2.1.6.6.4.1" style="font-size:80%;">0.680</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.7.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="4" id="S3.T2.1.7.7.1"><span class="ltx_text ltx_font_italic" id="S3.T2.1.7.7.1.1" style="font-size:80%;">Domain Engineering:</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.8.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.8.8.1"><span class="ltx_text" id="S3.T2.1.8.8.1.1" style="font-size:80%;">Interaction terms</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.8.8.2"><span class="ltx_text" id="S3.T2.1.8.8.2.1" style="font-size:80%;">0.887</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.8.8.3"><span class="ltx_text" id="S3.T2.1.8.8.3.1" style="font-size:80%;">$463</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.8.8.4"><span class="ltx_text" id="S3.T2.1.8.8.4.1" style="font-size:80%;">0.780</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.9.9">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.9.9.1"><span class="ltx_text" id="S3.T2.1.9.9.1.1" style="font-size:80%;">Risk scores</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.9.9.2"><span class="ltx_text" id="S3.T2.1.9.9.2.1" style="font-size:80%;">0.889</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.9.9.3"><span class="ltx_text" id="S3.T2.1.9.9.3.1" style="font-size:80%;">$461</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.9.9.4"><span class="ltx_text" id="S3.T2.1.9.9.4.1" style="font-size:80%;">0.782</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.10.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.10.10.1"><span class="ltx_text" id="S3.T2.1.10.10.1.1" style="font-size:80%;">Automated selection</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.10.10.2"><span class="ltx_text" id="S3.T2.1.10.10.2.1" style="font-size:80%;">0.881</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.10.10.3"><span class="ltx_text" id="S3.T2.1.10.10.3.1" style="font-size:80%;">$469</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.10.10.4"><span class="ltx_text" id="S3.T2.1.10.10.4.1" style="font-size:80%;">0.770</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.11.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="4" id="S3.T2.1.11.11.1"><span class="ltx_text ltx_font_italic" id="S3.T2.1.11.11.1.1" style="font-size:80%;">Model Architecture:</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.12.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.12.12.1"><span class="ltx_text" id="S3.T2.1.12.12.1.1" style="font-size:80%;">Ensemble (single)</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.12.12.2"><span class="ltx_text" id="S3.T2.1.12.12.2.1" style="font-size:80%;">0.889</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.12.12.3"><span class="ltx_text" id="S3.T2.1.12.12.3.1" style="font-size:80%;">$463</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.12.12.4"><span class="ltx_text" id="S3.T2.1.12.12.4.1" style="font-size:80%;">0.773</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.13.13">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.13.13.1"><span class="ltx_text" id="S3.T2.1.13.13.1.1" style="font-size:80%;">Default hyperparams</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.13.13.2"><span class="ltx_text" id="S3.T2.1.13.13.2.1" style="font-size:80%;">0.883</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.13.13.3"><span class="ltx_text" id="S3.T2.1.13.13.3.1" style="font-size:80%;">$471</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.13.13.4"><span class="ltx_text" id="S3.T2.1.13.13.4.1" style="font-size:80%;">0.768</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.14.14">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="4" id="S3.T2.1.14.14.1"><span class="ltx_text ltx_font_italic" id="S3.T2.1.14.14.1.1" style="font-size:80%;">Validation Strategy:</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.15.15">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.15.15.1"><span class="ltx_text" id="S3.T2.1.15.15.1.1" style="font-size:80%;">5-fold (vs 8-fold)</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.15.15.2"><span class="ltx_text" id="S3.T2.1.15.15.2.1" style="font-size:80%;">0.893</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.15.15.3"><span class="ltx_text" id="S3.T2.1.15.15.3.1" style="font-size:80%;">$460</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.1.15.15.4"><span class="ltx_text" id="S3.T2.1.15.15.4.1" style="font-size:80%;">0.783</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.16.16">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T2.1.16.16.1"><span class="ltx_text" id="S3.T2.1.16.16.1.1" style="font-size:80%;">No stratification</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.1.16.16.2"><span class="ltx_text" id="S3.T2.1.16.16.2.1" style="font-size:80%;">0.887</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.1.16.16.3"><span class="ltx_text" id="S3.T2.1.16.16.3.1" style="font-size:80%;">$458</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.1.16.16.4"><span class="ltx_text" id="S3.T2.1.16.16.4.1" style="font-size:80%;">0.772</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<ul class="ltx_itemize ltx_centering ltx_figure_panel" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_italic" id="S3.I1.i1.p1.1.1" style="font-size:90%;">Note:</span><span class="ltx_text" id="S3.I1.i1.p1.1.2" style="font-size:90%;"> Ch1/Ch3 = Macro-F1, Ch2 = MAE (USD). Negative deltas indicate degradation.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</figure>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p2.1.1">Multimodal Data Integration:</span> Removing the human-directed multimodal features, trigram TF-IDF (Challenge 1), enriched PDF parsing (Challenge 2), and vital sign statistics (Challenge 3), resulted in the largest performance drop (-0.037 F1 / +$20 MAE average). This corresponds directly to the single highest-gain human decisions in each challenge: expanding TF-IDF from 200 unigrams to 850 trigrams, adding CPT-code-level PDF extraction, and redirecting from raw time series to statistical aggregation. Using <span class="ltx_text ltx_font_italic" id="S3.SS2.p2.1.2">only</span> multimodal features without structured data also performed poorly (-0.083 F1 / +$37 MAE), confirming that human-guided integration of <span class="ltx_text ltx_font_italic" id="S3.SS2.p2.1.3">both</span> modalities is critical.</p>
+</div>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.2"><span class="ltx_text ltx_font_bold" id="S3.SS2.p3.2.1">Domain Feature Engineering:</span> Human-designed interaction terms (age<math alttext="\times" class="ltx_Math" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>Charlson, chronic condition<math alttext="\times" class="ltx_Math" display="inline" id="S3.SS2.p3.2.m2" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>cost) and composite risk scores contributed modestly but consistently (-0.006 to -0.008 F1 / +$3-5 MAE). Replacing human-guided feature selection with automated selection (SelectKBest) degraded performance by -0.014 F1 / +$11 MAE on average, illustrating that clinical intuition for feature relevance outperformed statistical filtering on these sample sizes.</p>
+</div>
+<div class="ltx_para" id="S3.SS2.p4">
+<p class="ltx_p" id="S3.SS2.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p4.1.1">Ensemble Architecture:</span> Reverting from the human-designed ensembles to the agentic system’s single-model baselines degraded performance by -0.006 F1 / +$5 MAE, with the largest impact on Challenge 3 (N=1,000) where ensemble diversity was most valuable for minority class recall. Human-tuned hyperparameters outperformed agentic defaults by -0.012 F1 / +$13 MAE, though notably this was the smallest human contribution category, consistent with our recommendation to prioritize feature engineering over hyperparameter tuning.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS3.5.1.1">III-C</span> </span><span class="ltx_text ltx_font_italic" id="S3.SS3.6.2">Cross-Task Analysis: Generalizable Patterns</span>
+</h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1">Table <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.T3" title="TABLE III ‣ III-C Cross-Task Analysis: Generalizable Patterns ‣ III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">III</span></a> shows top-5 features by importance across all three challenges, revealing consistent patterns.</p>
+</div>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE III: </span>Top-5 Most Important Features by Challenge</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T3.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.2.1.1"><span class="ltx_text ltx_font_bold" id="S3.T3.1.2.1.1.1" style="font-size:90%;">Challenge 1</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.2.1.2"><span class="ltx_text ltx_font_bold" id="S3.T3.1.2.1.2.1" style="font-size:90%;">Challenge 2</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.2.1.3"><span class="ltx_text ltx_font_bold" id="S3.T3.1.2.1.3.1" style="font-size:90%;">Challenge 3</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.1.3.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T3.1.3.1.1"><span class="ltx_text" id="S3.T3.1.3.1.1.1" style="font-size:90%;">Charlson band</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T3.1.3.1.2"><span class="ltx_text" id="S3.T3.1.3.1.2.1" style="font-size:90%;">Prior 5y cost</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T3.1.3.1.3"><span class="ltx_text" id="S3.T3.1.3.1.3.1" style="font-size:90%;">Avg note length</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.4.2">
+<td class="ltx_td ltx_align_left" id="S3.T3.1.4.2.1"><span class="ltx_text" id="S3.T3.1.4.2.1.1" style="font-size:90%;">Prior ED (6m)</span></td>
+<td class="ltx_td ltx_align_left" id="S3.T3.1.4.2.2"><span class="ltx_text" id="S3.T3.1.4.2.2.1" style="font-size:90%;">Prior 5y visits</span></td>
+<td class="ltx_td ltx_align_left" id="S3.T3.1.4.2.3"><span class="ltx_text" id="S3.T3.1.4.2.3.1" style="font-size:90%;">HR last</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1">
+<td class="ltx_td ltx_align_left" id="S3.T3.1.1.1">
+<span class="ltx_text" id="S3.T3.1.1.1.1" style="font-size:90%;">Age</span><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="ltx_text" id="S3.T3.1.1.1.2" style="font-size:90%;">Charlson</span>
+</td>
+<td class="ltx_td ltx_align_left" id="S3.T3.1.1.2"><span class="ltx_text" id="S3.T3.1.1.2.1" style="font-size:90%;">Line item count</span></td>
+<td class="ltx_td ltx_align_left" id="S3.T3.1.1.3"><span class="ltx_text" id="S3.T3.1.1.3.1" style="font-size:90%;">Temp. last</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.5.3">
+<td class="ltx_td ltx_align_left" id="S3.T3.1.5.3.1"><span class="ltx_text" id="S3.T3.1.5.3.1.1" style="font-size:90%;">Length of stay</span></td>
+<td class="ltx_td ltx_align_left" id="S3.T3.1.5.3.2"><span class="ltx_text" id="S3.T3.1.5.3.2.1" style="font-size:90%;">Cost/visit ratio</span></td>
+<td class="ltx_td ltx_align_left" id="S3.T3.1.5.3.3"><span class="ltx_text" id="S3.T3.1.5.3.3.1" style="font-size:90%;">Sentiment trend</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.6.4">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T3.1.6.4.1"><span class="ltx_text" id="S3.T3.1.6.4.1.1" style="font-size:90%;">“wound” keyword</span></td>
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T3.1.6.4.2"><span class="ltx_text" id="S3.T3.1.6.4.2.1" style="font-size:90%;">High-complexity</span></td>
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T3.1.6.4.3"><span class="ltx_text" id="S3.T3.1.6.4.3.1" style="font-size:90%;">Mobility trend</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.2"><span class="ltx_text ltx_font_bold" id="S3.SS3.p2.2.1">Common Patterns:</span> (1) Historical utilization dominates (prior visits/costs, comorbidity); (2) Multimodal features appear in top-5 despite being <math alttext="&lt;" class="ltx_Math" display="inline" id="S3.SS3.p2.1.m1" intent=":literal"><semantics><mo>&lt;</mo><annotation encoding="application/x-tex">&lt;</annotation></semantics></math>20% of features; (3) Domain interactions (age<math alttext="\times" class="ltx_Math" display="inline" id="S3.SS3.p2.2.m2" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>Charlson) rank above raw features; (4) Trends outweigh absolutes (HR slope vs raw HR).</p>
+</div>
+<figure class="ltx_table" id="S3.T4">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE IV: </span>Quantified Impact of Human Decisions</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T4.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T4.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T4.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T4.1.1.1.1.1" style="font-size:90%;">Human Decision Category</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T4.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T4.1.1.1.2.1" style="font-size:90%;">Avg Gain</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T4.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T4.1.2.1.1"><span class="ltx_text" id="S3.T4.1.2.1.1.1" style="font-size:90%;">Multimodal feature extraction</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T4.1.2.1.2"><span class="ltx_text" id="S3.T4.1.2.1.2.1" style="font-size:90%;">+0.041 F1</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T4.1.3.2.1"><span class="ltx_text" id="S3.T4.1.3.2.1.1" style="font-size:90%;">Domain interactions</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T4.1.3.2.2"><span class="ltx_text" id="S3.T4.1.3.2.2.1" style="font-size:90%;">+0.010 F1</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T4.1.4.3.1"><span class="ltx_text" id="S3.T4.1.4.3.1.1" style="font-size:90%;">Ensemble diversity</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T4.1.4.3.2"><span class="ltx_text" id="S3.T4.1.4.3.2.1" style="font-size:90%;">+0.008 F1</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T4.1.5.4.1"><span class="ltx_text" id="S3.T4.1.5.4.1.1" style="font-size:90%;">Clinical keywords</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T4.1.5.4.2"><span class="ltx_text" id="S3.T4.1.5.4.2.1" style="font-size:90%;">+0.015 F1</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T4.1.6.5.1"><span class="ltx_text" id="S3.T4.1.6.5.1.1" style="font-size:90%;">Hyperparameter choices</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T4.1.6.5.2"><span class="ltx_text" id="S3.T4.1.6.5.2.1" style="font-size:90%;">+0.014 F1</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S3.T4.1.7.6.1"><span class="ltx_text ltx_font_bold" id="S3.T4.1.7.6.1.1" style="font-size:90%;">Total contribution</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.T4.1.7.6.2"><span class="ltx_text ltx_font_bold" id="S3.T4.1.7.6.2.1" style="font-size:90%;">+0.065 F1</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.4"><span class="ltx_text ltx_font_bold" id="S3.SS3.p3.4.1">Interpretation:</span> Human decisions contributed approximately 7-8% relative improvement (+0.065 cumulative F1), moving our approach from agentic-only baselines (mid-tier performance) to competitive top-5 results. While individual contributions appear modest (0.008-0.041), they compound across pipeline stages, precisely the pattern predicted by our iterative methodology. The ordering of impact (multimodal extraction <math alttext="&gt;" class="ltx_Math" display="inline" id="S3.SS3.p3.1.m1" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math> clinical keywords <math alttext="&gt;" class="ltx_Math" display="inline" id="S3.SS3.p3.2.m2" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math> hyperparameters <math alttext="&gt;" class="ltx_Math" display="inline" id="S3.SS3.p3.3.m3" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math> domain interactions <math alttext="&gt;" class="ltx_Math" display="inline" id="S3.SS3.p3.4.m4" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math> ensemble diversity) suggests that early-stage decisions about <span class="ltx_text ltx_font_italic" id="S3.SS3.p3.4.2">what data to extract</span> matter more than late-stage decisions about <span class="ltx_text ltx_font_italic" id="S3.SS3.p3.4.3">how to model it</span>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1">Discussion</span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1">Our participation in the AgentDS Healthcare benchmark demonstrates that systematic human-AI collaboration can achieve competitive performance (5th overall) across diverse clinical prediction tasks while maintaining interpretability and reproducibility. We discuss key lessons, limitations, and implications for healthcare ML practice, situating our findings within the broader literature on human-AI collaboration, model selection, and clinical deployment.</p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.5.1.1">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.6.2">Key Lessons Learned</span>
+</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.1">1. Domain Knowledge Pays Dividends.</span> Clinical intuition for feature engineering (age<math alttext="\times" class="ltx_Math" display="inline" id="S4.SS1.p1.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>Charlson interactions, mobility keywords, vital sign trends) consistently outperformed automated feature selection by 1-3% (Table <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.T2" title="TABLE II ‣ III-B Ablation Studies: Impact of Human Decisions ‣ III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">II</span></a>). This advantage compounds across multiple decision points: our cumulative human contribution (+0.065 F1 / -$38 MAE, Table <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.T4" title="TABLE IV ‣ III-C Cross-Task Analysis: Generalizable Patterns ‣ III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">IV</span></a>) moved us from mid-tier to top-5 performance. <span class="ltx_text ltx_font_italic" id="S4.SS1.p1.1.2">Implication:</span> Healthcare ML practitioners should prioritize domain expertise in early pipeline stages (feature engineering) over extensive hyperparameter tuning in later stages.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p2.1.1">2. Multimodal Integration Requires Task-Specific Strategies.</span> While TF-IDF succeeded for discharge notes (Challenge 1), it failed for short daily notes (Challenge 3); clinical keyword extraction proved more effective. Similarly, PDF parsing required a regex tailored to the billing receipt structure (Challenge 2). <span class="ltx_text ltx_font_italic" id="S4.SS1.p2.1.2">Lesson:</span> No single approach generalizes across all unstructured healthcare data types; human judgment is required to select appropriate extraction methods based on data characteristics (document length, structure, domain-specific terminology).</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p3.1.1">3. Ensemble Diversity Over Complexity.</span> Our stacking ensembles (5 base models each) achieved competitive performance using only tree-based models and regularized linear models. The key was <span class="ltx_text ltx_font_italic" id="S4.SS1.p3.1.2">deliberate diversity</span>: in Challenge 1, three XGBoost variants with different depth/learning rate profiles (depth 5/6/7) plus L1/L2 logistic regression; in Challenge 2, the human decision to use fixed weights instead of a learned meta-learner prevented overfitting on N=2,000 samples. <span class="ltx_text ltx_font_italic" id="S4.SS1.p3.1.3">Insight:</span> Manually-configured diverse ensembles outperform random search, generating similar models.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<p class="ltx_p" id="S4.SS1.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p4.1.1">4. Small Samples Favor Interpretability.</span> With modest training sizes (N=1,000-5,000), our statistical feature aggregation (Challenge 3: vital trends, stability) and domain features outperformed deep learning approaches (LSTM, BERT), which require larger samples. This sample efficiency enabled faster iteration and model interpretability through feature importance analysis. <span class="ltx_text ltx_font_italic" id="S4.SS1.p4.1.2">Recommendation:</span> For healthcare datasets with N<math alttext="&lt;" class="ltx_Math" display="inline" id="S4.SS1.p4.1.m1" intent=":literal"><semantics><mo>&lt;</mo><annotation encoding="application/x-tex">&lt;</annotation></semantics></math>10,000, prioritize feature engineering and tree-based models over deep learning.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p5">
+<p class="ltx_p" id="S4.SS1.p5.2"><span class="ltx_text ltx_font_bold" id="S4.SS1.p5.2.1">5. Validation Strategy Impacts Reliability.</span> Stratified CV was critical for imbalanced classification tasks (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.SS1.p5.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = -0.007 F1 when removed), while 8-fold vs 5-fold showed a negligible difference (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.SS1.p5.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = -0.002). <span class="ltx_text ltx_font_italic" id="S4.SS1.p5.2.2">Guideline:</span> Invest effort in stratification and appropriate metrics (Macro-F1 for imbalance, MAE for skewed costs) rather than excessive fold counts.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p6">
+<p class="ltx_p" id="S4.SS1.p6.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p6.1.1">6. Reproducibility Through Documentation.</span> Our approach’s primary strength is not novelty but <span class="ltx_text ltx_font_italic" id="S4.SS1.p6.1.2">systematic documentation</span> of every human decision with rationale. This transparency enables: (1) peer review and critique, (2) replication by other teams, (3) trust-building for clinical deployment. <span class="ltx_text ltx_font_italic" id="S4.SS1.p6.1.3">Principle:</span> In healthcare ML, reproducibility and interpretability matter as much as raw performance.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.5.1.1">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.6.2">Cross-Task Insights</span>
+</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p1.1.1">What Generalized:</span> Tree-based ensemble methods (XGBoost, Gradient Boosting, RF, Extra Trees), domain-informed interactions, and multimodal feature extraction proved universally effective. Historical utilization features (prior visits, costs, comorbidity) dominated importance rankings across all tasks.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p2.1.1">What Required Adaptation:</span> Text processing (TF-IDF vs keywords), time-series handling (raw values vs aggregates vs trends), and class imbalance strategies varied by task. Rigid application of a single methodology across all tasks would have degraded performance by  5-10%.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p3.1.1">Human vs Automated Roles:</span> Our iteration logs reveal a consistent division of labor. The agentic system excelled at <span class="ltx_text ltx_font_italic" id="S4.SS2.p3.1.2">how much</span>: Optuna-based hyperparameter search (Challenge 1), automated CV estimation, and rapid model retraining. Humans excelled at <span class="ltx_text ltx_font_italic" id="S4.SS2.p3.1.3">what</span> and <span class="ltx_text ltx_font_italic" id="S4.SS2.p3.1.4">why</span>: which tables to join (cross-dataset integration in Challenge 3, +0.05 F1), which NLP strategy to use (keyword matching over TF-IDF for short notes), and when to override the system’s proposals (fixed ensemble weights over learned stacking in Challenge 2). The highest-value human decisions were early-stage choices about data representation; the agentic system efficiently optimized the resulting models.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS3.5.1.1">IV-C</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS3.6.2">Limitations</span>
+</h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p1.1.1">1. Synthetic Data Constraints.</span> The AgentDS benchmark uses synthetic data matching real distributions but lacking clinical noise (missing values, measurement errors, data entry inconsistencies). Our performance estimates may not generalize to messier real-world EHR data. <span class="ltx_text ltx_font_italic" id="S4.SS3.p1.1.2">Mitigation:</span> External validation on real EHR datasets (MIMIC-IV, eICU) is needed before clinical deployment.</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p2.1.1">2. Generalization vs Task-Specific Optimization.</span> Our unified methodology prioritized consistency across tasks over single-task performance, potentially leaving gains on the table. We ranked between 3rd and 6th on individual challenges (5th overall by domain score), suggesting room for task-specific optimization. <span class="ltx_text ltx_font_italic" id="S4.SS3.p2.1.2">Trade-off:</span> Generalization enables knowledge transfer across healthcare problems, but domain-specific competitions may require specialized approaches.</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p3">
+<p class="ltx_p" id="S4.SS3.p3.2"><span class="ltx_text ltx_font_bold" id="S4.SS3.p3.2.1">3. Limited Deep Learning Exploration.</span> We did not extensively explore transformer models (BioClinicalBERT for text, LSTMs for vitals) due to sample size constraints (N<math alttext="&lt;" class="ltx_Math" display="inline" id="S4.SS3.p3.1.m1" intent=":literal"><semantics><mo>&lt;</mo><annotation encoding="application/x-tex">&lt;</annotation></semantics></math>5,000). Larger datasets might favor end-to-end deep learning over manual feature engineering. <span class="ltx_text ltx_font_italic" id="S4.SS3.p3.2.2">Scope:</span> Our findings apply to common healthcare ML scenarios (N=1,000-10,000 samples, tabular+text+time-series); different conclusions may hold for massive EHR databases (N<math alttext="&gt;" class="ltx_Math" display="inline" id="S4.SS3.p3.2.m2" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math>100,000).</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p4">
+<p class="ltx_p" id="S4.SS3.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p4.1.1">4. Computational Resources.</span> Our GPU-accelerated training (Challenge 1:  8 minutes) required hardware not available to all practitioners. CPU-only training extends to 30-60 minutes, still acceptable but not trivial. <span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.2">Accessibility:</span> Cloud-based training (Google Colab, AWS) democratizes access, but cost and technical barriers remain.</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p5">
+<p class="ltx_p" id="S4.SS3.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p5.1.1">5. Multimodal Feature Engineering Labor.</span> Extracting PDF billing features, parsing clinical notes, and computing vital trends required 10-15 hours of human effort per challenge. This investment is worthwhile for research or high-stakes applications but may not scale to rapid prototyping scenarios. <span class="ltx_text ltx_font_italic" id="S4.SS3.p5.1.2">Pragmatism:</span> Practitioners must balance effort vs performance gains.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS4.5.1.1">IV-D</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS4.6.2">Implications for Healthcare ML Practice</span>
+</h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p1.1.1">For Clinicians:</span> Our feature importance rankings (Table <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S3.T3" title="TABLE III ‣ III-C Cross-Task Analysis: Generalizable Patterns ‣ III Results ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">III</span></a>) align with established clinical risk factors (Charlson index, prior utilization, vital trends) <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#bib.bib11" title="Identification of patients in need of advanced care for depression using data extracted from a statewide health information exchange: a machine learning approach">8</a>]</cite>, building trust that models capture medically-meaningful relationships. The interpretability of tree-based methods enables clinician review of model decisions, critical for clinical deployment.</p>
+</div>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p2.1.1">For ML Engineers:</span> Start with domain-guided feature engineering before investing in complex architectures. Our ablations show that multimodal features (+0.041 F1) and interactions (+0.010) contributed 4-10<math alttext="\times" class="ltx_Math" display="inline" id="S4.SS4.p2.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> more than ensemble complexity (+0.006-0.008). Simple ensembles with good features outperform complex ensembles with default features.</p>
+</div>
+<div class="ltx_para" id="S4.SS4.p3">
+<p class="ltx_p" id="S4.SS4.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p3.1.1">For Healthcare Systems:</span> Benchmark performance (5th place, 0.8986 F1 readmission, $465 ED cost MAE, 0.7939 F1 discharge) suggests these models approach clinical utility thresholds. However, external validation on real EHR data, prospective trials, and fairness audits (race, age, insurance bias) are prerequisites before deployment.</p>
+</div>
+<div class="ltx_para" id="S4.SS4.p4">
+<p class="ltx_p" id="S4.SS4.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p4.1.1">For Researchers:</span> The AgentDS benchmark successfully evaluates human-AI collaboration through: (1) multimodal data requiring domain expertise, (2) standardized evaluation preventing overfitting, (3) public leaderboards enabling comparison. We recommend similar benchmarks for other healthcare domains (oncology, radiology, mental health).</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS5.5.1.1">IV-E</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS5.6.2">Future Work</span>
+</h3>
+<div class="ltx_para" id="S4.SS5.p1">
+<p class="ltx_p" id="S4.SS5.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS5.p1.1.1">Short-term Extensions:</span></p>
+<ul class="ltx_itemize" id="S4.I1">
+<li class="ltx_item" id="S4.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i1.p1">
+<p class="ltx_p" id="S4.I1.i1.p1.1"><span class="ltx_text ltx_font_italic" id="S4.I1.i1.p1.1.1">Transformer-based text models:</span> BioClinicalBERT embeddings for discharge notes (Challenge 1) and daily notes (Challenge 3) may capture richer semantic content than TF-IDF/keywords. Requires <math alttext="&gt;" class="ltx_Math" display="inline" id="S4.I1.i1.p1.1.m1" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math>5,000 samples for stable fine-tuning.</p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i2.p1">
+<p class="ltx_p" id="S4.I1.i2.p1.1"><span class="ltx_text ltx_font_italic" id="S4.I1.i2.p1.1.1">Uncertainty quantification:</span> Calibrated probability predictions (isotonic regression, temperature scaling) enable clinicians to assess model confidence, critical for high-stakes decisions.</p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i3.p1">
+<p class="ltx_p" id="S4.I1.i3.p1.1"><span class="ltx_text ltx_font_italic" id="S4.I1.i3.p1.1.1">Fairness analysis:</span> Stratify performance by patient demographics (age, sex, insurance) to identify potential biases in learned models.</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S4.SS5.p2">
+<p class="ltx_p" id="S4.SS5.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS5.p2.1.1">Long-term Directions:</span></p>
+<ul class="ltx_itemize" id="S4.I2">
+<li class="ltx_item" id="S4.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i1.p1">
+<p class="ltx_p" id="S4.I2.i1.p1.1"><span class="ltx_text ltx_font_italic" id="S4.I2.i1.p1.1.1">External validation:</span> Apply our approach to real EHR datasets (MIMIC-IV, eICU) to assess generalization to noisy clinical data.</p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i2.p1">
+<p class="ltx_p" id="S4.I2.i2.p1.1"><span class="ltx_text ltx_font_italic" id="S4.I2.i2.p1.1.1">Prospective trials:</span> Deploy readmission or discharge models in live hospital settings (with clinician oversight) to measure impact on patient outcomes and costs.</p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i3.p1">
+<p class="ltx_p" id="S4.I2.i3.p1.1"><span class="ltx_text ltx_font_italic" id="S4.I2.i3.p1.1.1">Automated multimodal feature learning:</span> Investigate whether end-to-end deep learning (multimodal transformers) can match or exceed manual feature engineering at scale (N<math alttext="&gt;" class="ltx_Math" display="inline" id="S4.I2.i3.p1.1.m1" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math>50,000).</p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i4.p1">
+<p class="ltx_p" id="S4.I2.i4.p1.1"><span class="ltx_text ltx_font_italic" id="S4.I2.i4.p1.1.1">Continual learning:</span> Adapt models to distribution shift (COVID-19 pandemic, policy changes) through online learning or periodic retraining.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1">Conclusion</span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1">We have presented a human-guided agentic AI approach for multimodal clinical prediction, evaluated across three AgentDS Healthcare benchmark challenges: 30-day readmission prediction (Macro-F1 = 0.8986, 5th), emergency department cost forecasting (MAE = $465.13, 6th), and discharge readiness assessment (Macro-F1 = 0.7939, 3rd), achieving 5th place overall in the healthcare domain. Our central contribution is not the final models themselves but the <span class="ltx_text ltx_font_italic" id="S5.p1.1.1">iterative workflow</span> through which human analysts guided an agentic AI system from naive baselines to competitive performance.</p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1">The iteration evidence is concrete. In Challenge 1, human-directed expansion of text features (200 unigrams to 850 trigrams) and the switch from a single model to a stacking ensemble lifted CV F1 from 0.846 to 0.896. In Challenge 2, human analysis of per-model hold-out MAEs justified fixed ensemble weights over the agentic system’s proposed learned meta-learner, improving stability on N=2,000 samples. In Challenge 3, our strongest result (3rd place), four rounds of human intervention moved CV F1 from 0.49 to 0.73, with the largest single gain (+0.18) coming from a human decision to redirect the agentic system from raw time-series modeling to statistical vital sign aggregation. Across all challenges, ablation studies attribute +0.065 cumulative F1 to human decisions, with early-stage choices about data representation (multimodal feature extraction: +0.041) contributing far more than late-stage model tuning (ensemble diversity: +0.008).</p>
+</div>
+<div class="ltx_para" id="S5.p3">
+<p class="ltx_p" id="S5.p3.1">These results support three principles for deploying agentic AI in healthcare settings:</p>
+</div>
+<div class="ltx_para" id="S5.p4">
+<ol class="ltx_enumerate" id="S5.I1">
+<li class="ltx_item" id="S5.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S5.I1.i1.p1">
+<p class="ltx_p" id="S5.I1.i1.p1.1"><span class="ltx_text ltx_font_italic" id="S5.I1.i1.p1.1.1">Human guidance compounds:</span> Individual decisions appear modest (0.008-0.041 F1), but they accumulate across pipeline stages. Domain-informed feature engineering at each stage outperformed extensive automated search, consistent with the observation that the agentic system excelled at optimizing <span class="ltx_text ltx_font_italic" id="S5.I1.i1.p1.1.2">within</span> a representation but not at choosing <span class="ltx_text ltx_font_italic" id="S5.I1.i1.p1.1.3">which</span> representation to optimize.</p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S5.I1.i2.p1">
+<p class="ltx_p" id="S5.I1.i2.p1.1"><span class="ltx_text ltx_font_italic" id="S5.I1.i2.p1.1.1">No single extraction strategy generalizes across clinical data types:</span> TF-IDF succeeded for discharge summaries (Challenge 1) but failed for short daily notes (Challenge 3); the human decision to pivot to clinical keyword matching was essential. PDF parsing required billing-receipt-specific regex (Challenge 2). Task-specific human judgment for unstructured data remains a bottleneck that current agentic systems do not resolve autonomously.</p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S5.I1.i3.p1">
+<p class="ltx_p" id="S5.I1.i3.p1.1"><span class="ltx_text ltx_font_italic" id="S5.I1.i3.p1.1.1">Interpretability is a prerequisite, not a trade-off:</span> Our top features (Charlson band, prior ED utilization, vital sign trends, sentiment trajectory) align with established clinical risk factors, enabling clinician trust. Tree-based ensembles with documented decision rationale maintained this transparency while achieving competitive performance.</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="ltx_para" id="S5.p5">
+<p class="ltx_p" id="S5.p5.1">Our approach has clear limitations: synthetic benchmark data lacks real-world clinical noise as our sample sizes (N=1,000-5,000) favor feature engineering over deep learning, a conclusion that may not hold for larger EHR databases; and the human effort required (10-15 hours per challenge) constrains scalability. Future work should validate on real EHR data (MIMIC-IV, eICU), explore whether transformer-based multimodal models can reduce human effort at scale, and conduct prospective trials measuring clinical impact.</p>
+</div>
+<div class="ltx_para" id="S5.p6">
+<p class="ltx_p" id="S5.p6.1">The AgentDS benchmark demonstrates that standardized multimodal healthcare tasks can rigorously evaluate human-AI collaboration. Our results suggest that the most effective current paradigm is neither fully autonomous agentic AI nor traditional manual analysis, but an iterative loop in which human domain expertise shapes the problem representation and agentic systems efficiently optimize within it.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_font_smallcaps ltx_title_section">Acknowledgments</h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1">We thank the AgentDS benchmark organizers for providing a rigorous evaluation framework for human-AI collaboration in healthcare data science.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Ashfaq, A. Sant’Anna, M. Lingman, and S. Nowaczyk</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Readmission prediction using deep learning on electronic health records</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of biomedical informatics</span> <span class="ltx_text ltx_bib_volume">97</span>, <span class="ltx_text ltx_bib_pages"> pp. 103256</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p4.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p5.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p6.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. A. Bishop, H. A. Javed, R. El-Bouri, T. Zhu, T. Taylor, T. Peto, P. Watkinson, D. W. Eyre, and D. A. Clifton</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Improving patient flow during infectious disease outbreaks using machine learning for real-time prediction of patient readiness for discharge</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Plos one</span> <span class="ltx_text ltx_bib_volume">16</span> (<span class="ltx_text ltx_bib_number">11</span>), <span class="ltx_text ltx_bib_pages"> pp. e0260476</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p3.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Davis, J. Zhang, I. Lee, M. Rezaei, R. Greiner, F. A. McAlister, and R. Padwal</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Effective hospital readmission prediction models using machine-learned features</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">BMC Health Services Research</span> <span class="ltx_text ltx_bib_volume">22</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 1415</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p5.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Deng, S. Liu, Z. Wang, Y. Wang, Y. Jiang, and B. Liu</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Explainable time-series deep learning models for the prediction of mortality, prolonged length of stay and 30-day readmission in intensive care patients</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Medicine</span> <span class="ltx_text ltx_bib_volume">9</span>, <span class="ltx_text ltx_bib_pages"> pp. 933037</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p6.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. G. Hinostroza Fuentes, H. A. Karim, M. J. T. Tan, and N. AlDahoul</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AI with agency: a vision for adaptive, efficient, and ethical healthcare</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Digital Health</span> <span class="ltx_text ltx_bib_volume">7</span>, <span class="ltx_text ltx_bib_pages"> pp. 1600216</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p2.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Jahangiri, M. Abdollahi, E. Rashedi, and N. Azadeh-Fard</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A machine learning model to predict heart failure readmission: toward optimal feature set</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Artificial Intelligence</span> <span class="ltx_text ltx_bib_volume">7</span>, <span class="ltx_text ltx_bib_pages"> pp. 1363226</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p3.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Karunanayake</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Next-generation agentic ai for transforming healthcare</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Informatics and Health</span> <span class="ltx_text ltx_bib_volume">2</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 73–83</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p2.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p3.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. N. Kasthurirathne, P. G. Biondich, S. J. Grannis, S. Purkayastha, J. R. Vest, and J. F. Jones</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Identification of patients in need of advanced care for depression using data extracted from a statewide health information exchange: a machine learning approach</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of medical Internet research</span> <span class="ltx_text ltx_bib_volume">21</span> (<span class="ltx_text ltx_bib_number">7</span>), <span class="ltx_text ltx_bib_pages"> pp. e13809</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S4.SS4.p1.1" title="IV-D Implications for Healthcare ML Practice ‣ IV Discussion ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-D</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Kim, C. Park, H. Jeong, Y. S. Chan, X. Xu, D. McDuff, H. Lee, M. Ghassemi, C. Breazeal, and H. W. Park</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Mdagents: an adaptive collaboration of llms for medical decision-making</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in Neural Information Processing Systems</span> <span class="ltx_text ltx_bib_volume">37</span>, <span class="ltx_text ltx_bib_pages"> pp. 79410–79452</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p2.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. Loutati, A. Ben-Yehuda, S. Rosenberg, and Y. Rottenberg</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Multimodal machine learning for prediction of 30-day readmission risk in elderly population</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">The American Journal of Medicine</span> <span class="ltx_text ltx_bib_volume">137</span> (<span class="ltx_text ltx_bib_number">7</span>), <span class="ltx_text ltx_bib_pages"> pp. 617–628</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p1.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p5.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Maslej, L. Fattorini, R. Perrault, Y. Gil, V. Parli, N. Kariuki, E. Capstick, A. Reuel, E. Brynjolfsson, J. Etchemendy, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Artificial intelligence index report 2025</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2504.07139</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p3.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p5.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Naliyatthaliyazchayil, R. Muthyala, J. W. Gichoya, and S. Purkayastha</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Evaluating the reasoning capabilities of large language models for medical coding and hospital readmission risk stratification: zero-shot prompting approach</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of medical Internet research</span> <span class="ltx_text ltx_bib_volume">27</span>, <span class="ltx_text ltx_bib_pages"> pp. e74142</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p2.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. G. Oh, S. Oh, S. Cho, and M. Moon</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Predicting readmission among high-risk discharged patients using a machine learning model with nursing data: retrospective study</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">JMIR Medical Informatics</span> <span class="ltx_text ltx_bib_volume">13</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. e56671</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p1.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Purkayastha, R. Isaac, A. Veldandi, R. Saxena, P. Singh, P. Vaswani, E. A. Krupinski, J. A. Danish, and J. W. Gichoya</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Measuring impact of radiologist-ai collaboration: efficiency, accuracy, and clinical impact</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2024 IEEE International Symposium on Biomedical Imaging (ISBI)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–4</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p3.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Rahman, A. Bhuiyan, M. S. Islam, M. T. R. Laskar, R. Mahbub, A. Masry, S. Joty, and E. Hoque</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Llm-based data science agents: a survey of capabilities, challenges, and future directions</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2510.04023</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p2.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p4.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Shi, R. Xu, Y. Zhuang, Y. Yu, J. Zhang, H. Wu, Y. Zhu, J. C. Ho, C. Yang, and M. D. Wang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Ehragent: code empowers large language models for few-shot complex tabular reasoning on electronic health records</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 22315–22339</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p2.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. N. Srinivasu, G. L. Aruna Kumari, S. Ahmed, and A. Alhumam</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Exploring agentic ai in healthcare: a study on its working mechanism and swot analysis</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Medicine</span> <span class="ltx_text ltx_bib_volume">12</span>, <span class="ltx_text ltx_bib_pages"> pp. 1753443</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p3.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Tang, A. Tariq, J. A. Dunnmon, U. Sharma, P. Elugunti, D. L. Rubin, B. N. Patel, and I. Banerjee</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Predicting 30-day all-cause hospital readmission using multimodal spatiotemporal graph neural networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Journal of Biomedical and Health Informatics</span> <span class="ltx_text ltx_bib_volume">27</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 2071–2082</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p1.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. P. Wu, R. B. Shirley, A. Milinovich, K. Liu, E. Mireles-Cabodevila, H. Khouli, A. Duggal, and A. Bhattacharyya</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Exploring timely and safe discharge from icu: a comparative study of machine learning predictions and clinical practices</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Intensive Care Medicine Experimental</span> <span class="ltx_text ltx_bib_volume">13</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 10</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="https://arxiv.org/html/2602.19502v1#S1.p1.1" title="I Introduction ‣ Human-Guided Agentic AI for Multimodal Clinical Prediction: Lessons from the AgentDS Healthcare Benchmark"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<footer class="ltx_page_footer">
+<div class="ltx_page_logo">Generated  on Mon Feb 23 04:32:32 2026 by <a class="ltx_LaTeXML_logo" href="http://dlmf.nist.gov/LaTeXML/"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img alt="Mascot Sammy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/></a>
+</div></footer>
+</div>
+</body>
+</html>
