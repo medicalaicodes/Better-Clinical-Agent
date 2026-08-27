@@ -279,7 +279,7 @@ python demo_execution.py --case 0 --graph
 
 ## Authors & Contact
 
-- **Prabhu Nandan** (First & Corresponding Author): `prabhusahu23@iiserb.ac.in` — Indian Institute of Science Education and Research (IISER) Bhopal
+- **Prabhu Nandan** (Author): `prabhusahu23@iiserb.ac.in` — Indian Institute of Science Education and Research (IISER) Bhopal
 - **Vanshika Gupta** (Author): `vanshikag23@iiserb.ac.in` — Indian Institute of Science Education and Research (IISER) Bhopal
 - **Dr. Shreya Goyal** (Instructor / Supervisor): `shreyagoyal@iitmandi.ac.in` — Indian Institute of Technology (IIT) Mandi
 
