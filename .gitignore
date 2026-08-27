@@ -40,7 +40,7 @@ temp_*.txt
 .gemini/
 .env
 
-# LaTeX build artifacts
+# LaTeX build artifacts & source files
 *.aux
 *.out
 *.toc
@@ -49,9 +49,11 @@ temp_*.txt
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+*.tex
 
 # Secret / Local Reference Repositories
 ref/
 ref
+
 
 

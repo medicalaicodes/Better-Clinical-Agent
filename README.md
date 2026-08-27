@@ -9,9 +9,9 @@ A clinical diagnostic AI agent built for active, sequential patient workups. Ins
 The complete academic report detailing the system architecture, mathematical formulations, diagnostic evaluation, and clinical case trace is available in `docs/`:
 
 - **Academic Paper (PDF)**: [`docs/CLINICAL_AGENT_REPORT.pdf`](docs/CLINICAL_AGENT_REPORT.pdf)
-- **LaTeX Source**: [`docs/CLINICAL_AGENT_REPORT.tex`](docs/CLINICAL_AGENT_REPORT.tex)
 - **Live Diagnostic Trace (Case 5)**: [`docs/demo_case5.md`](docs/demo_case5.md) *(Complete turn-by-turn trace with neural model outputs, lab deviations, and guideline RAG)*
 - **Implementation Log**: [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md)
+
 
 
 
@@ -263,7 +263,6 @@ python demo_execution.py --case 0 --graph
 ├── data/sample_images/             # Radiographic images from NIH and IEEE datasets
 ├── docs/
 │   ├── CLINICAL_AGENT_REPORT.pdf   # Compiled academic technical report PDF
-│   ├── CLINICAL_AGENT_REPORT.tex   # LaTeX report source
 │   ├── demo_case5.md               # End-to-end transparent diagnostic trace for Case 5
 │   ├── survey/                     # Literature surveys, taxonomy, & gap analyses
 │   ├── presentations/              # Milestone slide decks (1 through 6)
