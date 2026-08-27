@@ -88,6 +88,48 @@ All 8 cases evaluate sequentially with full evidence grounding:
 
 ---
 
+## Literature Surveys & Research Progression
+
+The foundational literature reviews, failure-mode audits, and taxonomy breakdowns are documented in `docs/survey/`:
+
+| Document | Topic and Research Scope |
+|---|---|
+| [`01_landscape_survey_ai_agents_in_healthcare.md`](docs/survey/01_landscape_survey_ai_agents_in_healthcare.md) | Shift from static LLM question answering toward modality-driven clinical agents. |
+| [`02_clinical_agent_taxonomy_20_categories.md`](docs/survey/02_clinical_agent_taxonomy_20_categories.md) | Operational taxonomy organizing over 300 papers across 20 distinct healthcare domains. |
+| [`03_multimodal_clinical_agents_gap_analysis.md`](docs/survey/03_multimodal_clinical_agents_gap_analysis.md) | Critical analysis of 27 multimodal clinical agents and 11 documented failure modes. |
+| [`04_evidence_reliable_coordination_survey.md`](docs/survey/04_evidence_reliable_coordination_survey.md) | Review of systems including AgentRx, MedAgentBoard, MDAgents, CARE, CoMMa, and Cerebra. |
+| [`05_erc_framework_strengths_and_flaws_assessment.md`](docs/survey/05_erc_framework_strengths_and_flaws_assessment.md) | Stress testing evidence coordination mechanisms and identifying system vulnerabilities. |
+| [`06_erc_vulnerability_fix_notes.txt`](docs/survey/06_erc_vulnerability_fix_notes.txt) | Architectural strategies for preventing premature diagnostic closure and missing data errors. |
+| [`07_sota_clinical_mas_comparison_matrix.md`](docs/survey/07_sota_clinical_mas_comparison_matrix.md) | Side-by-side comparison matrix across multi-agent systems, uncertainty handling, and modalities. |
+| [`08_medagent_pro_lineage_and_verification_survey.md`](docs/survey/08_medagent_pro_lineage_and_verification_survey.md) | Analysis of planning structures, step-level verification, and execution bottlenecks. |
+| [`09_deep_read_pass_medvqa_deeprare_confagents.md`](docs/survey/09_deep_read_pass_medvqa_deeprare_confagents.md) | Deep analysis of Med-VQA, DeepRare, ConfAgents, and clinical decision boundaries. |
+| [`10_medagent_pro_disc_haemorrhage_failure_analysis.md`](docs/survey/10_medagent_pro_disc_haemorrhage_failure_analysis.md) | Case study on downstream diagnostic collapse caused by degraded specialist indicators. |
+
+Supporting materials include:
+- **Modality Ingestion Breakdowns**: [`docs/survey/phase_breakdowns/`](docs/survey/phase_breakdowns/)
+- **Paper Database & Catalog**: [`paper_catalog/`](paper_catalog/README.md) (indexed spreadsheet and annotated reference list)
+- **Research Progress Tracker**: [`docs/progress_tracker.md`](docs/progress_tracker.md)
+
+---
+
+## Chronological Presentation Series
+
+Slide decks, PDF summaries, and notes prepared across project milestones are archived in `docs/presentations/`:
+
+| Folder | Presentation Deck | Focus Area |
+|---|---|---|
+| [`1/`](docs/presentations/1/) | The Clinical Circuit Blueprint (EHR) | EHR data parsing, clinical circuits, and structured records. |
+| [`2/`](docs/presentations/2/) | Medical Agentic Ingestion Architectures | Multi-agent intake pipelines and modality routing. |
+| [`3/`](docs/presentations/3/) | Omni-Modal Synthesis | Early versus late multimodal feature fusion. |
+| [`4/`](docs/presentations/4/) | Clinical AI Reality Check | Evaluation of clinical readiness and real-world failure cases. |
+| [`5/`](docs/presentations/5/) | MultiModal Clinical Agents Presentation | Deep review of 27 state-of-the-art multimodal diagnostic papers. |
+| [`6/`](docs/presentations/6/) | Agentic AI in Healthcare Deck | Project defense synthesis and evidence coordination architecture. |
+| [`misc/`](docs/presentations/misc/) | Decks, Transcripts & Web Viewer | Presentation notes, full-text transcripts, and HTML slide viewer. |
+
+A detailed directory index is provided in [`docs/presentations/README.md`](docs/presentations/README.md).
+
+---
+
 ## Academic References
 
 1. **SDBench**: *A Benchmark for Sequential Diagnosis with Language Models* (Microsoft Research, 2025; [arXiv:2506.22405](https://arxiv.org/abs/2506.22405)).
@@ -145,7 +187,7 @@ To evaluate all 8 benchmark cases sequentially:
 python -m src.clinical_agent.evaluation.run_benchmark
 ```
 
-### 5. Run the Interactive CLI Demo
+### 5. Interactive CLI Demonstration
 
 Run a single case to see turn-by-turn tool calls and report generation:
 
@@ -216,7 +258,11 @@ python demo_execution.py --case 0 --graph
 ├── docs/
 │   ├── CLINICAL_AGENT_REPORT.pdf   # 8-page compiled technical report PDF
 │   ├── CLINICAL_AGENT_REPORT.tex   # LaTeX report source
+│   ├── survey/                     # Literature surveys, taxonomy, & gap analyses
+│   ├── presentations/              # Milestone slide decks (1 through 6)
+│   ├── progress_tracker.md         # Research progress dashboard
 │   └── cxr_case0_streptococcus.jpg # Radiograph asset for Case 0
+├── paper_catalog/                  # 300+ paper index & annotated catalogs
 ├── pytest.ini                      # Pytest configuration
 ├── settings.json                   # Runtime configuration
 └── IMPLEMENTATION_LOG.md           # Implementation and change log
@@ -226,8 +272,8 @@ python demo_execution.py --case 0 --graph
 
 ## Authors & Contact
 
-- **Prabhu Nandan** (Author) — `prabhusahu23@iiserb.ac.in`
-- **Dr. Shreya Goyal** (Instructor / Supervisor) — `shreyagoyal@iitmandi.ac.in`
+- **Prabhu Nandan** (Author): `prabhusahu23@iiserb.ac.in`
+- **Dr. Shreya Goyal** (Instructor / Supervisor): `shreyagoyal@iitmandi.ac.in`
 
 ---
 
