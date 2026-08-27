@@ -39,3 +39,8 @@ temp_*.txt
 .vscode/
 .gemini/
 .env
+
+# Secret / Local Reference Repositories
+ref/
+ref
+
