@@ -1,26 +1,38 @@
 """
-Clinical Agent Framework
-Evidence-Reliable Multimodal AI Reasoning for Healthcare
+Clinical AI Agent: Open-World Sequential Diagnostic AI System
 """
 
-__version__ = "0.1.0"
-
 from .schemas import (
+    PatientCase,
+    FindingItem,
+    FindingStatus,
+    ToolResult,
     ModalityType,
-    EvidencePacket,
-    AgentClaim,
-    ConflictLog,
+    SuspicionTier,
+    DispositionType,
+    DifferentialHypothesis,
+    DiagnosticOrder,
     ClinicalReport,
 )
-from .router import SpecialistRouter
-from .coordination import EvidenceCoordinator
+from .config import get_settings, Settings
+from .llm_client import ClinicalLLMClient
+from .agent import AttendingClinicalAgent
+from .graph import build_clinical_graph
 
 __all__ = [
+    "PatientCase",
+    "FindingItem",
+    "FindingStatus",
+    "ToolResult",
     "ModalityType",
-    "EvidencePacket",
-    "AgentClaim",
-    "ConflictLog",
+    "SuspicionTier",
+    "DispositionType",
+    "DifferentialHypothesis",
+    "DiagnosticOrder",
     "ClinicalReport",
-    "SpecialistRouter",
-    "EvidenceCoordinator",
+    "get_settings",
+    "Settings",
+    "ClinicalLLMClient",
+    "AttendingClinicalAgent",
+    "build_clinical_graph",
 ]

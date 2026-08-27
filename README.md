@@ -1,123 +1,236 @@
+<<<<<<< HEAD
 # Better Clinical Agentic AI framework
+=======
+# Towards Reliable Tool Orchestration and Evidence Coordination in Open-World Multimodal Clinical Agent Systems
+>>>>>>> 35699a8 (Upload Codebase)
 
-> **Evidence-Reliable Multimodal AI Reasoning for Healthcare**
->
-> A modular framework and research benchmark designed to address key reliability, calibration, and missing-modality challenges in clinical multi-agent AI systems.
-
----
-
-## Executive Overview
-
-Deploying AI agents in healthcare requires more than fluency; it demands **epistemic reliability**—knowing which claims are load-bearing, detecting tool degradation, managing missing modalities, and preserving diagnostic uncertainty without forcing overconfident consensus.
-
-This repository consolidates an extensive **300+ paper literature survey**, a critical analysis of **27 state-of-the-art multimodal clinical agents**, **11 systemic failure modes** identified across published benchmarks, a **6-deck presentation defense series**, and a streamlined Python software architecture (`src/clinical_agent/`) for building evidence-grounded clinical agents.
+A clinical diagnostic AI agent built for active, sequential patient workups. Instead of evaluating patient records in a single prompt, the system mirrors hospital emergency workflows: starting from initial vitals and complaints, ordering targeted investigations step-by-step, running vision models and laboratory validators, and cross-checking decisions against clinical guidelines.
 
 ---
 
-## Literature Surveys & Research Progression
+## Technical Report
 
-Our research is organized in chronological progression, with self-explanatory document names detailing specific research milestones:
+The complete 8-page academic paper detailing the system architecture, mathematical formulations, diagnostic evaluation, and an end-to-end clinical case trace with embedded radiograph imagery is available in `docs/`:
 
-| Document | Focus & Research Significance |
-|---|---|
-| [`01_landscape_survey_ai_agents_in_healthcare.md`](docs/survey/01_landscape_survey_ai_agents_in_healthcare.md) | **Landscape Overview**: Paradigm shift toward modality-driven healthcare AI agents. |
-| [`02_clinical_agent_taxonomy_20_categories.md`](docs/survey/02_clinical_agent_taxonomy_20_categories.md) | **20-Category Taxonomy**: Operational hierarchy framing 300+ papers across 20 domains. |
-| [`03_multimodal_clinical_agents_gap_analysis.md`](docs/survey/03_multimodal_clinical_agents_gap_analysis.md) | **Category 1.1 Gap Analysis**: Critical analysis of 27 SOTA papers & **11 failure modes**. |
-| [`04_evidence_reliable_coordination_survey.md`](docs/survey/04_evidence_reliable_coordination_survey.md) | **ERC Baseline Survey**: Evaluation of AgentRx, MedAgentBoard, MDAgents, CARE, CoMMa, & Cerebra. |
-| [`05_erc_framework_strengths_and_flaws_assessment.md`](docs/survey/05_erc_framework_strengths_and_flaws_assessment.md) | **Critical Stress-Test**: Assessment of theoretical strengths and system vulnerabilities. |
-| [`06_erc_vulnerability_fix_notes.txt`](docs/survey/06_erc_vulnerability_fix_notes.txt) | **Fix Notes**: Architectural mechanisms to prevent system vulnerabilities. |
-| [`07_sota_clinical_mas_comparison_matrix.md`](docs/survey/07_sota_clinical_mas_comparison_matrix.md) | **Comparison Matrix**: SOTA clinical MAS feature comparison across UQ and missingness. |
-| [`08_medagent_pro_lineage_and_verification_survey.md`](docs/survey/08_medagent_pro_lineage_and_verification_survey.md) | **MedAgent-Pro Lineage**: Workflow planning and step-level verification analysis. |
-| [`09_deep_read_pass_medvqa_deeprare_confagents.md`](docs/survey/09_deep_read_pass_medvqa_deeprare_confagents.md) | **Deep-Read Pass**: Med-VQA, DeepRare, ConfAgents, and ethical framework boundaries. |
-| [`10_medagent_pro_disc_haemorrhage_failure_analysis.md`](docs/survey/10_medagent_pro_disc_haemorrhage_failure_analysis.md) | **Indicator Failure Analysis**: Tool degradation impact (16.5 F1 score drop). |
-
-- **Modality Ingestion Phases**: [`docs/survey/phase_breakdowns/`](docs/survey/phase_breakdowns/) (Perception, EHR, Imaging, Omics, RAG, Fusion, Omni-Modal).  
-- **Database & Catalogs**: [`paper_catalog/`](paper_catalog/README.md) (Excel database & annotated master list).  
-- **Progress Tracker**: [`docs/progress_tracker.md`](docs/progress_tracker.md) (Live status dashboard & milestone tracker).
+- **PDF**: [`docs/CLINICAL_AGENT_REPORT.pdf`](docs/CLINICAL_AGENT_REPORT.pdf)
+- **LaTeX Source**: [`docs/CLINICAL_AGENT_REPORT.tex`](docs/CLINICAL_AGENT_REPORT.tex)
 
 ---
 
-## Chronological Presentation Series (`docs/presentations/`)
+## How It Works
 
-All presentation slide decks, PDF exports, transcripts, and defense notes created during the internship are organized in chronological order:
-
-| Phase / Folder | Presentation Deck | Key Scope |
-|---|---|---|
-| [`1/`](docs/presentations/1/) | **The Clinical Circuit Blueprint (EHR)** (`.pptx`, `.pdf`) | EHR circuit design & structured data parsing. |
-| [`2/`](docs/presentations/2/) | **Medical Agentic Ingestion Architectures** (`.pptx`) | Multi-agent ingestion pipeline design. |
-| [`3/`](docs/presentations/3/) | **Omni-Modal Synthesis** (`.pptx`) | Omni-modal synthesis & early vs. late fusion. |
-| [`4/`](docs/presentations/4/) | **Clinical AI Reality Check** (`.pptx`) | Empirical evaluation of SOTA clinical readiness. |
-| [`5/`](docs/presentations/5/) | **MultiModal Clinical Agents Presentation** (`.pptx`) | Category 1.1 SOTA evaluation & 27 paper analysis. |
-| [`6/`](docs/presentations/6/) | **Agentic AI in Healthcare Deck** (`.pptx`) | Comprehensive research defense & synthesis. |
-| [`misc/`](docs/presentations/misc/) | **Decks, Transcripts & Web Viewer** (`.pptx`, `.md`, `.html`) | Motivation deck, full text transcript, narrative notes, & HTML viewer. |
-
-- **Explore Presentation Decks**: [`docs/presentations/README.md`](docs/presentations/README.md)
-
----
-
-## System Architecture & Framework Design
-
-The **Better Clinical Agent** framework introduces a 4-layer control architecture built to prevent systemic failure modes:
+Standard medical benchmarks feed entire patient files (scans, full lab panels, and notes) to an LLM all at once. In actual hospital practice, clinicians work sequentially. They review presenting symptoms, build a differential, and order tests one at a time based on what earlier tests showed.
 
 ```mermaid
 flowchart TD
-    A[Multimodal Patient Input\nCXR, EHR, Clinical Notes] --> B[Specialist Router\nDetects missing inputs & assigns tasks]
-    B --> C1[Imaging Specialist]
-    B --> C2[EHR Specialist]
-    B --> C3[Notes Specialist]
-    C1 --> D[Evidence Packet Extractor\nFindings + Uncertainty Scores]
-    C2 --> D
-    C3 --> D
-    D --> E[Evidence Coordinator\nCross-modal conflict detection & UQ calibration]
-    E --> F[Clinical Report & Disclosures\nPrimary impression, differentials, & conflict notes]
+    A["Patient at Triage\n(Age, Sex, Complaint, Vitals)"] --> B["Initial Differential\n(Ranked by Suspicion Tier)"]
+    B --> C{"Sufficient Diagnostic Evidence?"}
+    C -- "No" --> D["Action Selection\n(Evaluates Model Probabilities, Margins, and Lab Deviations)"]
+    D --> E["Run Diagnostic Tool"]
+    E --> E1["DenseNet-121 Classifier\n(18 Pathologies with Threshold Margins)"]
+    E --> E2["MedSAM ViT Segmenter\n(Thoracic Symmetry Ratio)"]
+    E --> E3["Lab Panel Validator\n(Tietz Reference Intervals & Deviation Severity)"]
+    E --> E4["Guideline RAG\n(Clinical Practice Monographs)"]
+    E1 --> F["Append Finding to Evidence Ledger"]
+    E2 --> F
+    E3 --> F
+    E4 --> F
+    F --> C
+    C -- "Yes / Turn Limit" --> G["Synthesize Clinical Report\n(Lead Diagnosis, Evidence-Grounded Plan, Disposition)"]
 ```
 
-### Core Architecture Components
-1. **Specialist Router (`src/clinical_agent/router.py`)**: Gracefully identifies available modalities and logs missing inputs without failing.
-2. **Typed Evidence Schemas (`src/clinical_agent/schemas.py`)**: Binds every claim to checkable `EvidencePacket` objects with explicit uncertainty scores.
-3. **Disagreement & Conflict Controller (`src/clinical_agent/coordination.py`)**: Preserves conflicting findings between specialists (e.g. imaging vs. notes) rather than forcing artificial consensus.
+The system executes this process across distinct stages:
 
-- **Read the technical design blueprint**: [`docs/blueprint/system_blueprint.md`](docs/blueprint/system_blueprint.md)
+1. **Intake and Differential Formulation**: The attending language model parses demographics, symptoms, and vitals to formulate an initial list of 3 to 5 candidate conditions (`HIGH_SUSPICION`, `MODERATE_SUSPICION`, `RULE_OUT`).
+2. **Sequential Tool Selection**: At each turn, the agent evaluates the evidence collected so far. It inspects model classification margins ($|p_k - \theta_k|$) and lab deviations to pick the most informative next test.
+3. **Specialist Model Execution**: The selected tool runs directly on the patient case data, returning quantitative metrics and structured findings.
+4. **Guideline Verification via RAG**: Proposed treatments and diagnostic suspicions are matched against indexed society guidelines (IDSA, ATS, AHA, ACC, ESC, NIH) using TF-IDF cosine similarity.
+5. **Report Synthesis**: When the agent has enough evidence (or hits the 4-turn limit), it generates a final consultation report with the primary diagnosis, clinical impression, actionable treatment plan, and disposition (`ADMIT_INPATIENT`, `DISCHARGE_WITH_FOLLOWUP`, `ESCALATE_TO_PHYSICIAN`).
 
 ---
 
-## Code Structure & Quickstart
+## Diagnostic Tools and Deep Learning Checkpoints
 
-The Python package is organized cleanly under `src/clinical_agent/`:
+The agent coordinates real specialist tools without mock fallbacks:
+
+- **Chest X-Ray Classifier (`ChestXRayClassifierTool`)**:
+  - *Model*: 121-layer DenseNet (`DenseNet-121`) from `TorchXRayVision` (`densenet121-res224-all`).
+  - *Details*: Calculates calibrated probabilities and explicit operating margins ($\text{Margin} = |p_k - \theta_k|$) across 18 chest pathologies (consolidation, cardiomegaly, effusion, pneumothorax, infiltration, and others).
+- **Thoracic Anatomical Segmenter (`MedSAMSegmenterTool`)**:
+  - *Model*: Medical Segment Anything Model (`wanglab/medsam-vit-base`) Vision Transformer.
+  - *Details*: Prompts bounding boxes over the hemithoraces to segment both lung fields and calculate the symmetry ratio $\mathcal{S} = \frac{\min(A_L, A_R)}{\max(A_L, A_R)}$. Values under 0.85 indicate volume loss or dense unilateral consolidation.
+- **Laboratory Panel Validator (`LaboratoryTestsTool`)**:
+  - *Reference*: Uses standard physiological reference intervals from the *Tietz Textbook of Clinical Chemistry*.
+  - *Details*: Evaluates complete blood count, inflammatory markers (Procalcitonin, CRP), cardiac markers (Troponin I, BNP, NT-proBNP), coagulation (D-Dimer), and basic metabolic panels, calculating quantitative percentage deviations ($\Delta = \frac{|v - \lambda|}{\lambda}$).
+- **Guideline Retrieval RAG (`MedicalKnowledgeRAGTool`)**:
+  - *Details*: Uses MedRAG clinical concept mapping and TF-IDF cosine similarity against indexed disease monographs and practice guidelines, grounding treatment decisions in published medical protocols.
+- **Clinical Notes Extractor (`ClinicalNotesExtractorTool`)**:
+  - *Details*: Regex-based triage parser that extracts documented physical signs (crackles, jugular venous distension, point tenderness, relative bradycardia).
+
+---
+
+## Benchmark Evaluation Results
+
+The evaluation suite (`src/clinical_agent/evaluation/sample_cases.py`) covers 8 diverse clinical presentations sourced from open-access hospital datasets (NIH ChestX-ray14, IEEE CXR, and emergency medicine records).
+
+All 8 cases evaluate sequentially with full evidence grounding:
+
+| Case ID | Etiology & Presentation | Key Findings | Agent Diagnosis | Disposition |
+|---|---|---|---|---|
+| `PT_STREP_65M` | Typical Pneumococcal CAP | Dense RUL Opacity, PCT 1.85 ug/L, WBC 17.8 | Bacterial Pneumonia | `ADMIT_INPATIENT` |
+| `PT_ADHF_71M` | Acute Decompensated Heart Failure | BNP 1680 pg/mL, Cardiomegaly, JVD | Decompensated HF | `ADMIT_INPATIENT` |
+| `PT_PE_48F` | Acute Pulmonary Embolism | D-Dimer 3.85 ug/mL, Clear CXR, Calf swelling | Pulmonary Embolism | `ADMIT_INPATIENT` |
+| `PT_COSTO_34M` | Costochondritis / Chest Wall Strain | Parasternal point tenderness, Normal labs & CXR | Costochondritis | `DISCHARGE_WITH_FOLLOWUP` |
+| `PT_PJP_HIV_40M` | PJP Pneumonia in HIV Host | SpO2 84%, CD4 85, Perihilar haziness | PJP Pneumonia | `ADMIT_INPATIENT` |
+| `PT_KLEB_DM_62F` | Klebsiella Necrotizing Pneumonia | Currant-jelly sputum, Upper lobe cavitation, WBC 21.4 | Klebsiella Pneumonia | `ADMIT_INPATIENT` |
+| `PT_LEGIONELLA_60M` | Legionnaires' Disease | Hyponatremia (Na 126), Watery diarrhea, Faget sign | Legionnaires' Disease | `ADMIT_INPATIENT` |
+| `PT_COVID_VIRAL_58M` | COVID-19 Acute Viral Infection | Anosmia, Bilateral ground-glass opacities, CRP 78 | COVID-19 Infection | `ADMIT_INPATIENT` |
+
+---
+
+## Academic References
+
+1. **SDBench**: *A Benchmark for Sequential Diagnosis with Language Models* (Microsoft Research, 2025; [arXiv:2506.22405](https://arxiv.org/abs/2506.22405)).
+2. **MedAgent-Pro**: *Towards Evidence-Based Multi-Modal Medical Diagnosis via Reasoning Agentic Workflow* (Wang et al., ICLR 2026; [arXiv:2503.18968](https://arxiv.org/abs/2503.18968)).
+3. **MedRAX**: *A Medical Reasoning Agent for Chest X-ray* (Bo Wang Lab, 2025; [arXiv:2502.02618](https://arxiv.org/abs/2502.02618)).
+4. **TorchXRayVision**: *A library of chest X-ray datasets and models* (Cohen et al., MIDL 2022; [arXiv:2111.00595](https://arxiv.org/abs/2111.00595)).
+5. **MedSAM**: *Segment Anything in Medical Images* (Ma et al., Nature Communications 2024; [DOI:10.1038/s41467-024-44824-z](https://doi.org/10.1038/s41467-024-44824-z)).
+6. **MedRAG**: *Benchmarking Retrieval-Augmented Generation for Medicine* (Xiong et al., ACL 2024; [arXiv:2402.13178](https://arxiv.org/abs/2402.13178)).
+7. **Tietz Reference Intervals**: *Tietz Textbook of Clinical Chemistry and Molecular Diagnostics* (Rifai et al., 6th Edition, Elsevier, 2018).
+
+---
+
+## Quickstart
+
+### 1. Environment Setup
+
+```bash
+git clone https://github.com/your-username/Better-Clinical-Agent.git
+cd Better-Clinical-Agent
+
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+### 2. Configure the LLM
+
+The framework connects via `LiteLLM` to local Ollama models (`medgemma`, `medllama2`) or cloud providers.
+
+To run locally with MedGemma:
+```bash
+ollama pull medgemma
+```
+
+Settings can be changed in `settings.json` or by setting environment variables:
+```bash
+export LLM_MODEL="ollama/medgemma"
+export LLM_TEMPERATURE="0.1"
+```
+
+### 3. Run the Tests
+
+Execute the 14-test suite covering schemas, vision models, lab tools, RAG retrieval, and the LangGraph engine:
+
+```bash
+python -m pytest tests/ -v
+```
+
+### 4. Run the 8-Case Benchmark Runner
+
+To evaluate all 8 benchmark cases sequentially:
+
+```bash
+python -m src.clinical_agent.evaluation.run_benchmark
+```
+
+### 5. Run the Interactive CLI Demo
+
+Run a single case to see turn-by-turn tool calls and report generation:
+
+```bash
+# Case 0: Streptococcus pneumoniae Lobar Pneumonia
+python demo_execution.py --case 0
+
+# Case 1: Acute Decompensated Heart Failure
+python demo_execution.py --case 1
+
+# Case 2: Acute Pulmonary Embolism
+python demo_execution.py --case 2
+
+# Case 3: Costochondritis (Musculoskeletal Chest Pain)
+python demo_execution.py --case 3
+
+# Case 4: Pneumocystis jirovecii Pneumonia (HIV Patient)
+python demo_execution.py --case 4
+
+# Case 5: Klebsiella pneumoniae Necrotizing Pneumonia
+python demo_execution.py --case 5
+
+# Case 6: Legionnaires' Disease
+python demo_execution.py --case 6
+
+# Case 7: COVID-19 Viral Respiratory Infection
+python demo_execution.py --case 7
+```
+
+To run through the compiled **LangGraph state machine**:
+
+```bash
+python demo_execution.py --case 0 --graph
+```
+
+---
+
+## Repository Layout
 
 ```
-Better-Clinical-Agent/
-├── paper_catalog/                  # 300+ Paper Excel database & annotated catalogs
-├── docs/                           # Research documentation
-│   ├── survey/                     # Literature surveys, taxonomy, & 10 descriptive survey files
-│   ├── blueprint/                  # System architecture, audit, & execution roadmap
-│   ├── presentations/              # Chronological slide decks (Folders 1 to 6 & misc)
-│   └── progress_tracker.md         # Research progress dashboard
+.
 ├── src/
-│   └── clinical_agent/             # Core Python framework
-│       ├── __init__.py
-│       ├── schemas.py              # Data structures (EvidencePacket, AgentClaim, ConflictLog)
-│       ├── router.py               # Specialist router & missingness handler
-│       └── coordination.py         # Evidence coordinator & conflict log
-└── tests/                          # Unit test suite
-    └── test_schemas.py
+│   └── clinical_agent/
+│       ├── schemas.py              # Pydantic data models for cases, findings, and reports
+│       ├── config.py               # Runtime settings and model configurations
+│       ├── llm_client.py           # LiteLLM client with structured JSON parsing
+│       ├── agent.py                # Attending clinical agent sequential loop
+│       ├── graph.py                # Compiled LangGraph state machine
+│       ├── models/
+│       │   ├── densenet_cxr.py     # TorchXRayVision DenseNet-121 wrapper
+│       │   └── medsam_wrapper.py   # MedSAM ViT-Base segmentation wrapper
+│       ├── tools/
+│       │   ├── base.py             # Specialist tool base interface
+│       │   ├── chest_xray.py       # Radiograph classifier with threshold margins
+│       │   ├── medsam.py           # Thoracic lung area segmenter & symmetry ratio
+│       │   ├── laboratory.py       # Lab biomarker validator with deviation metrics
+│       │   ├── medical_knowledge.py# Guideline retrieval tool (MedRAG style)
+│       │   └── clinical_notes.py   # Triage note and physical exam parser
+│       ├── prompts/
+│       │   └── __init__.py         # Differential, action, and report prompts
+│       └── evaluation/
+│           ├── sample_cases.py     # 8 benchmark clinical cases
+│           ├── simulated_ehr.py    # Multi-turn EHR simulation environment
+│           └── run_benchmark.py    # Automated benchmark runner
+├── tests/                          # 14 pytest unit and integration tests
+├── demo_execution.py               # Interactive CLI demo script
+├── data/sample_images/             # Radiographic images from NIH and IEEE datasets
+├── docs/
+│   ├── CLINICAL_AGENT_REPORT.pdf   # 8-page compiled technical report PDF
+│   ├── CLINICAL_AGENT_REPORT.tex   # LaTeX report source
+│   └── cxr_case0_streptococcus.jpg # Radiograph asset for Case 0
+├── pytest.ini                      # Pytest configuration
+├── settings.json                   # Runtime configuration
+└── IMPLEMENTATION_LOG.md           # Implementation and change log
 ```
 
-### Installation & Testing
+---
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/medicalaicodes/Better-Clinical-Agent.git
-   cd Better-Clinical-Agent
-   ```
+## Authors & Contact
 
-2. **Run Unit Tests**:
-   ```bash
-   python -m unittest discover tests
-   ```
+- **Prabhu Nandan** (Author) — `prabhusahu23@iiserb.ac.in`
+- **Dr. Shreya Goyal** (Instructor / Supervisor) — `shreyagoyal@iitmandi.ac.in`
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

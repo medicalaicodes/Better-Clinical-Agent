@@ -1,0 +1,12 @@
+{
+  "llm_model": "ollama/medgemma",
+  "llm_temperature": 0.1,
+  "llm_max_tokens": 1024,
+  "gemini_api_key": "AQ.Ab8RN6JV53jiBAapBSUn5F5QsNz6CpZm2DHPm5b3tLjfKW_qJg",
+  "openai_api_key": "",
+  "anthropic_api_key": "",
+  "ollama_host": "http://localhost:11434",
+  "conflict_threshold": 0.45,
+  "reliability_threshold": 0.50,
+  "max_diagnostic_turns": 4
+}

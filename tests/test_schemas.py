@@ -1,67 +1,67 @@
 """
-Tests for Clinical Agent Schemas and Evidence Coordinator
+Clinical AI Agent: Data Schema Unit Tests
 """
 
-import unittest
-from src.clinical_agent import (
+import pytest
+from src.clinical_agent.schemas import (
     ModalityType,
-    EvidencePacket,
-    AgentClaim,
-    SpecialistRouter,
-    EvidenceCoordinator,
+    FindingStatus,
+    FindingItem,
+    ToolResult,
+    PatientCase,
+    ClinicalReport,
+    DispositionType,
 )
 
 
-class TestClinicalAgent(unittest.TestCase):
-
-    def test_router_missing_modalities(self):
-        router = SpecialistRouter(
-            required_modalities=[ModalityType.CXR, ModalityType.EHR, ModalityType.NOTES]
-        )
-        # Pass only EHR data
-        result = router.route_inputs({ModalityType.EHR: "patient_data"})
-        self.assertIn(ModalityType.EHR, result["available_modalities"])
-        self.assertIn(ModalityType.CXR, result["missing_modalities"])
-        self.assertIn(ModalityType.NOTES, result["missing_modalities"])
-
-    def test_evidence_coordination_and_conflict_detection(self):
-        evidence1 = EvidencePacket(
-            modality=ModalityType.CXR,
-            findings=["Lobar consolidation in right lower lobe"],
-            confidence=0.9,
-        )
-        claim1 = AgentClaim(
-            agent_id="cxr_specialist",
-            modality=ModalityType.CXR,
-            claim_text="Right lower lobe pneumonia",
-            supporting_evidence=[evidence1],
-            uncertainty_score=0.1,  # Low uncertainty
-        )
-
-        evidence2 = EvidencePacket(
-            modality=ModalityType.NOTES,
-            findings=["Cough reported, non-feverish"],
-            confidence=0.5,
-        )
-        claim2 = AgentClaim(
-            agent_id="notes_specialist",
-            modality=ModalityType.NOTES,
-            claim_text="Mild viral bronchitis",
-            supporting_evidence=[evidence2],
-            uncertainty_score=0.7,  # High uncertainty
-        )
-
-        coordinator = EvidenceCoordinator(conflict_threshold=0.5)
-        report = coordinator.synthesize(
-            claims=[claim1, claim2],
-            missing_modalities=[ModalityType.GENOMICS],
-        )
-
-        self.assertEqual(report.primary_impression, "Right lower lobe pneumonia")
-        self.assertIn(ModalityType.GENOMICS, report.missing_modalities)
-        self.assertGreater(len(report.conflicts), 0)
-        self.assertLess(report.overall_confidence, 1.0)
+def test_finding_item_instantiation():
+    finding = FindingItem(
+        name="Lung Opacity",
+        status=FindingStatus.PRESENT,
+        confidence=0.88,
+        quantitative_value=0.88,
+        unit="probability",
+    )
+    assert finding.name == "Lung Opacity"
+    assert finding.status == FindingStatus.PRESENT
+    assert finding.confidence == 0.88
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_patient_case_validation():
+    case = PatientCase(
+        patient_id="PT_TEST_01",
+        age=55,
+        gender="Male",
+        chief_complaint="Chest pain and dyspnea",
+        vitals={"HR": 95, "BP": "130/85"},
+    )
+    assert case.patient_id == "PT_TEST_01"
+    assert case.age == 55
+    assert case.gender == "Male"
+
+
+def test_tool_result_creation():
+    result = ToolResult(
+        tool_name="test_tool",
+        modality=ModalityType.LABORATORY,
+        findings=[
+            FindingItem(name="Leukocytosis", status=FindingStatus.PRESENT, confidence=0.99)
+        ],
+        summary="High WBC count observed.",
+    )
+    assert result.tool_name == "test_tool"
+    assert len(result.findings) == 1
+
+
+def test_clinical_report_structure():
+    report = ClinicalReport(
+        case_id="PT_001",
+        patient_id="PT_001",
+        primary_diagnosis="Community-Acquired Pneumonia",
+        disposition=DispositionType.ADMIT_INPATIENT,
+        clinical_impression="Patient has typical bacterial lobar consolidation.",
+        recommendations=["Start IV Ceftriaxone", "Monitor oxygenation"],
+    )
+    assert report.primary_diagnosis == "Community-Acquired Pneumonia"
+    assert report.disposition == DispositionType.ADMIT_INPATIENT
+    assert len(report.recommendations) == 2
