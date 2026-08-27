@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# Better Clinical Agentic AI framework
-=======
 # Towards Reliable Tool Orchestration and Evidence Coordination in Open-World Multimodal Clinical Agent Systems
->>>>>>> 35699a8 (Upload Codebase)
 
 A clinical diagnostic AI agent built for active, sequential patient workups. Instead of evaluating patient records in a single prompt, the system mirrors hospital emergency workflows: starting from initial vitals and complaints, ordering targeted investigations step-by-step, running vision models and laboratory validators, and cross-checking decisions against clinical guidelines.
 
@@ -21,23 +17,28 @@ The complete 8-page academic paper detailing the system architecture, mathematic
 
 Standard medical benchmarks feed entire patient files (scans, full lab panels, and notes) to an LLM all at once. In actual hospital practice, clinicians work sequentially. They review presenting symptoms, build a differential, and order tests one at a time based on what earlier tests showed.
 
+<div align="center">
+
 ```mermaid
 flowchart TD
-    A["Patient at Triage\n(Age, Sex, Complaint, Vitals)"] --> B["Initial Differential\n(Ranked by Suspicion Tier)"]
-    B --> C{"Sufficient Diagnostic Evidence?"}
-    C -- "No" --> D["Action Selection\n(Evaluates Model Probabilities, Margins, and Lab Deviations)"]
+    A["Patient at Triage<br/>(Age, Sex, Complaint, Vitals)"] --> B["Initial Differential<br/>(Ranked by Suspicion Tier)"]
+    B --> C{"Sufficient Diagnostic<br/>Evidence?"}
+    C -- "No" --> D["Action Selection<br/>(Evaluates Probabilities, Margins & Deviations)"]
     D --> E["Run Diagnostic Tool"]
-    E --> E1["DenseNet-121 Classifier\n(18 Pathologies with Threshold Margins)"]
-    E --> E2["MedSAM ViT Segmenter\n(Thoracic Symmetry Ratio)"]
-    E --> E3["Lab Panel Validator\n(Tietz Reference Intervals & Deviation Severity)"]
-    E --> E4["Guideline RAG\n(Clinical Practice Monographs)"]
+    E --> E1["DenseNet-121 Classifier<br/>(18 Pathologies with Threshold Margins)"]
+    E --> E2["MedSAM ViT Segmenter<br/>(Thoracic Symmetry Ratio)"]
+    E --> E3["Lab Panel Validator<br/>(Tietz Reference Intervals & Severity)"]
+    E --> E4["Guideline RAG<br/>(Clinical Practice Monographs)"]
     E1 --> F["Append Finding to Evidence Ledger"]
     E2 --> F
     E3 --> F
     E4 --> F
     F --> C
-    C -- "Yes / Turn Limit" --> G["Synthesize Clinical Report\n(Lead Diagnosis, Evidence-Grounded Plan, Disposition)"]
+    C -- "Yes / Turn Limit" --> G["Synthesize Clinical Report<br/>(Lead Diagnosis, Plan, Disposition)"]
 ```
+
+</div>
+
 
 The system executes this process across distinct stages:
 
