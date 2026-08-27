@@ -142,3 +142,28 @@ def build_clinical_graph(agent: Optional[AttendingClinicalAgent] = None) -> Stat
     workflow.add_edge("synthesize", END)
 
     return workflow.compile()
+
+
+class ClinicalAgentGraph:
+    """Wrapper class for compiled LangGraph clinical state machine."""
+
+    def __init__(self, model_name: Optional[str] = None):
+        self.agent = AttendingClinicalAgent(model_name=model_name)
+        self.graph = build_clinical_graph(self.agent)
+
+    def run(self, case: PatientCase, max_turns: int = 4) -> ClinicalReport:
+        initial_state: ClinicalAgentState = {
+            "case": case,
+            "active_ddx": [],
+            "evidence_history": [],
+            "completed_tools": [],
+            "selected_action": "",
+            "clinical_indication": "",
+            "search_query": None,
+            "turn_count": 0,
+            "max_turns": max_turns,
+            "final_report": None,
+        }
+        final_state = self.graph.invoke(initial_state)
+        return final_state.get("final_report")
+

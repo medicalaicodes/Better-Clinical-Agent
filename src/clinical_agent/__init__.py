@@ -17,7 +17,7 @@ from .schemas import (
 from .config import get_settings, Settings
 from .llm_client import ClinicalLLMClient
 from .agent import AttendingClinicalAgent
-from .graph import build_clinical_graph
+from .graph import build_clinical_graph, ClinicalAgentGraph
 
 __all__ = [
     "PatientCase",
@@ -35,4 +35,5 @@ __all__ = [
     "ClinicalLLMClient",
     "AttendingClinicalAgent",
     "build_clinical_graph",
+    "ClinicalAgentGraph",
 ]
