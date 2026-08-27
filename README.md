@@ -4,12 +4,14 @@ A clinical diagnostic AI agent built for active, sequential patient workups. Ins
 
 ---
 
-## Technical Report
+## Technical Report & Implementation Records
 
-The complete 8-page academic paper detailing the system architecture, mathematical formulations, diagnostic evaluation, and an end-to-end clinical case trace with embedded radiograph imagery is available in `docs/`:
+The complete 8-page academic paper detailing the system architecture, mathematical formulations, diagnostic evaluation, and clinical case trace is available in `docs/`:
 
-- **PDF**: [`docs/CLINICAL_AGENT_REPORT.pdf`](docs/CLINICAL_AGENT_REPORT.pdf)
+- **Academic Paper (PDF)**: [`docs/CLINICAL_AGENT_REPORT.pdf`](docs/CLINICAL_AGENT_REPORT.pdf)
 - **LaTeX Source**: [`docs/CLINICAL_AGENT_REPORT.tex`](docs/CLINICAL_AGENT_REPORT.tex)
+- **Implementation Log**: [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md)
+
 
 ---
 
