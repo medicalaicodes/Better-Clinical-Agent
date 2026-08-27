@@ -6,11 +6,13 @@ A clinical diagnostic AI agent built for active, sequential patient workups. Ins
 
 ## Technical Report & Implementation Records
 
-The complete 8-page academic paper detailing the system architecture, mathematical formulations, diagnostic evaluation, and clinical case trace is available in `docs/`:
+The complete academic report detailing the system architecture, mathematical formulations, diagnostic evaluation, and clinical case trace is available in `docs/`:
 
 - **Academic Paper (PDF)**: [`docs/CLINICAL_AGENT_REPORT.pdf`](docs/CLINICAL_AGENT_REPORT.pdf)
 - **LaTeX Source**: [`docs/CLINICAL_AGENT_REPORT.tex`](docs/CLINICAL_AGENT_REPORT.tex)
+- **Live Diagnostic Trace (Case 5)**: [`docs/demo_case5.md`](docs/demo_case5.md) *(Complete turn-by-turn trace with neural model outputs, lab deviations, and guideline RAG)*
 - **Implementation Log**: [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md)
+
 
 
 ---
@@ -85,7 +87,7 @@ All 8 cases evaluate sequentially with full evidence grounding:
 | `PT_PE_48F` | Acute Pulmonary Embolism | D-Dimer 3.85 ug/mL, Clear CXR, Calf swelling | Pulmonary Embolism | `ADMIT_INPATIENT` |
 | `PT_COSTO_34M` | Costochondritis / Chest Wall Strain | Parasternal point tenderness, Normal labs & CXR | Costochondritis | `DISCHARGE_WITH_FOLLOWUP` |
 | `PT_PJP_HIV_40M` | PJP Pneumonia in HIV Host | SpO2 84%, CD4 85, Perihilar haziness | PJP Pneumonia | `ADMIT_INPATIENT` |
-| `PT_KLEB_DM_62F` | Klebsiella Necrotizing Pneumonia | Currant-jelly sputum, Upper lobe cavitation, WBC 21.4 | Klebsiella Pneumonia | `ADMIT_INPATIENT` |
+| [`PT_KLEB_DM_62F`](docs/demo_case5.md) | Klebsiella Necrotizing Pneumonia *(See Trace)* | Currant-jelly sputum, Upper lobe cavitation, WBC 21.4 | Klebsiella Pneumonia | `ADMIT_INPATIENT` |
 | `PT_LEGIONELLA_60M` | Legionnaires' Disease | Hyponatremia (Na 126), Watery diarrhea, Faget sign | Legionnaires' Disease | `ADMIT_INPATIENT` |
 | `PT_COVID_VIRAL_58M` | COVID-19 Acute Viral Infection | Anosmia, Bilateral ground-glass opacities, CRP 78 | COVID-19 Infection | `ADMIT_INPATIENT` |
 
@@ -257,10 +259,12 @@ python demo_execution.py --case 0 --graph
 │           └── run_benchmark.py    # Automated benchmark runner
 ├── tests/                          # 14 pytest unit and integration tests
 ├── demo_execution.py               # Interactive CLI demo script
+├── requirements.txt                # Pinned dependency requirements
 ├── data/sample_images/             # Radiographic images from NIH and IEEE datasets
 ├── docs/
-│   ├── CLINICAL_AGENT_REPORT.pdf   # 8-page compiled technical report PDF
+│   ├── CLINICAL_AGENT_REPORT.pdf   # Compiled academic technical report PDF
 │   ├── CLINICAL_AGENT_REPORT.tex   # LaTeX report source
+│   ├── demo_case5.md               # End-to-end transparent diagnostic trace for Case 5
 │   ├── survey/                     # Literature surveys, taxonomy, & gap analyses
 │   ├── presentations/              # Milestone slide decks (1 through 6)
 │   ├── progress_tracker.md         # Research progress dashboard
@@ -275,8 +279,11 @@ python demo_execution.py --case 0 --graph
 
 ## Authors & Contact
 
-- **Prabhu Nandan** (Author): `prabhusahu23@iiserb.ac.in`
-- **Dr. Shreya Goyal** (Instructor / Supervisor): `shreyagoyal@iitmandi.ac.in`
+- **Prabhu Nandan** (First & Corresponding Author): `prabhusahu23@iiserb.ac.in` — Indian Institute of Science Education and Research (IISER) Bhopal
+- **Vanshika Gupta** (Author): `vanshikag23@iiserb.ac.in` — Indian Institute of Science Education and Research (IISER) Bhopal
+- **Dr. Shreya Goyal** (Instructor / Supervisor): `shreyagoyal@iitmandi.ac.in` — Indian Institute of Technology (IIT) Mandi
+
+
 
 ---
 
