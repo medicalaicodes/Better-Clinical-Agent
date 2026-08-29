@@ -12,31 +12,42 @@ ORCHESTRATOR_SYSTEM_PROMPT = """You are an Attending Emergency Physician orchest
 You utilize specialist diagnostic tools that output explicit model probabilities, operating thresholds, and biomarker deviation metrics.
 Your goal is to reliably evaluate patient presentations, interpret tool confidence margins, coordinate multimodal evidence against clinical practice guidelines via RAG, and synthesize a verified diagnostic consultation report."""
 
-DIFFERENTIAL_PROMPT_TEMPLATE = """You are an emergency physician conducting a patient intake evaluation.
-Formulate an initial open differential diagnosis of 3 to 5 candidate conditions based strictly on the presenting intake history and vitals.
+DIFFERENTIAL_PROMPT_TEMPLATE = """You are an emergency physician conducting a comprehensive patient intake evaluation.
+Thoroughly analyze the presenting clinical history, vitals, and physician notes (handling any clinical abbreviations or shorthand).
 
 Patient Demographics: {age}-year-old {gender}
 Chief Complaint: {chief_complaint}
 Vital Signs: {vitals}
 Clinical Notes / History: {clinical_notes}
 
-For each condition:
-1. Provide the condition name and standard ICD-10 code (if known).
-2. Assign a clinical suspicion tier: 'HIGH_SUSPICION', 'MODERATE_SUSPICION', or 'RULE_OUT'.
-3. Write a 1-2 sentence clinical rationale explaining why this diagnosis is considered.
+Clinical Intake Instructions:
+1. Extract all Pertinent Positives: confirmed symptoms, signs, risk factors, or exam abnormalities present.
+2. Extract all Pertinent Negatives: symptoms or signs that are explicitly denied, absent, or normal on exam (e.g. denies cough, no orthopnea, clear lungs).
+3. Formulate an initial open differential diagnosis of 3 to 5 candidate conditions based on the presenting intake history and vitals.
+   - For each condition, assign a suspicion tier: 'HIGH_SUSPICION', 'MODERATE_SUSPICION', or 'RULE_OUT'.
+   - Write a 1-2 sentence clinical rationale explaining why this diagnosis is considered.
 
 Return strictly a JSON object:
 {{
+  "pertinent_positives": [
+    "<Symptom / Sign 1 confirmed present>",
+    "<Symptom / Sign 2 confirmed present>"
+  ],
+  "pertinent_negatives": [
+    "<Symptom / Sign 1 explicitly denied or absent>",
+    "<Symptom / Sign 2 explicitly denied or absent>"
+  ],
   "differential": [
     {{
       "condition": "<Condition Name>",
       "icd10_code": "<ICD-10>",
-      "tier": "HIGH_SUSPICION",
+      "tier": "HIGH_SUSPICION | MODERATE_SUSPICION | RULE_OUT",
       "clinical_rationale": "<Rationale>"
     }}
   ]
 }}
 """
+
 
 ACTION_SELECTION_PROMPT_TEMPLATE = """You are the Attending Physician managing an active sequential diagnostic workup.
 
@@ -81,23 +92,28 @@ Accumulated Multi-Modal Evidence Ledger (Imaging, Labs, Segmentation, Guidelines
 {evidence_str}
 
 Diagnostic Synthesis Instructions:
-1. Thoroughly analyze the Evidence Ledger, integrating objective laboratory biomarker abnormalities, radiographic probabilities, and retrieved clinical practice guidelines.
-2. Formulate the definitive Primary Lead Diagnosis that accounts for all specific findings (including pathogen-specific indicators, such as hyponatremia with relative bradycardia and diarrhea pointing to Legionnaires' Disease, marked BNP elevation in heart failure, high D-Dimer in PE, or profound hypoxemia in PJP). You MUST update/revise the initial hypotheses based on the gathered evidence.
-3. Cross-reference all clinical claims against the evidence ledger and retrieved guidelines. Explicitly ground treatment recommendations in the retrieved clinical guideline evidence.
-4. Provide a refined, evidence-grounded differential diagnosis list (3-4 conditions) with updated suspicion tiers.
-5. Select the appropriate Triage Disposition ('ADMIT_INPATIENT', 'DISCHARGE_WITH_FOLLOWUP', or 'ESCALATE_TO_PHYSICIAN').
-6. Write a coherent 3-4 sentence Clinical Impression explaining how the accumulated objective evidence substantiates the primary diagnosis and rules out alternative etiologies.
-7. Provide 2-3 guideline-directed Actionable Clinical Recommendations (e.g. targeted antimicrobial therapy, supportive oxygenation, or monitoring).
+1. Grounding & Evidence Integration: Synthesize all accumulated objective evidence (quantitative laboratory biomarkers, reference range deviations, imaging probabilities, physical exam signs, and pertinent negatives) alongside verified clinical practice guidelines.
+2. Cross-Modal Biochemical Arbitration: High-specificity laboratory biomarkers and clinical pertinent negatives supersede ambiguous or weak imaging signals. If imaging indicates low-margin or non-specific features but acute infectious/inflammatory biomarkers (e.g. Procalcitonin < 0.10 ug/L, normal WBC) and respiratory exam/symptoms are strictly absent/normal, DO NOT diagnose acute bacterial pneumonia; classify imaging as clear/indeterminate or baseline artifact.
+3. Dynamic Hypothesis Revision: Update the initial pre-test differential based strictly on the gathered objective evidence. Confirm, down-grade, or rule out candidate diagnoses based on whether diagnostic criteria and biomarkers are met.
+4. Diagnostic Rigor & Negative Findings: Do not force an unsubstantiated acute inpatient diagnosis if objective confirmatory markers (e.g., relevant acute inflammatory, cardiac, or thrombotic biomarkers and radiographic findings) are absent, normal, or non-diagnostic. Formulate the primary diagnosis to match the true clinical and syndromic presentation.
+5. Refined Differential: Provide a refined, evidence-grounded differential list (3-4 conditions) with ICD-10 codes, updated suspicion tiers, and rationale citing specific evidence ledger items.
+6. Triage Disposition Selection:
+   - 'ADMIT_INPATIENT': Objective laboratory biomarkers, imaging findings, or hemodynamic instability demonstrate acute severe disease requiring continuous inpatient monitoring or parenteral therapy.
+   - 'DISCHARGE_WITH_FOLLOWUP': Acute life-threatening pathology is ruled out by normal/negative emergency workup, or the presentation represents a non-emergent, subacute, or self-limiting condition appropriate for outpatient management and diagnostic follow-up.
+   - 'ESCALATE_TO_PHYSICIAN': Accumulated evidence indicates an acute structural, surgical, or vascular emergency requiring immediate advanced modalities outside the standard workup, or unresolved high-risk ambiguity necessitating immediate senior specialist intervention.
+7. Clinical Impression: Write a 3-4 sentence evidence-grounded clinical narrative synthesizing how the objective data supports the primary diagnosis while ruling out competing differential considerations.
+8. Actionable Recommendations: Provide 2-3 guideline-directed management or diagnostic recommendations (e.g., targeted therapy, further specialized testing, or follow-up protocol).
+
 
 Return strictly a JSON object:
 {{
   "primary_diagnosis": "<Definitive Primary Diagnosis Name>",
-  "disposition": "ADMIT_INPATIENT",
+  "disposition": "ADMIT_INPATIENT | DISCHARGE_WITH_FOLLOWUP | ESCALATE_TO_PHYSICIAN",
   "differential_diagnosis": [
     {{
       "condition": "<Condition Name>",
       "icd10_code": "<ICD-10>",
-      "tier": "HIGH_SUSPICION",
+      "tier": "HIGH_SUSPICION | MODERATE_SUSPICION | RULE_OUT",
       "clinical_rationale": "<Evidence-grounded rationale>"
     }}
   ],
@@ -108,4 +124,6 @@ Return strictly a JSON object:
   ]
 }}
 """
+
+
 

@@ -269,6 +269,34 @@ class MedicalKnowledgeRAGTool(BaseClinicalTool):
         top_matches = self.semantic_search(query, top_k=3)
         best_chunk, top_score = top_matches[0]
 
+        # Minimum similarity threshold: if similarity is low, signal unindexed / non-matching status
+        if top_score < 0.25:
+            summary = (
+                f"Guidelines Index Search (Query: '{query[:60]}...', Cosine Similarity: {top_score:.3f}): "
+                f"No specific clinical practice guidelines matched in database (similarity below threshold 0.25). "
+                f"The clinical presentation is unindexed or non-diagnostic for indexed acute cardiopulmonary disease monographs."
+            )
+            findings = [
+                FindingItem(
+                    name="Guideline RAG: No Matching Clinical Guideline in Index",
+                    status=FindingStatus.ABSENT,
+                    confidence=round(1.0 - float(top_score), 3),
+                    details={"unmatched_nearest_candidate": best_chunk["disease"], "similarity": round(top_score, 4), "threshold": 0.25},
+                )
+            ]
+            return ToolResult(
+                tool_name=self.name,
+                modality=self.modality,
+                findings=findings,
+                summary=summary,
+                raw_output={
+                    "query": query,
+                    "status": "unindexed_or_low_similarity",
+                    "top_score": round(top_score, 4),
+                    "unmatched_candidate": best_chunk["disease"],
+                },
+            )
+
         findings: List[FindingItem] = []
         for chunk, score in top_matches:
             findings.append(
@@ -306,4 +334,5 @@ class MedicalKnowledgeRAGTool(BaseClinicalTool):
                 "matches": [m[0]["text"] for m in top_matches],
             },
         )
+
 

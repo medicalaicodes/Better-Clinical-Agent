@@ -39,23 +39,15 @@ def build_clinical_graph(agent: Optional[AttendingClinicalAgent] = None) -> Stat
 
     def intake_node(state: ClinicalAgentState) -> Dict[str, Any]:
         case = state["case"]
-        evidence: List[ToolResult] = []
-        completed: List[str] = []
-
-        if case.clinical_notes:
-            notes_tool = clinical_agent.tools.get("clinical_notes_extractor")
-            if notes_tool:
-                res = notes_tool.run(case)
-                evidence.append(res)
-                completed.append("clinical_notes_extractor")
-
-        initial_ddx = clinical_agent.llm_client.formulate_initial_differential(case)
+        initial_ddx, intake_evidence = clinical_agent.llm_client.formulate_initial_differential(case)
+        evidence = [intake_evidence] if intake_evidence else []
         return {
             "active_ddx": initial_ddx,
             "evidence_history": evidence,
-            "completed_tools": completed,
+            "completed_tools": ["clinical_history_synthesis"] if intake_evidence else [],
             "turn_count": 0,
         }
+
 
     def reasoning_node(state: ClinicalAgentState) -> Dict[str, Any]:
         case = state["case"]

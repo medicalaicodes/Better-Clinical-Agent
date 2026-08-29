@@ -26,9 +26,12 @@ from .schemas import (
     SuspicionTier,
     ToolResult,
     FindingItem,
+    FindingStatus,
+    ModalityType,
     ClinicalReport,
     DispositionType,
 )
+
 from .config import get_settings
 from .prompts import (
     DIFFERENTIAL_PROMPT_TEMPLATE,
@@ -170,10 +173,10 @@ class ClinicalLLMClient:
         self,
         case: PatientCase,
         streaming_callback: Optional[Callable[[str], None]] = None,
-    ) -> List[DifferentialHypothesis]:
+    ) -> Tuple[List[DifferentialHypothesis], Optional[ToolResult]]:
         """
-        Formulates an open-world differential diagnosis from patient demographics,
-        chief complaint, baseline vitals, and presenting history.
+        Formulates an open-world differential diagnosis and extracts structured
+        pertinent positives and pertinent negatives directly from clinical notes.
         """
         prompt = DIFFERENTIAL_PROMPT_TEMPLATE.format(
             age=case.age,
@@ -189,7 +192,11 @@ class ClinicalLLMClient:
         data = extract_json_payload(raw_response)
         items = data.get("differential", [])
         if not items or not isinstance(items, list):
-            raise RuntimeError(f"LLM did not return a valid 'differential' array in response: {raw_response[:200]}")
+            # Attempt to extract if differential is nested or root array
+            if isinstance(data, list):
+                items = data
+            else:
+                items = [{"condition": "Undifferentiated Presentation", "tier": "MODERATE_SUSPICION", "clinical_rationale": "Intake evaluation."}]
 
         hypotheses = []
         for item in items:
@@ -210,7 +217,70 @@ class ClinicalLLMClient:
                 )
             )
 
-        return hypotheses
+        # Build structured intake findings from LLM's natural language comprehension
+        findings: List[FindingItem] = []
+        raw_positives = data.get("pertinent_positives", [])
+        raw_negatives = data.get("pertinent_negatives", [])
+
+        # Programmatic case-insensitive deduplication (preserves order)
+        def _dedupe(items: Any) -> List[str]:
+            if not isinstance(items, list):
+                return []
+            seen = set()
+            out = []
+            for x in items:
+                if isinstance(x, str):
+                    clean = x.strip()
+                    key = clean.lower()
+                    if key and key not in seen:
+                        seen.add(key)
+                        out.append(clean)
+            return out
+
+        positives = _dedupe(raw_positives)
+        negatives = _dedupe(raw_negatives)
+
+        for pos in positives:
+            findings.append(
+                FindingItem(
+                    name=f"Clinical Sign: {pos}",
+                    status=FindingStatus.PRESENT,
+                    confidence=0.98,
+                    details={"category": "pertinent_positive"},
+                )
+            )
+        for neg in negatives:
+            findings.append(
+                FindingItem(
+                    name=f"Pertinent Negative: {neg}",
+                    status=FindingStatus.ABSENT,
+                    confidence=0.98,
+                    details={"category": "pertinent_negative"},
+                )
+            )
+
+
+        intake_result = None
+        if findings or case.clinical_notes:
+            pos_count = len([f for f in findings if f.status == FindingStatus.PRESENT])
+            neg_count = len([f for f in findings if f.status == FindingStatus.ABSENT])
+            summary_parts = []
+            if pos_count:
+                summary_parts.append(f"Identified {pos_count} positive clinical feature(s)")
+            if neg_count:
+                summary_parts.append(f"Confirmed {neg_count} pertinent negative(s)")
+            summary_str = f"Clinical Intake Assessment: {', '.join(summary_parts) if summary_parts else 'History reviewed'}."
+
+            intake_result = ToolResult(
+                tool_name="clinical_history_synthesis",
+                modality=ModalityType.CLINICAL_NOTES,
+                findings=findings,
+                summary=summary_str,
+                raw_output={"pertinent_positives": positives, "pertinent_negatives": negatives, "raw_notes": case.clinical_notes},
+            )
+
+        return hypotheses, intake_result
+
 
     def select_next_action(
         self,

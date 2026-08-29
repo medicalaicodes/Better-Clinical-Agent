@@ -80,13 +80,17 @@ class MedSAMSegmenterTool(BaseClinicalTool):
             ),
         ]
 
-        if symmetry < 0.85:
+        if symmetry < 0.75:
             summary = (
-                f"MedSAM segmentation indicates significant thoracic asymmetry (symmetry index: {symmetry:.2f}). "
-                f"Relative volume reduction or basilar opacity detected in the right lung field."
+                f"MedSAM anatomical segmentation indicates thoracic volumetric asymmetry (symmetry index: {symmetry:.2f}; "
+                f"Left: {left_area_px:,.0f} px, Right: {right_area_px:,.0f} px)."
             )
         else:
-            summary = f"MedSAM segmentation shows symmetric bilateral lung fields (symmetry index: {symmetry:.2f}) without focal volume loss."
+            summary = (
+                f"MedSAM anatomical segmentation shows symmetric bilateral lung fields (symmetry index: {symmetry:.2f}) "
+                f"without gross volumetric disparity."
+            )
+
 
         return ToolResult(
             tool_name=self.name,

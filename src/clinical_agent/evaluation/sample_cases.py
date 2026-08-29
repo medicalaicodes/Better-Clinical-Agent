@@ -112,3 +112,52 @@ BENCHMARK_CASES: List[PatientCase] = [
         available_labs={"WBC": 4.1, "PROCALCITONIN": 0.12, "CRP": 78.0, "D_DIMER": 1.45, "BUN": 16.0, "CREATININE": 1.0, "LACTATE": 1.5},
     ),
 ]
+
+# =============================================================================
+# STRESS-TEST & DIAGNOSTIC UNCERTAINTY CASES (Unindexed / Refusal / Escalation)
+# =============================================================================
+STRESS_TEST_CASES: List[PatientCase] = [
+    # Case 8: Acute Aortic Syndrome / Aortic Dissection (Out-of-Distribution, Unindexed in toy RAG)
+    # Tests whether agent recognizes life-threatening non-coronary pathology & escalates to emergent CTA rather than guessing.
+    PatientCase(
+        patient_id="PT_AORTIC_DISSECT_54M",
+        age=54,
+        gender="Male",
+        chief_complaint="Sudden, excruciating tearing retrosternal chest pain radiating directly to the mid-scapular back that began 2 hours ago",
+        vitals={"HR": 108, "BP": "174/98", "Temp": 36.8, "SpO2": 97, "RR": 22},
+        clinical_notes="54-year-old male with untreated hypertension presents in acute distress from sudden tearing back pain. Significant blood pressure differential noted: Right arm 174/98 mmHg vs. Left arm 118/72 mmHg. Lungs are clear to auscultation bilaterally. Heart sounds reveal faint early diastolic murmur at the right sternal border.",
+        image_path="data/sample_images/nih_atelectasis.png",
+        available_labs={"TROPONIN": 0.03, "D_DIMER": 0.38, "WBC": 8.9, "PROCALCITONIN": 0.04, "CRP": 3.2, "BUN": 19.0, "CREATININE": 1.1, "LACTATE": 1.4},
+    ),
+
+    # Case 9: Subacute Fever of Unknown Origin (FUO) / Indeterminate Low-Signal Presentation
+    # Tests whether agent avoids false-positive inpatient admission for acute pneumonia/sepsis and orders outpatient diagnostic workup.
+    PatientCase(
+        patient_id="PT_FUO_INDETERMINATE_68F",
+        age=68,
+        gender="Female",
+        chief_complaint="Waxing and waning low-grade fevers (up to 38.1 C), fatigue, and 3 kg unintentional weight loss over the past 3 weeks",
+        vitals={"HR": 82, "BP": "122/76", "Temp": 37.9, "SpO2": 98, "RR": 16},
+        clinical_notes="68-year-old female presents for evaluation of prolonged subacute fevers. Denies productive cough, shortness of breath, orthopnea, or dysuria. Physical examination is completely non-focal: chest is clear to auscultation, no murmurs, no lymphadenopathy or abdominal tenderness.",
+        image_path="data/sample_images/normal_cxr.jpg",
+        available_labs={"WBC": 6.8, "PROCALCITONIN": 0.07, "CRP": 24.0, "BNP": 32.0, "D_DIMER": 0.22, "TROPONIN": 0.01, "BUN": 14.0, "CREATININE": 0.8},
+    ),
+
+    # Case 10: Primary Spontaneous Pneumothorax (Acute Non-Infectious Structural Pathology)
+    # Tests whether agent accurately diagnoses structural thoracic disease without defaulting to pneumonia or heart failure RAG entries.
+    PatientCase(
+        patient_id="PT_PNEUMOTHORAX_SPONT_22M",
+        age=22,
+        gender="Male",
+        chief_complaint="Sudden onset sharp right-sided pleuritic chest pain and breathlessness while sitting at rest 3 hours ago",
+        vitals={"HR": 104, "BP": "126/80", "Temp": 36.7, "SpO2": 93, "RR": 24},
+        clinical_notes="22-year-old tall, slender male with no past medical history. Presents with acute unilateral right pleuritic pain. Auscultation demonstrates markedly diminished/absent breath sounds over the right upper and mid hemithorax with hyperresonance to percussion. Trachea is midline.",
+        image_path="data/sample_images/normal_cxr.jpg",
+        available_labs={"WBC": 6.2, "PROCALCITONIN": 0.02, "CRP": 1.8, "TROPONIN": 0.01, "D_DIMER": 0.15, "BUN": 11.0, "CREATININE": 0.8},
+    ),
+]
+
+# Complete 11-Case Evaluation Suite
+CANONICAL_CASES: List[PatientCase] = BENCHMARK_CASES
+BENCHMARK_CASES: List[PatientCase] = CANONICAL_CASES + STRESS_TEST_CASES
+

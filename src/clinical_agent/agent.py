@@ -44,13 +44,12 @@ class AttendingClinicalAgent:
         self.settings = get_settings()
         self.llm_client = ClinicalLLMClient(model_name=model_name)
         
-        # Specialist Tools Hub
+        # Specialist Tools Hub (Diagnostic Perception, Validation, and Guidelines)
         self.tools: Dict[str, BaseClinicalTool] = {
             "chest_xray_classifier": ChestXRayClassifierTool(),
             "medsam_segmenter": MedSAMSegmenterTool(),
             "laboratory_tests": LaboratoryTestsTool(),
             "medical_knowledge_rag": MedicalKnowledgeRAGTool(),
-            "clinical_notes_extractor": ClinicalNotesExtractorTool(),
         }
 
     def register_tool(self, tool: BaseClinicalTool):
@@ -71,19 +70,14 @@ class AttendingClinicalAgent:
         evidence_history: List[ToolResult] = []
         completed_tools: List[str] = []
 
-        # 1. Baseline Clinical History & Notes Extraction
-        if case.clinical_notes:
-            notes_tool = self.tools.get("clinical_notes_extractor")
-            if notes_tool:
-                baseline_result = notes_tool.run(case)
-                evidence_history.append(baseline_result)
-                completed_tools.append("clinical_notes_extractor")
-
-        # 2. Formulate Initial Pre-Test Differential Diagnosis
-        active_ddx = self.llm_client.formulate_initial_differential(
+        # 1. LLM Clinical Intake & Pre-Test Differential Formulation
+        active_ddx, intake_evidence = self.llm_client.formulate_initial_differential(
             case=case,
             streaming_callback=streaming_callback,
         )
+        if intake_evidence:
+            evidence_history.append(intake_evidence)
+
 
         # 3. Active Sequential Inquiry Loop
         for turn_idx in range(1, max_steps + 1):

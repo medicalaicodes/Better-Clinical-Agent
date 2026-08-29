@@ -16,12 +16,15 @@ from src.clinical_agent.evaluation import BENCHMARK_CASES
 
 def mock_graph_llm(messages, **kwargs):
     content = messages[0]["content"] if messages else ""
-    if "initial open differential diagnosis" in content.lower():
+    if "intake evaluation" in content.lower() or "initial open differential diagnosis" in content.lower():
         return json.dumps({
+            "pertinent_positives": ["Fever", "Productive cough"],
+            "pertinent_negatives": ["No orthopnea"],
             "differential": [
                 {"condition": "Bacterial Pneumonia", "icd10_code": "J18.9", "tier": "HIGH_SUSPICION", "clinical_rationale": "High fever and productive cough."}
             ]
         })
+
     elif "available specialist tools to order:" in content.lower():
         import re
         match = re.search(r"Available Specialist Tools to Order:\s*\n?([^\n]+)", content)
