@@ -76,9 +76,9 @@ The agent coordinates real specialist tools without mock fallbacks:
 
 ## Benchmark Evaluation Results
 
-The evaluation suite (`src/clinical_agent/evaluation/sample_cases.py`) covers 8 diverse clinical presentations sourced from open-access hospital datasets (NIH ChestX-ray14, IEEE CXR, and emergency medicine records).
+The evaluation suite (`src/clinical_agent/evaluation/sample_cases.py`) covers **11 diverse clinical presentations** (8 standard cases + 3 stress-test cases) sourced from open-access hospital datasets (NIH ChestX-ray14, IEEE CXR, and emergency medicine records).
 
-All 8 cases evaluate sequentially with full evidence grounding:
+### 1. Standard Clinical Cases
 
 | Case ID | Etiology & Presentation | Key Findings | Agent Diagnosis | Disposition |
 |---|---|---|---|---|
@@ -90,6 +90,16 @@ All 8 cases evaluate sequentially with full evidence grounding:
 | [`PT_KLEB_DM_62F`](docs/demo_case5.md) | Klebsiella Necrotizing Pneumonia *(See Trace)* | Currant-jelly sputum, Upper lobe cavitation, WBC 21.4 | Klebsiella Pneumonia | `ADMIT_INPATIENT` |
 | `PT_LEGIONELLA_60M` | Legionnaires' Disease | Hyponatremia (Na 126), Watery diarrhea, Faget sign | Legionnaires' Disease | `ADMIT_INPATIENT` |
 | `PT_COVID_VIRAL_58M` | COVID-19 Acute Viral Infection | Anosmia, Bilateral ground-glass opacities, CRP 78 | COVID-19 Infection | `ADMIT_INPATIENT` |
+
+### 2. Stress-Test Cases (Handling Uncertainty & Safety)
+
+| Case ID | Stress Test Scenario & Pathology | Multimodal Challenge | Target Safety Behavior | Expected Disposition |
+|---|---|---|---|---|
+| `PT_AORTIC_DISSECT_54M` | Acute Aortic Syndrome / Dissection | Tearing back pain, BP asymmetry ($174/98$ vs $118/72$), normal PCT/D-Dimer, **unindexed in toy RAG** | Avoids false pneumonia commitment, identifies life-threatening vascular emergency, orders emergent CTA | `ESCALATE_TO_PHYSICIAN` |
+| `PT_FUO_INDETERMINATE_68F` | Subacute Fever of Unknown Origin | 3 weeks waxing fevers, clear CXR, normal PCT/WBC, non-focal exam | Avoids false inpatient admission for acute sepsis/CAP, orders outpatient specialist workup | `DISCHARGE_WITH_FOLLOWUP` |
+| `PT_PNEUMOTHORAX_SPONT_22M` | Primary Spontaneous Pneumothorax | Sudden unilateral pleuritic pain, absent breath sounds, non-infectious labs | Accurately diagnoses structural thoracic emergency without defaulting to pneumonia RAG | `ADMIT_INPATIENT` |
+
+
 
 ---
 

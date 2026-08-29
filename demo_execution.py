@@ -73,36 +73,29 @@ def run_transparent_diagnostic_demo(case_idx: int, model_name: Optional[str] = N
     completed_tools: List[str] = []
 
     # =========================================================================
-    # STAGE 1: Baseline Notes Extraction
+    # STAGE 1: Clinical Intake Assessment & Initial Differential Formulation
     # =========================================================================
-    if case.clinical_notes:
-        print_banner("STAGE 1: TRIAGE CLINICAL NOTES EXTRACTION", "Specialist Tool: clinical_notes_extractor")
-        print(f"-> Ingesting Unstructured Text: \"{case.clinical_notes}\"\n")
-        notes_tool = agent.tools["clinical_notes_extractor"]
-        notes_result = notes_tool.run(case)
-        evidence_history.append(notes_result)
-        completed_tools.append("clinical_notes_extractor")
-
-        print("-> Extracted Structured Entities:")
-        for f in notes_result.findings:
-            print(f"   * [{f.status.value}] {f.name} (Confidence: {f.confidence:.2f})")
-        print(f"-> Evidence Summary: {notes_result.summary}\n")
-
-    # =========================================================================
-    # STAGE 2: Initial Pre-Test Differential Formulation
-    # =========================================================================
-    print_banner("STAGE 2: INITIAL DIFFERENTIAL FORMULATION", "Attending LLM: Pre-Test Diagnostic Reasoning")
-    print("-> Prompting Attending LLM with baseline vitals, demographics, and symptoms...")
+    print_banner("STAGE 1: CLINICAL INTAKE & PRE-TEST DIFFERENTIAL REASONING", "Attending LLM: Natural Language Clinical Synthesis")
+    print(f"-> Ingesting Patient Presentation & Notes: \"{case.clinical_notes}\"\n")
+    print("-> Prompting Attending LLM with baseline vitals, demographics, and clinical history...")
     print("-> Streaming Model Reasoning:")
     print("   " + "-" * 74)
 
-    active_ddx = agent.llm_client.formulate_initial_differential(
+    active_ddx, intake_evidence = agent.llm_client.formulate_initial_differential(
         case=case,
         streaming_callback=stream_printer,
     )
     print("\n   " + "-" * 74)
 
-    print("\n-> Structured Pre-Test Differential Diagnoses:")
+    if intake_evidence:
+        evidence_history.append(intake_evidence)
+        print("\n-> LLM Extracted Pertinent Clinical Features & Negatives:")
+        for f in intake_evidence.findings:
+            status_tag = "POSITIVE" if f.status.value == "present" else "PERTINENT NEGATIVE"
+            print(f"   * [{status_tag}] {f.name} (Confidence: {f.confidence:.2f})")
+        print(f"-> Evidence Summary Appended to Ledger: {intake_evidence.summary}\n")
+
+    print("-> Structured Pre-Test Differential Diagnoses:")
     for idx, ddx in enumerate(active_ddx, 1):
         tier_val = ddx.tier.value if hasattr(ddx.tier, "value") else str(ddx.tier)
         icd_str = f" ({ddx.icd10_code})" if ddx.icd10_code else ""
@@ -110,8 +103,9 @@ def run_transparent_diagnostic_demo(case_idx: int, model_name: Optional[str] = N
         print(f"      Rationale: {ddx.clinical_rationale}")
 
     # =========================================================================
-    # STAGE 3: Active Sequential Inquiry & Tool Orchestration Loop
+    # STAGE 2: Active Sequential Inquiry & Tool Orchestration Loop
     # =========================================================================
+
     max_turns = 4
     for turn in range(1, max_turns + 1):
         available_tools = [name for name in agent.tools.keys() if name not in completed_tools]
@@ -233,7 +227,7 @@ def main():
         "--case",
         type=int,
         default=None,
-        help="Case index to execute (0 to 7). Example: --case 6",
+        help="Case index to execute (0 to 10). Example: --case 8 (Aortic Dissection stress test)",
     )
     parser.add_argument(
         "--graph",
@@ -243,7 +237,17 @@ def main():
     parser.add_argument(
         "--benchmark",
         action="store_true",
-        help="Run automated sequential benchmark on all 8 clinical cases",
+        help="Run automated sequential benchmark on all 11 clinical cases (8 canonical + 3 stress-tests)",
+    )
+    parser.add_argument(
+        "--stress-only",
+        action="store_true",
+        help="Run automated benchmark on only the 3 stress-test cases (Cases 8 to 10)",
+    )
+    parser.add_argument(
+        "--canonical-only",
+        action="store_true",
+        help="Run automated benchmark on only the 8 canonical cases (Cases 0 to 7)",
     )
     parser.add_argument(
         "--model",
@@ -267,8 +271,23 @@ def main():
     # Automatically ensure models are downloaded before executing cases
     ensure_models_downloaded(verbose=False)
 
-    if args.benchmark:
+    if args.stress_only:
+        from src.clinical_agent.evaluation.sample_cases import STRESS_TEST_CASES, BENCHMARK_CASES
+        stress_indices = [idx for idx, c in enumerate(BENCHMARK_CASES) if c in STRESS_TEST_CASES]
+        print_banner("RUNNING FULL TRANSPARENT PIPELINE ON ALL STRESS-TEST CASES", f"Total Cases: {len(stress_indices)}")
+        for idx in stress_indices:
+            run_transparent_diagnostic_demo(case_idx=idx, model_name=args.model)
+            print("\n" + "=" * 80 + "\n")
+    elif args.canonical_only:
+        from src.clinical_agent.evaluation.sample_cases import CANONICAL_CASES, BENCHMARK_CASES
+        canonical_indices = [idx for idx, c in enumerate(BENCHMARK_CASES) if c in CANONICAL_CASES]
+        print_banner("RUNNING FULL TRANSPARENT PIPELINE ON ALL CANONICAL CASES", f"Total Cases: {len(canonical_indices)}")
+        for idx in canonical_indices:
+            run_transparent_diagnostic_demo(case_idx=idx, model_name=args.model)
+            print("\n" + "=" * 80 + "\n")
+    elif args.benchmark:
         run_clinical_benchmark(model_name=args.model, verbose=True)
+
     elif args.graph:
         case_idx = args.case if args.case is not None else 0
         run_graph_mode(case_idx=case_idx, model_name=args.model)
@@ -276,9 +295,10 @@ def main():
         run_transparent_diagnostic_demo(case_idx=args.case, model_name=args.model)
     else:
         print("No specific case provided. Running Case 0 (Streptococcal Pneumonia)...")
-        print("Use --help to see all options (e.g. --case 6, --benchmark, --graph, --download-models).\n")
+        print("Use --help to see all options (e.g. --case 8, --benchmark, --stress-only, --graph).\n")
         run_transparent_diagnostic_demo(case_idx=0, model_name=args.model)
 
 
 if __name__ == "__main__":
     main()
+
