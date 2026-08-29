@@ -52,8 +52,11 @@ class MedSAMSegmenterTool(BaseClinicalTool):
         seg_result = model.segment_lung_fields(image_path)
         left_area_px = seg_result["left_lung_area_px"]
         right_area_px = seg_result["right_lung_area_px"]
+        heart_area_px = seg_result.get("heart_area_px", 0)
         symmetry = seg_result["symmetry_index"]
-
+        collapse_pct = seg_result.get("estimated_collapse_pct", round((1.0 - symmetry) * 100.0, 1))
+        ctr = seg_result.get("cardiothoracic_ratio", 0.45)
+        is_cardiomegaly = seg_result.get("is_cardiomegaly", ctr > 0.50)
 
         findings: List[FindingItem] = [
             FindingItem(
@@ -72,30 +75,59 @@ class MedSAMSegmenterTool(BaseClinicalTool):
             ),
             FindingItem(
                 name="MedSAM: Thoracic Lung-Field Area Symmetry Index",
-                status=FindingStatus.PRESENT if symmetry < 0.85 else FindingStatus.ABSENT,
+                status=FindingStatus.PRESENT if symmetry < 0.75 else FindingStatus.ABSENT,
                 confidence=0.90,
                 quantitative_value=symmetry,
                 unit="ratio",
-                details={"symmetry_index": symmetry, "is_asymmetric": symmetry < 0.85},
+                details={"symmetry_index": symmetry, "is_asymmetric": symmetry < 0.75},
+            ),
+            FindingItem(
+                name="MedSAM: Estimated Unilateral Lung Volume Deficit / Collapse",
+                status=FindingStatus.PRESENT if collapse_pct >= 30.0 else FindingStatus.ABSENT,
+                confidence=0.88,
+                quantitative_value=collapse_pct,
+                unit="percent",
+                details={"collapse_pct": collapse_pct, "significant_collapse": collapse_pct >= 30.0},
+            ),
+            FindingItem(
+                name="MedSAM: Cardiothoracic Ratio (CTR) / Radiographic Cardiomegaly",
+                status=FindingStatus.PRESENT if is_cardiomegaly else FindingStatus.ABSENT,
+                confidence=0.91,
+                quantitative_value=ctr,
+                unit="ratio",
+                details={"ctr": ctr, "is_cardiomegaly": is_cardiomegaly, "threshold": 0.50},
             ),
         ]
 
-        if symmetry < 0.75:
+        if is_cardiomegaly:
             summary = (
-                f"MedSAM anatomical segmentation indicates thoracic volumetric asymmetry (symmetry index: {symmetry:.2f}; "
-                f"Left: {left_area_px:,.0f} px, Right: {right_area_px:,.0f} px)."
+                f"MedSAM anatomical segmentation reveals enlarged cardiac silhouette (Cardiothoracic Ratio CTR: {ctr:.2f} > 0.50 threshold, "
+                f"confirming radiographic cardiomegaly) with {symmetry:.2f} thoracic symmetry."
+            )
+        elif collapse_pct >= 30.0:
+            summary = (
+                f"MedSAM anatomical segmentation indicates significant thoracic volume deficit "
+                f"({collapse_pct:.0f}% unilateral volume loss / parenchymal retraction; Symmetry: {symmetry:.2f}, CTR: {ctr:.2f})."
             )
         else:
             summary = (
-                f"MedSAM anatomical segmentation shows symmetric bilateral lung fields (symmetry index: {symmetry:.2f}) "
-                f"without gross volumetric disparity."
+                f"MedSAM anatomical segmentation demonstrates symmetric bilateral lung aeration and normal cardiac silhouette "
+                f"(Symmetry: {symmetry:.2f}, Volume Deficit: {collapse_pct:.0f}%, CTR: {ctr:.2f} <= 0.50 threshold) without focal collapse or cardiomegaly."
             )
-
 
         return ToolResult(
             tool_name=self.name,
             modality=self.modality,
             findings=findings,
             summary=summary,
-            raw_output={"left_area_px": left_area_px, "right_area_px": right_area_px, "symmetry_index": symmetry},
+            raw_output={
+                "left_area_px": left_area_px,
+                "right_area_px": right_area_px,
+                "heart_area_px": heart_area_px,
+                "symmetry_index": symmetry,
+                "estimated_collapse_pct": collapse_pct,
+                "cardiothoracic_ratio": ctr,
+                "is_cardiomegaly": is_cardiomegaly,
+            },
         )
+

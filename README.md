@@ -56,21 +56,25 @@ The system executes this process across distinct stages:
 
 ## Diagnostic Tools and Deep Learning Checkpoints
 
-The agent coordinates real specialist tools without mock fallbacks:
+The agent coordinates real specialist tools alongside direct LLM clinical intake:
 
+- **Direct LLM Clinical Intake & Pertinent Negatives Ledger**:
+  - *Details*: The Attending LLM directly ingests unstructured clinical notes, triage history, and clinical shorthand, synthesizing structured pertinent positives (confirmed present) and pertinent negatives (denied or normal on exam) directly into the Evidence Ledger.
 - **Chest X-Ray Classifier (`ChestXRayClassifierTool`)**:
   - *Model*: 121-layer DenseNet (`DenseNet-121`) from `TorchXRayVision` (`densenet121-res224-all`).
-  - *Details*: Calculates calibrated probabilities and explicit operating margins ($\text{Margin} = |p_k - \theta_k|$) across 18 chest pathologies (consolidation, cardiomegaly, effusion, pneumothorax, infiltration, and others).
+  - *Details*: Computes calibrated probabilities with zero-centered clinical certainty scaling ($\text{Certainty} = 2(p - 0.50)$, where $0.50$ represents the uninformative baseline). Genuinely positive radiographic signs require $\ge +30\%$ certainty ($p \ge 0.65$), while clear radiographs are classified as normal without false-positive noise.
 - **Thoracic Anatomical Segmenter (`MedSAMSegmenterTool`)**:
   - *Model*: Medical Segment Anything Model (`wanglab/medsam-vit-base`) Vision Transformer.
-  - *Details*: Prompts bounding boxes over the hemithoraces to segment both lung fields and calculate the symmetry ratio $\mathcal{S} = \frac{\min(A_L, A_R)}{\max(A_L, A_R)}$. Values under 0.85 indicate volume loss or dense unilateral consolidation.
+  - *Details*: Performs multi-prompt anatomical segmentation of bilateral hemithoraces and the cardiac silhouette to extract objective spatial biomarkers:
+    1. **Cardiothoracic Ratio (CTR)**: Calculates transverse cardiac vs. thoracic diameter ($\text{CTR} = \frac{D_{\text{heart}}}{D_{\text{thorax}}}$), providing quantitative verification of cardiomegaly ($\text{CTR} > 0.50$).
+    2. **Unilateral Lung Volume Deficit / Collapse %**: Quantifies parenchymal loss in pneumothorax, effusion, or lobar atelectasis ($\text{Deficit} = (1.0 - \mathcal{S}) \times 100\%$).
+
 - **Laboratory Panel Validator (`LaboratoryTestsTool`)**:
   - *Reference*: Uses standard physiological reference intervals from the *Tietz Textbook of Clinical Chemistry*.
   - *Details*: Evaluates complete blood count, inflammatory markers (Procalcitonin, CRP), cardiac markers (Troponin I, BNP, NT-proBNP), coagulation (D-Dimer), and basic metabolic panels, calculating quantitative percentage deviations ($\Delta = \frac{|v - \lambda|}{\lambda}$).
 - **Guideline Retrieval RAG (`MedicalKnowledgeRAGTool`)**:
-  - *Details*: Uses MedRAG clinical concept mapping and TF-IDF cosine similarity against indexed disease monographs and practice guidelines, grounding treatment decisions in published medical protocols.
-- **Clinical Notes Extractor (`ClinicalNotesExtractorTool`)**:
-  - *Details*: Regex-based triage parser that extracts documented physical signs (crackles, jugular venous distension, point tenderness, relative bradycardia).
+  - *Details*: Uses MedRAG clinical concept mapping and TF-IDF cosine similarity against indexed disease monographs and practice guidelines, featuring a strict relevance threshold ($\tau \ge 0.25$) to explicitly signal unindexed or non-diagnostic queries.
+
 
 ---
 

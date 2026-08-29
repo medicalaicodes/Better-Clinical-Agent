@@ -16,13 +16,16 @@ from src.clinical_agent.evaluation import BENCHMARK_CASES
 
 def mock_llm_responses(messages, **kwargs):
     content = messages[0]["content"] if messages else ""
-    if "initial open differential diagnosis" in content.lower():
+    if "intake evaluation" in content.lower() or "initial open differential diagnosis" in content.lower():
         return json.dumps({
+            "pertinent_positives": ["Fever", "Cough"],
+            "pertinent_negatives": ["Denies chest pain", "No orthopnea"],
             "differential": [
                 {"condition": "Community-Acquired Pneumonia", "icd10_code": "J18.9", "tier": "HIGH_SUSPICION", "clinical_rationale": "Fever and cough."},
                 {"condition": "Acute Bronchitis", "icd10_code": "J20.9", "tier": "MODERATE_SUSPICION", "clinical_rationale": "Cough illness."}
             ]
         })
+
     elif "available specialist tools to order:" in content.lower():
         import re
         match = re.search(r"Available Specialist Tools to Order:\s*\n?([^\n]+)", content)
@@ -98,4 +101,45 @@ def test_graph_state_machine_execution():
         assert isinstance(report, ClinicalReport)
         assert report.patient_id == case.patient_id
         assert len(report.evidence_trail) >= 2
+
+
+def test_agent_stress_test_escalation_flow():
+    """Validates that out-of-distribution stress test cases execute cleanly and support escalation."""
+    from src.clinical_agent.evaluation import STRESS_TEST_CASES
+    agent = AttendingClinicalAgent()
+    aortic_case = STRESS_TEST_CASES[0]  # PT_AORTIC_DISSECT_54M
+    
+    def mock_escalation_llm(messages, **kwargs):
+        content = messages[0]["content"] if messages else ""
+        if "intake evaluation" in content.lower() or "initial open differential diagnosis" in content.lower():
+            return json.dumps({
+                "pertinent_positives": ["Tearing chest pain radiating to back", "Blood pressure asymmetry"],
+                "pertinent_negatives": ["Clear lungs bilaterally"],
+                "differential": [
+                    {"condition": "Acute Aortic Dissection", "icd10_code": "I71.0", "tier": "HIGH_SUSPICION", "clinical_rationale": "Sudden tearing back pain with asymmetric BP."},
+                    {"condition": "Acute Coronary Syndrome", "icd10_code": "I20.0", "tier": "MODERATE_SUSPICION", "clinical_rationale": "Severe chest pain."}
+                ]
+            })
+
+        elif "available specialist tools to order:" in content.lower():
+            return json.dumps({"selected_action": "STOP", "clinical_indication": "Urgent advanced imaging required.", "search_query": ""})
+        elif "finalizing the definitive diagnostic consultation report" in content.lower():
+            return json.dumps({
+                "primary_diagnosis": "Suspected Acute Aortic Dissection",
+                "disposition": "ESCALATE_TO_PHYSICIAN",
+                "differential_diagnosis": [
+                    {"condition": "Acute Aortic Dissection", "icd10_code": "I71.0", "tier": "HIGH_SUSPICION", "clinical_rationale": "Asymmetric BP and tearing pain."}
+                ],
+                "clinical_impression": "Severe tearing chest and back pain with marked blood pressure asymmetry.",
+                "recommendations": ["Stat CT Angiography of Chest/Abdomen/Pelvis", "Immediate Cardiothoracic Surgery consult"]
+            })
+        return "{}"
+
+    with patch.object(agent.llm_client, "_call_completion", side_effect=mock_escalation_llm):
+        report = agent.diagnose(case=aortic_case, max_turns=3)
+        assert isinstance(report, ClinicalReport)
+        assert report.patient_id == aortic_case.patient_id
+        assert report.disposition.value == "ESCALATE_TO_PHYSICIAN"
+        assert len(report.recommendations) > 0
+
 

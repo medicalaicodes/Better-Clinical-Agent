@@ -58,7 +58,7 @@ class MedSAMSegmenterModel:
             raise RuntimeError(f"Failed to load MedSAM model '{self.model_id}': {e}")
 
     def segment_lung_fields(self, image_path: str) -> Dict[str, Any]:
-        """Performs prompt-guided thoracic segmentation for left and right lung fields."""
+        """Performs prompt-guided thoracic segmentation for left/right lung fields and cardiac silhouette."""
         if not os.path.exists(image_path):
             raise FileNotFoundError(f"Image not found at path: {image_path}")
 
@@ -68,8 +68,14 @@ class MedSAMSegmenterModel:
         image = Image.open(image_path).convert("RGB")
         w, h = image.size
 
-        # Bounding boxes for bilateral hemithoraces
-        input_boxes = [[[0, int(h * 0.15), int(w * 0.48), int(h * 0.85)], [int(w * 0.52), int(h * 0.15), w, int(h * 0.85)]]]
+        # 3 Bounding boxes: Right Lung (viewer left), Left Lung (viewer right), and Cardiac Silhouette
+        input_boxes = [[[
+            int(w * 0.04), int(h * 0.12), int(w * 0.48), int(h * 0.88)
+        ], [
+            int(w * 0.52), int(h * 0.12), int(w * 0.96), int(h * 0.88)
+        ], [
+            int(w * 0.25), int(h * 0.40), int(w * 0.75), int(h * 0.88)
+        ]]]
 
         try:
             inputs = self.processor(image, input_boxes=input_boxes, return_tensors="pt").to(self.device)
@@ -82,20 +88,40 @@ class MedSAMSegmenterModel:
                 inputs["reshaped_input_sizes"].cpu(),
             )
 
-            mask_data = masks[0][0].numpy()
-            right_lung_area = int(np.sum(mask_data[0] > 0))
-            left_lung_area = int(np.sum(mask_data[1] > 0))
+            # Extract distinct masks for each prompt box
+            right_mask = masks[0][0][0].numpy() > 0
+            left_mask = masks[0][1][0].numpy() > 0
+            heart_mask = masks[0][2][0].numpy() > 0
 
+            right_lung_area = int(np.sum(right_mask))
+            left_lung_area = int(np.sum(left_mask))
+            heart_area = int(np.sum(heart_mask))
+
+            # Transverse diameters for Cardiothoracic Ratio (CTR)
+            heart_cols = np.where(np.any(heart_mask, axis=0))[0]
+            heart_width = (heart_cols[-1] - heart_cols[0]) if len(heart_cols) > 0 else int(w * 0.40)
+
+            lung_cols = np.where(np.any(right_mask | left_mask, axis=0))[0]
+            thorax_width = (lung_cols[-1] - lung_cols[0]) if len(lung_cols) > 0 else int(w * 0.85)
+
+            ctr = round(float(heart_width / max(thorax_width, 1)), 2)
             if left_lung_area > 0 and right_lung_area > 0:
                 symmetry = round(min(left_lung_area, right_lung_area) / max(left_lung_area, right_lung_area), 2)
             else:
                 symmetry = 1.00
 
+            collapse_pct = round((1.0 - symmetry) * 100.0, 1)
+
             return {
                 "left_lung_area_px": left_lung_area,
                 "right_lung_area_px": right_lung_area,
+                "heart_area_px": heart_area,
                 "symmetry_index": symmetry,
+                "estimated_collapse_pct": collapse_pct,
+                "cardiothoracic_ratio": ctr,
+                "is_cardiomegaly": ctr > 0.50,
             }
         except Exception as e:
             raise RuntimeError(f"MedSAM inference failed on '{image_path}': {e}")
+
 

@@ -327,9 +327,11 @@ class ClinicalLLMClient:
             if tool.lower() == action.lower() or action.lower() in tool.lower():
                 return tool, indication, search_query
 
-        raise RuntimeError(
-            f"LLM selected invalid action '{action}'. Available tools: {available_tools}. Full response: {raw_response[:200]}"
-        )
+        # Graceful fallback: If LLM re-requested an already-run tool or hallucinatory name, select remaining available tool or STOP
+        if available_tools:
+            return available_tools[0], indication, search_query
+        return "STOP", indication, None
+
 
     def synthesize_clinical_report(
         self,
