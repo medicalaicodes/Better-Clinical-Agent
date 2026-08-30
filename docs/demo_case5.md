@@ -22,8 +22,8 @@ This document demonstrates the sequential decision-making process of the **Atten
 
 ```
 ================================================================================
-                       CLINICAL CASE 5: [PT_KLEB_DM_62F]
-                        PATIENT EMERGENCY TRIAGE INTAKE
+                       CLINICAL CASE 5: [PT_KLEB_DM_62F]                      
+                        PATIENT EMERGENCY TRIAGE INTAKE                       
 ================================================================================
   Patient Demographics:  62-year-old Female
   Chief Complaint:       Acute fever (39.5 C), severe dyspnea, and copious thick gelatinous blood-red 'currant-jelly' sputum for 2 days
@@ -34,105 +34,83 @@ This document demonstrates the sequential decision-making process of the **Atten
 --------------------------------------------------------------------------------
 ```
 
-### Stage 1: Triage Clinical Notes Extraction
-*Specialist Tool: `clinical_notes_extractor`*
+### Stage 1: Clinical Intake & Pre-Test Differential Formulation
+*Attending LLM: Direct Natural Language Clinical Comprehension & Pre-Test Hypothesis Formulation*
 
-- **Ingested Unstructured Text**: `"62-year-old female with poorly controlled type 2 diabetes (HbA1c 10.8%). Acute toxic appearance, profound tachypnea, and productive cough with characteristic thick dark red currant-jelly sputum. Severe right hemithorax dullness and bronchial breathing."`
-- **Extracted Structured Entities**:
-  - `[PRESENT]` Exam/History Sign: **Purulent Sputum** (Confidence: $0.95$)
-- **Evidence Summary**: `Extracted 1 clinical exam/history features: Purulent Sputum.`
-
----
-
-### Stage 2: Initial Pre-Test Differential Formulation
-*Attending LLM: Pre-Test Diagnostic Reasoning (Prior to Unveiling Labs/Imaging)*
-
-```json
-{
-  "differential": [
-    {
-      "condition": "Pneumonia, likely aspiration pneumonia",
-      "icd10_code": "J18.9",
-      "tier": "HIGH_SUSPICION",
-      "clinical_rationale": "The patient presents with acute fever, dyspnea, productive cough with currant-jelly sputum, and right hemithorax dullness, suggesting pneumonia. The patient's diabetes and toxic appearance increase the likelihood of aspiration pneumonia."
-    },
-    {
-      "condition": "Acute Respiratory Distress Syndrome (ARDS)",
-      "icd10_code": "J96.9",
-      "tier": "MODERATE_SUSPICION",
-      "clinical_rationale": "The patient's severe dyspnea, hypoxemia (SpO2 88%), and tachypnea suggest acute respiratory distress. The clinical picture could be consistent with ARDS, especially given the patient's underlying diabetes."
-    },
-    {
-      "condition": "Pulmonary Embolism (PE)",
-      "icd10_code": "I62.9",
-      "tier": "MODERATE_SUSPICION",
-      "clinical_rationale": "The patient's acute dyspnea, tachypnea, and hypoxemia raise suspicion for PE. While the sputum is not typical, it is not exclusionary. The patient's age and diabetes also increase the risk of PE."
-    },
-    {
-      "condition": "Acute Bronchitis",
-      "icd10_code": "J20.9",
-      "tier": "RULE_OUT",
-      "clinical_rationale": "While the patient has a productive cough, the severity of dyspnea, hypoxemia, and the presence of currant-jelly sputum make acute bronchitis less likely. The patient's toxic appearance and underlying diabetes also make this diagnosis less likely."
-    }
-  ]
-}
-```
+- **Ingested Presentation & Physical Exam Notes**: `"62-year-old female with poorly controlled type 2 diabetes (HbA1c 10.8%). Acute toxic appearance, profound tachypnea, and productive cough with characteristic thick dark red currant-jelly sputum. Severe right hemithorax dullness and bronchial breathing."`
+- **Extracted Structured Features**:
+  - `[POSITIVE]` Acute fever ($39.5^\circ\text{C}$) (Confidence: $0.98$)
+  - `[POSITIVE]` Severe dyspnea (Confidence: $0.98$)
+  - `[POSITIVE]` Copious thick gelatinous blood-red 'currant-jelly' sputum (Confidence: $0.98$)
+  - `[POSITIVE]` Severe right hemithorax dullness (Confidence: $0.98$)
+  - `[POSITIVE]` Bronchial breathing (Confidence: $0.98$)
+  - `[PERTINENT NEGATIVE]` No mention of chest pain (Confidence: $0.98$)
+  - `[PERTINENT NEGATIVE]` No mention of cough characteristics beyond productive (Confidence: $0.98$)
+  - `[PERTINENT NEGATIVE]` No mention of recent travel (Confidence: $0.98$)
+  - `[PERTINENT NEGATIVE]` No mention of known exposure to tuberculosis (Confidence: $0.98$)
+- **Pre-Test Differential Formulation**:
+  1. `[HIGH_SUSPICION]` Pneumonia (likely bacterial, possibly aspiration)
+  2. `[MODERATE_SUSPICION]` Acute Respiratory Distress Syndrome (ARDS)
+  3. `[MODERATE_SUSPICION]` Aspiration Pneumonia
+  4. `[RULE_OUT]` Pulmonary Embolism (PE)
+  5. `[RULE_OUT]` Tuberculosis (TB)
 
 ---
 
 ### Turn 1: Chest Radiography Classification
-*Specialist Tool: `chest_xray_classifier` (DenseNet-121 Backbone)*
+*Specialist Tool: `chest_xray_classifier` (DenseNet-121 Backbone with Zero-Centered Certainty Scaling)*
 
-- **Attending LLM Indication**: `"The patient presents with acute fever, severe dyspnea, and copious thick gelatinous blood-red 'currant-jelly' sputum, suggesting pneumonia. A chest X-ray is needed to confirm the diagnosis and assess for complications such as pleural effusion or consolidation."`
-- **DenseNet-121 Neural Probabilities**:
-  - `[PRESENT]` Lung Opacity: $p = 0.7166$ (Operating Margin: $+0.515$)
-  - `[PRESENT]` Mass / Density: $p = 0.6892$
-  - `[PRESENT]` Pneumonia: $p = 0.6779$
-  - `[PRESENT]` Consolidation: $p = 0.6685$
-  - `[PRESENT]` Infiltration: $p = 0.6589$
-  - `[PRESENT]` Pleural Effusion: $p = 0.6347$
-- **Evidence Appended**: `Chest radiograph reveals Lung Opacity, Mass, Pneumonia (Lead: Lung Opacity, Prob: 0.717, Threshold: 0.20, Margin: 0.515).`
+- **Attending LLM Indication**: `"The patient presents with acute fever, severe dyspnea, and copious blood-red 'currant-jelly' sputum, suggesting a possible pulmonary infection. A chest X-ray is needed to evaluate for pneumonia, aspiration pneumonia, ARDS, pulmonary embolism, and tuberculosis."`
+- **DenseNet-121 Radiographic Detections**:
+  - `[PRESENT]` Lung Opacity: $p = 0.7166$ (Certainty: **$+43.3\%$**)
+  - `[PRESENT]` Mass / Density: $p = 0.6892$ (Certainty: **$+37.8\%$**)
+  - `[PRESENT]` Pneumonia: $p = 0.6779$ (Certainty: **$+35.6\%$**)
+  - `[PRESENT]` Consolidation: $p = 0.6685$ (Certainty: **$+33.7\%$**)
+  - `[PRESENT]` Infiltration: $p = 0.6589$ (Certainty: **$+31.8\%$**)
+- **Evidence Appended**: `Chest radiograph demonstrates positive radiographic signs: Lung Opacity (Prob: 0.717, Certainty: +43.3%), Mass (Prob: 0.689, Certainty: +37.8%), Pneumonia (Prob: 0.678, Certainty: +35.6%).`
 
 ---
 
 ### Turn 2: Emergency Biomarker Panel Validation
-*Specialist Tool: `laboratory_tests` (Tietz Reference Intervals)*
+*Specialist Tool: `laboratory_tests` (Tietz Reference Intervals & Acute Phase Biomarkers)*
 
-- **Attending LLM Indication**: `"The patient presents with acute respiratory distress, fever, and currant jelly sputum, raising concern for pneumonia, ARDS, and pulmonary embolism. Laboratory tests are needed to evaluate for infection, inflammation, and clotting abnormalities."`
+- **Attending LLM Indication**: `"The patient presents with acute fever, severe dyspnea, and copious blood-tinged sputum, suggesting a possible infectious process. Laboratory tests are needed to assess inflammatory markers, cardiac function, and other relevant parameters to differentiate between pneumonia, aspiration, ARDS, pulmonary embolism, and tuberculosis."`
 - **Quantitative Laboratory Deviations**:
   - **WBC**: $21.4 \times 10^3/\mu\text{L}$ [`HIGH` — Leukocytosis, Dev: $+94\%$]
   - **Procalcitonin**: $3.4\,\mu\text{g/L}$ [`HIGH` — Bacterial Sepsis / Severe Necrotizing Infection, Dev: **$+1260\%$**]
-  - **C-Reactive Protein (CRP)**: $112.0\,\text{mg/L}$ [`HIGH` — Severe Systemic Inflammation, Dev: **$+1020\%$**]
+  - **C-Reactive Protein (CRP)**: $112.0\,\text{mg/L}$ [`HIGH` — Acute Phase Reactant / Severe Inflammation, Dev: **$+1020\%$**]
   - **Serum Glucose**: $268.0\,\text{mg/dL}$ [`HIGH` — Severe Diabetic Hyperglycemia, Dev: $+171\%$]
-  - **Blood Urea Nitrogen (BUN)**: $32.0\,\text{mg/dL}$ [`HIGH` — Pre-renal azotemia / Dehydration, Dev: $+60\%$]
+  - **Blood Urea Nitrogen (BUN)**: $32.0\,\text{mg/dL}$ [`HIGH` — Renal Impairment / Dehydration, Dev: $+60\%$]
   - **Serum Creatinine**: $1.7\,\text{mg/dL}$ [`HIGH` — Acute Kidney Injury, Dev: $+42\%$]
-  - **Serum Lactate**: $2.8\,\text{mmol/L}$ [`HIGH` — Tissue Hypoperfusion / Early Sepsis, Dev: $+40\%$]
+  - **Serum Lactate**: $2.8\,\text{mmol/L}$ [`HIGH` — Lactic Acidosis / Tissue Hypoperfusion, Dev: $+40\%$]
 - **Evidence Appended**: `Laboratory evaluation revealed 7 abnormal biomarker(s): WBC 21.4 x10^3/uL [HIGH, dev: +94%]; PROCALCITONIN 3.4 ug/L [HIGH, dev: +1260%]; CRP 112.0 mg/L [HIGH, dev: +1020%]; GLUCOSE 268.0 mg/dL [HIGH, dev: +171%]; BUN 32.0 mg/dL [HIGH, dev: +60%]; CREATININE 1.7 mg/dL [HIGH, dev: +42%]; LACTATE 2.8 mmol/L [HIGH, dev: +40%].`
 
 ---
 
-### Turn 3: Clinical Practice Guideline Verification (RAG)
-*Specialist Tool: `medical_knowledge_rag` (IDSA / StatPearls Knowledge Base)*
+### Turn 3: Thoracic Anatomical Lung & Cardiac Segmentation
+*Specialist Tool: `medsam_segmenter` (MedSAM ViT-Base 3-Box Anatomical Biomarkers)*
 
-- **Formulated Query**: `"CURRANT JELLY SPUTUM, ASPIRATION PNEUMONIA, HIGH WBC, HIGH PROCALCITONIN, HIGH CRP, HYPOXIA, TACHYPNEA, DIABETES"`
-- **Attending LLM Indication**: `"The patient presents with currant jelly sputum, which is highly suggestive of aspiration pneumonia. The elevated WBC, procalcitonin, and CRP levels indicate a significant inflammatory response, consistent with pneumonia. The patient's hypoxemia and tachypnea further support the diagnosis of pneumonia, and her diabetes increases the risk of aspiration. I am looking for guidelines on the management of aspiration pneumonia, especially in a diabetic patient with these laboratory findings."`
-- **Matched Guideline Monograph**:
-  - **Monograph**: *Klebsiella pneumoniae Severe Necrotizing Pneumonia* (Source: IDSA Severe Hospital & Community Pneumonia Guidelines / StatPearls NBK546648)
-  - **Cosine Similarity Score**: $0.329$
-  - **Guideline Excerpt**: *"Prompt intravenous antipseudomonal third/fourth-generation cephalosporin (Cefepime) or carbapenem (Meropenem) plus respiratory fluoroquinolone. Differentiate from pulmonary tuberculosis (apical cavitary lesions), lung abscess, and aspiration pneumonitis."*
-- **Evidence Appended**: `Evidence Verification via Clinical Guidelines for 'Klebsiella pneumoniae Severe Necrotizing Pneumonia' (Source: IDSA Severe Hospital & Community Pneumonia Guidelines / StatPearls NBK546648, Query: 'CURRANT JELLY SPUTUM, ASPIRATION PNEUMONIA, HIGH WBC, HIGH P...', Cosine Similarity: 0.329): Guideline Protocol: Differentiate from pulmonary tuberculosis (apical cavitary lesions), lung abscess, and aspiration pneumonitis.`
+- **Attending LLM Indication**: `"The patient presents with acute respiratory distress, hypoxemia, and a history of diabetes. The chest radiograph shows lung opacity. I want to assess lung volumes and the Cardiothoracic Ratio (CTR) to evaluate for possible pulmonary edema, consolidation, or other abnormalities that could be contributing to the patient's respiratory distress and hypoxemia. This will help differentiate between pneumonia, ARDS, and other potential causes of respiratory compromise."`
+- **MedSAM Segmentation Outputs**:
+  - Left Lung Area: $57{,}897$ pixels (Confidence: $0.92$)
+  - Right Lung Area: $95{,}376$ pixels (Confidence: $0.92$)
+  - **Thoracic Lung-Field Area Symmetry Index ($\mathcal{S}$)**: **$0.61$** (Significant asymmetric lobar consolidation)
+  - **Estimated Unilateral Lung Volume Deficit / Collapse**: **$39.0\%$** (Marked parenchymal volume retraction)
+  - **Cardiothoracic Ratio (CTR)**: **$0.48$** (Preserved normal cardiac silhouette, $\le 0.50$ threshold)
+- **Evidence Appended**: `MedSAM anatomical segmentation indicates significant thoracic volume deficit (39% unilateral volume loss / parenchymal retraction; Symmetry: 0.61, CTR: 0.48).`
 
 ---
 
-### Turn 4: Thoracic Anatomical Lung Segmentation
-*Specialist Tool: `medsam_segmenter` (MedSAM ViT-Base Backbone)*
+### Turn 4: Clinical Practice Guideline Verification (RAG)
+*Specialist Tool: `medical_knowledge_rag` (IDSA / StatPearls Knowledge Base)*
 
-- **Attending LLM Indication**: `"The patient's clinical presentation, including currant-jelly sputum, high WBC count, and high procalcitonin, strongly suggests Klebsiella pneumoniae severe necrotizing pneumonia, a form of aspiration pneumonia. The medsam_segmenter tool can help segment the image to identify areas of consolidation and necrosis, which would support the diagnosis."`
-- **MedSAM Segmentation Outputs**:
-  - Left Lung Area: $77{,}603$ pixels (Confidence: $0.92$)
-  - Right Lung Area: $112{,}441$ pixels (Confidence: $0.92$)
-  - **Thoracic Symmetry Ratio ($\mathcal{S}$)**: **$0.69$** (Significant asymmetric lobar consolidation, threshold $< 0.85$)
-- **Evidence Appended**: `MedSAM segmentation indicates significant thoracic asymmetry (symmetry index: 0.69). Relative volume reduction or basilar opacity detected in the right lung field.`
+- **Formulated Query**: `"acute respiratory distress, currant jelly sputum, pneumonia, aspiration pneumonia, ARDS, diabetes, high WBC, elevated procalcitonin, elevated CRP, elevated glucose, elevated BUN, elevated creatinine, elevated lactate"`
+- **Attending LLM Indication**: `"The patient presents with acute respiratory distress, currant jelly sputum, and a history of diabetes. The elevated WBC, procalcitonin, CRP, glucose, BUN, creatinine, and lactate levels suggest a severe inflammatory process, potentially indicating pneumonia or ARDS. The currant jelly sputum raises suspicion for aspiration pneumonia. The patient's diabetes increases the risk for both pneumonia and ARDS. The elevated lactate suggests possible sepsis or hypoperfusion."`
+- **Matched Guideline Monograph**:
+  - **Monograph**: *Klebsiella pneumoniae Severe Necrotizing Pneumonia* (Source: IDSA Severe Hospital & Community Pneumonia Guidelines / StatPearls NBK546648)
+  - **Cosine Similarity Score**: $0.344$
+  - **Guideline Excerpt**: *"Prompt intravenous antipseudomonal third/fourth-generation cephalosporin (Cefepime) or carbapenem (Meropenem) plus respiratory fluoroquinolone. Differentiate from pulmonary tuberculosis (apical cavitary lesions), lung abscess, and aspiration pneumonitis."*
+- **Evidence Appended**: `Evidence Verification via Clinical Guidelines for 'Klebsiella pneumoniae Severe Necrotizing Pneumonia' (Source: IDSA Severe Hospital & Community Pneumonia Guidelines / StatPearls NBK546648, Query: 'acute respiratory distress, currant jelly sputum, pneumonia,...', Cosine Similarity: 0.344): Guideline Protocol: Differentiate from pulmonary tuberculosis (apical cavitary lesions), lung abscess, and aspiration pneumonitis.`
 
 ---
 
@@ -140,34 +118,33 @@ This document demonstrates the sequential decision-making process of the **Atten
 
 ```
 ================================================================================
-                 FINAL DEFINITIVE CLINICAL REPORT & DISPOSITION
-                           Patient ID: PT_KLEB_DM_62F
+                 FINAL DEFINITIVE CLINICAL REPORT & DISPOSITION               
+                           Patient ID: PT_KLEB_DM_62F                         
 ================================================================================
-  Primary Lead Diagnosis: Klebsiella pneumoniae Severe Necrotizing Pneumonia   
+  Primary Lead Diagnosis: Klebsiella pneumoniae Severe Necrotizing Pneumonia
   Recommended Disposition: ADMIT_INPATIENT
 
   Refined Differential Diagnosis:
-    1. [MODERATE_SUSPICION] Aspiration Pneumonia
-       Rationale: The patient's history of diabetes, toxic appearance, copious currant-jelly sputum, and chest X-ray findings are consistent with aspiration pneumonia. While Klebsiella is the more specific diagnosis, aspiration pneumonia remains a plausible consideration, especially given the patient's risk factors.
-    2. [MODERATE_SUSPICION] Acute Respiratory Distress Syndrome (ARDS)
-       Rationale: The patient's severe dyspnea, hypoxemia, and elevated WBC count suggest ARDS. The clinical picture could be consistent with ARDS, especially given the patient's underlying diabetes. Further evaluation is needed to rule out other causes of respiratory distress.
-    3. [MODERATE_SUSPICION] Pneumonia
-       Rationale: The patient's fever, dyspnea, and chest X-ray findings are consistent with pneumonia. While Klebsiella is the more specific diagnosis, pneumonia remains a plausible consideration, especially given the patient's risk factors.
+    1. [MODERATE_SUSPICION] Acute Respiratory Distress Syndrome (ARDS)
+       Rationale: The patient's severe dyspnea, hypoxemia (SpO2 88), and clinical appearance suggest ARDS, especially given the underlying diabetes. The currant-jelly sputum could be a sign of pulmonary infection contributing to ARDS.
+    2. [MODERATE_SUSPICION] Aspiration Pneumonia
+       Rationale: The patient's diabetes and the presence of thick, blood-tinged sputum raise suspicion for aspiration pneumonia, particularly if there is a history of altered mental status or risk factors for aspiration.
+    3. [RULE_OUT] Pulmonary Embolism (PE)
+       Rationale: While the patient has risk factors (diabetes), the presentation is more suggestive of pneumonia. However, PE should be considered, especially given the dyspnea and hypoxemia, and further investigation (e.g., D-dimer, CT angiogram) may be warranted.
 
   Accumulated Evidence Trail:
-    [1] (clinical_notes_extractor): Extracted 1 clinical exam/history features: Purulent Sputum.
-    [2] (chest_xray_classifier): Chest radiograph reveals Lung Opacity, Mass, Pneumonia (Lead: Lung Opacity, Prob: 0.717, Threshold: 0.20, Margin: 0.515).    
+    [1] (clinical_history_synthesis): Clinical Intake Assessment: Identified 5 positive clinical feature(s), Confirmed 4 pertinent negative(s).
+    [2] (chest_xray_classifier): Chest radiograph demonstrates positive radiographic signs: Lung Opacity (Prob: 0.717, Certainty: +43.3%), Mass (Prob: 0.689, Certainty: +37.8%), Pneumonia (Prob: 0.678, Certainty: +35.6%).
     [3] (laboratory_tests): Laboratory evaluation revealed 7 abnormal biomarker(s): WBC 21.4 x10^3/uL [HIGH, dev: +94%]; PROCALCITONIN 3.4 ug/L [HIGH, dev: +1260%]; CRP 112.0 mg/L [HIGH, dev: +1020%]; GLUCOSE 268.0 mg/dL [HIGH, dev: +171%]; BUN 32.0 mg/dL [HIGH, dev: +60%]; CREATININE 1.7 mg/dL [HIGH, dev: +42%]; LACTATE 2.8 mmol/L [HIGH, dev: +40%].
-    [4] (medical_knowledge_rag): Evidence Verification via Clinical Guidelines for 'Klebsiella pneumoniae Severe Necrotizing Pneumonia' (Source: IDSA Severe Hospital & Community Pneumonia Guidelines / StatPearls NBK546648, Query: 'CURRANT JELLY SPUTUM, ASPIRATION PNEUMONIA, HIGH WBC, HIGH P...', Cosine Similarity: 0.329): Guideline Protocol: Differentiate from pulmonary tuberculosis (apical cavitary lesions), lung abscess, and aspiration pneumonitis.
-    [5] (medsam_segmenter): MedSAM segmentation indicates significant thoracic asymmetry (symmetry index: 0.69). Relative volume reduction or basilar opacity detected in the right lung field.
+    [4] (medsam_segmenter): MedSAM anatomical segmentation indicates significant thoracic volume deficit (39% unilateral volume loss / parenchymal retraction; Symmetry: 0.61, CTR: 0.48).
+    [5] (medical_knowledge_rag): Evidence Verification via Clinical Guidelines for 'Klebsiella pneumoniae Severe Necrotizing Pneumonia' (Source: IDSA Severe Hospital & Community Pneumonia Guidelines / StatPearls NBK546648, Query: 'acute respiratory distress, currant jelly sputum, pneumonia,...', Cosine Similarity: 0.344): Guideline Protocol: Differentiate from pulmonary tuberculosis (apical cavitary lesions), lung abscess, and aspiration pneumonitis.
 
   Clinical Impression:
-    The patient presents with acute fever, severe dyspnea, and copious thick gelatinous blood-red 'currant-jelly' sputum, along with elevated WBC, CRP, and lactate levels, and a chest X-ray showing lung opacity. These findings are highly suggestive of Klebsiella pneumoniae severe necrotizing pneumonia, likely secondary to aspiration. The patient's diabetes and toxic appearance increase the likelihood of aspiration pneumonia. While ARDS and pneumonia are also considerations, the clinical picture is most consistent with Klebsiella pneumonia.        
+    The patient presents with acute fever, severe dyspnea, and copious thick gelatinous blood-red 'currant-jelly' sputum, indicating a severe bacterial infection. The chest radiograph shows lung opacity and a significant volume deficit, consistent with necrotizing pneumonia. The markedly elevated WBC, procalcitonin, CRP, glucose, BUN, creatinine, and lactate levels strongly support a severe bacterial infection, likely Klebsiella pneumoniae. The patient requires immediate admission for intravenous antibiotics and respiratory support.
 
   Actionable Management Recommendations:
-    - Initiate broad-spectrum intravenous antibiotics with coverage for Klebsiella pneumoniae, including anti-pseudomonal activity.
-    - Provide supplemental oxygen to maintain SpO2 > 90%.
-    - Monitor the patient's respiratory status, including oxygen saturation, respiratory rate, and work of breathing. Consider intubation and mechanical ventilation if respiratory failure develops.
+    - Initiate broad-spectrum intravenous antibiotics with coverage for Klebsiella pneumoniae, including anti-pseudomonal agents.
+    - Obtain sputum cultures and sensitivities to guide antibiotic therapy.
 ================================================================================
 ```
 
@@ -175,7 +152,8 @@ This document demonstrates the sequential decision-making process of the **Atten
 
 ## 4. Key Architectural Highlights Observed
 
-1. **Autonomous Tool Selection**: The Attending LLM recognized that the pathognomonic symptom (*"currant-jelly sputum"*) and toxic appearance warranted immediate radiographic confirmation, followed by multi-organ blood biomarker assessment.
-2. **Quantitative Deviation Awareness**: The agent identified that Procalcitonin was elevated by **$+1260\%$** and CRP by **$+1020\%$**, confirming severe necrotizing bacterial infection over simple viral bronchitis.
-3. **Guideline Retrieval Specificity**: The RAG subsystem translated the complex query into targeted search vectors, matching the exact IDSA guideline for *Klebsiella pneumoniae* and pulling evidence-grounded antimicrobial regimens.
-4. **Safety & Triage Disposition**: Correctly assigned `ADMIT_INPATIENT` with intensive respiratory monitoring and glycemic stabilization recommendations.
+1. **Direct Clinical Intake**: The Attending LLM directly ingested the triage history and clinical notes to extract 5 positive findings (currant-jelly sputum, high fever, dyspnea, dullness, bronchial breathing) and 4 pertinent negatives.
+2. **Zero-Centered Certainty Scaling**: The DenseNet-121 classifier scaled raw probabilities to clear margins ($\text{Certainty} = 2(p - 0.50) \times 100\%$), identifying acute consolidation ($+43.3\%$ opacity certainty, $+35.6\%$ pneumonia certainty).
+3. **MedSAM Anatomical Biomarkers**: Vision Transformer 3-box segmentation measured a **$39\%$ unilateral parenchymal volume deficit** and asymmetry ratio of **$0.61$** alongside a normal cardiac silhouette ($\text{CTR} = 0.48$), objectively characterizing necrotizing lobar consolidation.
+4. **Biochemical Grounding**: Validated extreme elevations in Procalcitonin ($+1260\%$), CRP ($+1020\%$), Leukocytes ($+94\%$), and Lactate ($+40\%$), confirming severe invasive bacterial sepsis.
+5. **Guideline-Driven Triage**: Matched IDSA guideline monographs via semantic RAG and finalized `ADMIT_INPATIENT` with targeted antipseudomonal antibiotic recommendations.
