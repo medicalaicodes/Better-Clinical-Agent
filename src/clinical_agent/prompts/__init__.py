@@ -21,8 +21,8 @@ Vital Signs: {vitals}
 Clinical Notes / History: {clinical_notes}
 
 Clinical Intake Instructions:
-1. Extract all Pertinent Positives: confirmed symptoms, signs, risk factors, or exam abnormalities present.
-2. Extract all Pertinent Negatives: symptoms or signs that are explicitly denied, absent, or normal on exam (e.g. denies cough, no orthopnea, clear lungs).
+1. Extract Pertinent Positives: confirmed symptoms, signs, risk factors, or exam abnormalities present (maximum 4-6 concise, distinct items).
+2. Extract Pertinent Negatives: symptoms or physical findings that are explicitly denied, absent, or normal on exam (maximum 4-6 concise, distinct items; do not repeat entries).
 3. Formulate an initial open differential diagnosis of 3 to 5 candidate conditions based on the presenting intake history and vitals.
    - For each condition, assign a suspicion tier: 'HIGH_SUSPICION', 'MODERATE_SUSPICION', or 'RULE_OUT'.
    - Write a 1-2 sentence clinical rationale explaining why this diagnosis is considered.
@@ -40,9 +40,8 @@ Return strictly a JSON object:
   "differential": [
     {{
       "condition": "<Condition Name>",
-      "icd10_code": "<ICD-10>",
       "tier": "HIGH_SUSPICION | MODERATE_SUSPICION | RULE_OUT",
-      "clinical_rationale": "<Rationale>"
+      "clinical_rationale": "<1-2 sentence medical justification>"
     }}
   ]
 }}
@@ -60,16 +59,16 @@ Current Differential Diagnosis Hypotheses:
 Chronological Evidence Ledger from Completed Turns:
 {evidence_str}
 
-Available Specialist Tools to Order:
+Available Specialist Diagnostic Tools to Order:
 {tools_str}
 
 Diagnostic Reasoning Instructions:
-1. Review the quantitative findings, model prediction probabilities, and classification margins returned by prior specialist tools.
-2. If an imaging test indicates uncertainty or marginal findings near operating thresholds, prioritize ordering confirmatory emergency blood biomarkers or consult 'medical_knowledge_rag' to verify guideline criteria before concluding.
-3. If the accumulated clinical, imaging, laboratory, and guideline evidence is sufficient to confirm the definitive diagnosis and establish a safe treatment plan, output "STOP".
-4. Otherwise, select the single next most informative diagnostic tool from the available tools list.
-5. If you select 'medical_knowledge_rag', specify the exact clinical search query (e.g. key abnormal findings or symptoms to query guidelines for).
-6. State your clinical rationale explaining what specific finding you are looking for.
+1. Review the quantitative findings, model prediction probabilities, and classification metrics returned by prior specialist tools.
+2. Match your clinical inquiry to the corresponding tool modality (e.g., blood tests for biochemical/inflammatory biomarkers, radiograph classifier for lung opacities, anatomical segmenter for thoracic volumes/CTR, and guideline RAG for clinical practice protocols).
+3. If intermediate findings reveal diagnostic uncertainty or borderline values, select the next most informative tool from the available tools list to rule in or rule out candidate conditions.
+4. If the accumulated clinical, imaging, laboratory, and guideline evidence is sufficient to confirm the definitive diagnosis and establish a safe disposition, output "STOP".
+5. If selecting 'medical_knowledge_rag', formulate a concise clinical query of key abnormal findings or presenting features.
+6. State your clinical rationale explaining what specific physiological or anatomical feature you are evaluating.
 
 Return strictly a JSON object:
 {{
@@ -93,16 +92,17 @@ Accumulated Multi-Modal Evidence Ledger (Imaging, Labs, Segmentation, Guidelines
 
 Diagnostic Synthesis Instructions:
 1. Grounding & Evidence Integration: Synthesize all accumulated objective evidence (quantitative laboratory biomarkers, reference range deviations, imaging probabilities, physical exam signs, and pertinent negatives) alongside verified clinical practice guidelines.
-2. Cross-Modal Biochemical Arbitration: High-specificity laboratory biomarkers and clinical pertinent negatives supersede ambiguous or weak imaging signals. If imaging indicates low-margin or non-specific features but acute infectious/inflammatory biomarkers (e.g. Procalcitonin < 0.10 ug/L, normal WBC) and respiratory exam/symptoms are strictly absent/normal, DO NOT diagnose acute bacterial pneumonia; classify imaging as clear/indeterminate or baseline artifact.
-3. Dynamic Hypothesis Revision: Update the initial pre-test differential based strictly on the gathered objective evidence. Confirm, down-grade, or rule out candidate diagnoses based on whether diagnostic criteria and biomarkers are met.
-4. Diagnostic Rigor & Negative Findings: Do not force an unsubstantiated acute inpatient diagnosis if objective confirmatory markers (e.g., relevant acute inflammatory, cardiac, or thrombotic biomarkers and radiographic findings) are absent, normal, or non-diagnostic. Formulate the primary diagnosis to match the true clinical and syndromic presentation.
-5. Refined Differential: Provide a refined, evidence-grounded differential list (3-4 conditions) with ICD-10 codes, updated suspicion tiers, and rationale citing specific evidence ledger items.
-6. Triage Disposition Selection:
+2. Cross-Modal Biochemical Arbitration: High-specificity laboratory biomarkers and clinical pertinent negatives supersede ambiguous or weak imaging signals. If imaging indicates low-margin or non-specific features but acute inflammatory/infectious biomarkers and physical exam findings are strictly normal or absent, do not diagnose acute invasive infection; classify imaging as clear or baseline artifact.
+3. Clinical Presentation Acuity & Syndromic Formulation: Formulate the lead diagnosis reflecting the patient's primary presenting signs, confirmed physical findings, or abnormal laboratory biomarkers. If the patient has stable, normal triage vital signs and a subacute presentation, classify the condition as a subacute or undifferentiated diagnostic presentation requiring outpatient workup, rather than an acute emergency.
+4. Dynamic Hypothesis Revision: Update the initial pre-test differential based strictly on the gathered objective evidence. Confirm, down-grade, or rule out candidate diagnoses based on whether diagnostic criteria and biomarkers are met.
+5. Diagnostic Rigor & Negative Findings: Do not force an unsubstantiated acute inpatient diagnosis if objective confirmatory markers (e.g., relevant acute inflammatory, cardiac, or thrombotic biomarkers and radiographic findings) are absent, normal, or non-diagnostic. Formulate the primary diagnosis to match the true clinical and syndromic presentation.
+6. Refined Differential: Provide a refined, evidence-grounded differential list (3-4 conditions), updated suspicion tiers, and rationale citing specific evidence ledger items.
+7. Triage Disposition Selection:
    - 'ADMIT_INPATIENT': Objective laboratory biomarkers, imaging findings, or hemodynamic instability demonstrate acute severe disease requiring continuous inpatient monitoring or parenteral therapy.
    - 'DISCHARGE_WITH_FOLLOWUP': Acute life-threatening pathology is ruled out by normal/negative emergency workup, or the presentation represents a non-emergent, subacute, or self-limiting condition appropriate for outpatient management and diagnostic follow-up.
    - 'ESCALATE_TO_PHYSICIAN': Accumulated evidence indicates an acute structural, surgical, or vascular emergency requiring immediate advanced modalities outside the standard workup, or unresolved high-risk ambiguity necessitating immediate senior specialist intervention.
-7. Clinical Impression: Write a 3-4 sentence evidence-grounded clinical narrative synthesizing how the objective data supports the primary diagnosis while ruling out competing differential considerations.
-8. Actionable Recommendations: Provide 2-3 guideline-directed management or diagnostic recommendations (e.g., targeted therapy, further specialized testing, or follow-up protocol).
+8. Clinical Impression: Write a 3-4 sentence evidence-grounded clinical narrative synthesizing how the objective data supports the primary diagnosis while ruling out competing differential considerations.
+9. Forward Management Recommendations: List 2-3 specific new next steps, specialized secondary investigations, or outpatient monitoring protocols. Do not re-request initial tests already completed in the evaluation.
 
 
 Return strictly a JSON object:
@@ -112,7 +112,6 @@ Return strictly a JSON object:
   "differential_diagnosis": [
     {{
       "condition": "<Condition Name>",
-      "icd10_code": "<ICD-10>",
       "tier": "HIGH_SUSPICION | MODERATE_SUSPICION | RULE_OUT",
       "clinical_rationale": "<Evidence-grounded rationale>"
     }}
@@ -124,6 +123,7 @@ Return strictly a JSON object:
   ]
 }}
 """
+
 
 
 

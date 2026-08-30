@@ -299,7 +299,14 @@ class ClinicalLLMClient:
 
         ddx_str = "\n".join([f"- {h.condition} [{h.tier.value}]: {h.clinical_rationale}" for h in active_ddx])
         evidence_str = "\n".join([f"- [Turn {i+1} - {e.tool_name} ({e.modality.value})]: {e.summary}" for i, e in enumerate(evidence_history)]) or "No tests ordered yet."
-        tools_str = ", ".join(available_tools)
+
+        TOOL_CAPABILITY_MAP = {
+            "chest_xray_classifier": "Deep learning radiograph classifier evaluating 18 thoracic pathologies and parenchymal opacities on chest images.",
+            "medsam_segmenter": "Vision Transformer anatomical segmenter calculating lung volume symmetry, collapse percentage, and Cardiothoracic Ratio (CTR) on chest images.",
+            "laboratory_tests": "Quantitative blood analyzer measuring inflammatory, cardiac, thrombotic, hematologic, and metabolic analyte deviations.",
+            "medical_knowledge_rag": "Semantic retrieval engine querying indexed clinical practice guidelines and disease monographs.",
+        }
+        tools_str = "\n".join([f"- '{t}': {TOOL_CAPABILITY_MAP.get(t, 'Specialist diagnostic tool.')}" for t in available_tools])
 
         prompt = ACTION_SELECTION_PROMPT_TEMPLATE.format(
             age=case.age,
@@ -310,6 +317,7 @@ class ClinicalLLMClient:
             evidence_str=evidence_str,
             tools_str=tools_str,
         )
+
 
         raw_response = self._call_completion(
             [{"role": "user", "content": prompt}],
@@ -346,7 +354,10 @@ class ClinicalLLMClient:
         """
         top_condition = active_ddx[0].condition if active_ddx else "Undifferentiated Presentation"
         ddx_str = "\n".join([f"- {h.condition} [{h.tier.value}]: {h.clinical_rationale}" for h in active_ddx])
-        evidence_str = "\n".join([f"- [{e.tool_name}]: {e.summary}" for e in evidence_history])
+        
+        completed_tests = [e.tool_name for e in evidence_history]
+        completed_note = f"[Completed Diagnostic Evaluations on Record: {', '.join(completed_tests)}]\n"
+        evidence_str = completed_note + "\n".join([f"- [{e.tool_name}]: {e.summary}" for e in evidence_history])
 
         prompt = REPORT_SYNTHESIS_PROMPT_TEMPLATE.format(
             age=case.age,
@@ -356,6 +367,7 @@ class ClinicalLLMClient:
             differential_str=ddx_str,
             evidence_str=evidence_str,
         )
+
 
         raw_response = self._call_completion(
             [{"role": "user", "content": prompt}],

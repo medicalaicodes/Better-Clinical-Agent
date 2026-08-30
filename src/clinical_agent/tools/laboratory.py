@@ -27,10 +27,11 @@ LAB_REFERENCE_RANGES: Dict[str, Dict[str, Any]] = {
     "BNP": {"low": 0.0, "high": 100.0, "unit": "pg/mL", "clinical_name": "B-type Natriuretic Peptide", "high_label": "Marked Elevation (Acute Decompensated Heart Failure)", "low_label": "Normal BNP"},
     "NT_PROBNP": {"low": 0.0, "high": 300.0, "unit": "pg/mL", "clinical_name": "N-Terminal pro-BNP", "high_label": "Marked Elevation (Ventricular Wall Stress / Heart Failure)", "low_label": "Normal NT-proBNP"},
     "D_DIMER": {"low": 0.0, "high": 0.50, "unit": "ug/mL FEU", "clinical_name": "D-Dimer", "high_label": "Elevated D-Dimer (Thromboembolism / PE / DVT)", "low_label": "Normal D-Dimer (Excludes PE)"},
-    "PROCALCITONIN": {"low": 0.0, "high": 0.25, "unit": "ug/L", "clinical_name": "Procalcitonin", "high_label": "Marked Elevation (Bacterial Sepsis / Severe Pneumonia)", "low_label": "Low (Bacterial Infection Unlikely)"},
-    "CRP": {"low": 0.0, "high": 10.0, "unit": "mg/L", "clinical_name": "C-Reactive Protein", "high_label": "Elevated (Acute Phase Reactant / Systemic Inflammation)", "low_label": "Normal CRP"},
+    "PROCALCITONIN": {"low": 0.0, "high": 0.25, "unit": "ug/L", "clinical_name": "Procalcitonin", "high_label": "Bacterial Infection / Sepsis Marker", "low_label": "Low Procalcitonin"},
+    "CRP": {"low": 0.0, "high": 10.0, "unit": "mg/L", "clinical_name": "C-Reactive Protein", "high_label": "Acute Phase Reactant / Inflammatory Marker", "low_label": "Normal CRP"},
     "LACTATE": {"low": 0.5, "high": 2.0, "unit": "mmol/L", "clinical_name": "Serum Lactate", "high_label": "Lactic Acidosis / Tissue Hypoperfusion", "low_label": "Normal Lactate"},
 }
+
 
 
 class LaboratoryTestsTool(BaseClinicalTool):
