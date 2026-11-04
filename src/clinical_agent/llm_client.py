@@ -8,108 +8,33 @@ Academic Citations & Foundations:
   * Med-PaLM 2 / Med-Gemini: "Capabilities of Gemini Models in Medicine" (Google Research & DeepMind, 2024; arXiv:2404.18416).
 """
 
-import os
 import json
-import time
-import re
-import logging
-from typing import List, Dict, Any, Optional, Tuple, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
-# Prevent LiteLLM from making remote network calls for cost maps
-os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
-
-import litellm
-
+from .llm import LLM, parse_json
+from .prompts import (
+    ACTION_SELECTION_PROMPT_TEMPLATE,
+    DIFFERENTIAL_PROMPT_TEMPLATE,
+    REPORT_SYNTHESIS_PROMPT_TEMPLATE,
+)
 from .schemas import (
-    PatientCase,
+    ClinicalReport,
     DifferentialHypothesis,
-    SuspicionTier,
-    ToolResult,
+    DispositionType,
     FindingItem,
     FindingStatus,
     ModalityType,
-    ClinicalReport,
-    DispositionType,
+    PatientCase,
+    SuspicionTier,
+    ToolResult,
 )
-
-from .config import get_settings
-from .prompts import (
-    DIFFERENTIAL_PROMPT_TEMPLATE,
-    ACTION_SELECTION_PROMPT_TEMPLATE,
-    REPORT_SYNTHESIS_PROMPT_TEMPLATE,
-)
-
-# Suppress verbose LiteLLM logging
-litellm.suppress_debug_info = True
-litellm.set_verbose = False
-litellm.telemetry = False
-logging.getLogger("LiteLLM").setLevel(logging.ERROR)
-
-
-def clean_json_string(text: str) -> str:
-    """Cleans common LLM syntax irregularities like trailing commas or unescaped characters."""
-    # Remove trailing commas before closing braces or brackets
-    cleaned = re.sub(r",\s*([\]\}])", r"\1", text)
-    # Remove single-line JS/JSON comments
-    cleaned = re.sub(r"//.*?\n", "\n", cleaned)
-    return cleaned
 
 
 def extract_json_payload(raw_text: str) -> Dict[str, Any]:
-    """Extracts JSON dictionary from raw model text or markdown fences with robust cleaning."""
-    text = raw_text.strip()
-    match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    if match:
-        text = match.group(1).strip()
-    try:
-        return json.loads(text)
-    except Exception:
-        pass
-
-    # Extract outermost JSON object
-    start = text.find("{")
-    end = text.rfind("}")
-    if start != -1 and end != -1 and end > start:
-        snippet = text[start:end + 1]
-        try:
-            return json.loads(snippet)
-        except Exception:
-            pass
-
-        try:
-            cleaned = clean_json_string(snippet)
-            return json.loads(cleaned)
-        except Exception:
-            pass
-
-    # Fallback: attempt to parse with regex key-value extraction for structured reports
-    extracted = {}
-    if "primary_diagnosis" in text:
-        m = re.search(r'"primary_diagnosis"\s*:\s*"([^"]+)"', text)
-        if m:
-            extracted["primary_diagnosis"] = m.group(1)
-    if "disposition" in text:
-        m = re.search(r'"disposition"\s*:\s*"([^"]+)"', text)
-        if m:
-            extracted["disposition"] = m.group(1)
-    if "clinical_impression" in text:
-        m = re.search(r'"clinical_impression"\s*:\s*"([^"]+)"', text)
-        if m:
-            extracted["clinical_impression"] = m.group(1)
-    if "selected_action" in text:
-        m = re.search(r'"selected_action"\s*:\s*"([^"]+)"', text)
-        if m:
-            extracted["selected_action"] = m.group(1)
-    if "clinical_indication" in text:
-        m = re.search(r'"clinical_indication"\s*:\s*"([^"]+)"', text)
-        if m:
-            extracted["clinical_indication"] = m.group(1)
-
-    if extracted:
-        return extracted
-
-    raise ValueError(f"Could not parse valid JSON from text: {text[:150]}")
-
+    data = parse_json(raw_text)
+    if data is None:
+        raise ValueError(f"Could not parse JSON from LLM output: {raw_text[:150]}")
+    return data
 
 
 class ClinicalLLMClient:
@@ -121,53 +46,12 @@ class ClinicalLLMClient:
     """
 
     def __init__(self, model_name: Optional[str] = None):
-        settings = get_settings()
-        self.model_name = model_name or settings.llm_model
-        self.temperature = settings.llm_temperature
-        self.max_tokens = settings.llm_max_tokens
-        self.timeout = settings.llm_timeout
+        self.llm = LLM(model=model_name)
+        self.model_name = self.llm.model
 
-    def _call_completion(
-        self,
-        messages: List[Dict[str, str]],
-        streaming_callback: Optional[Callable[[str], None]] = None,
-        retries: int = 1,
-    ) -> str:
-        """Executes LLM chat completion with token streaming and retry handling."""
-        last_error = None
-        for attempt in range(retries + 1):
-            try:
-                if streaming_callback is not None:
-                    response = litellm.completion(
-                        model=self.model_name,
-                        messages=messages,
-                        temperature=self.temperature,
-                        max_tokens=self.max_tokens,
-                        timeout=self.timeout,
-                        stream=True,
-                    )
-                    full_text = []
-                    for chunk in response:
-                        delta = chunk.choices[0].delta.content or ""
-                        if delta:
-                            full_text.append(delta)
-                            streaming_callback(delta)
-                    return "".join(full_text)
-                else:
-                    response = litellm.completion(
-                        model=self.model_name,
-                        messages=messages,
-                        temperature=self.temperature,
-                        max_tokens=self.max_tokens,
-                        timeout=self.timeout,
-                    )
-                    return response.choices[0].message.content or ""
-            except Exception as e:
-                last_error = e
-                if attempt < retries:
-                    time.sleep(0.5)
-
-        raise RuntimeError(f"LLM API completion failed on model '{self.model_name}': {last_error}")
+    def _call_completion(self, messages: List[Dict[str, str]],
+                         streaming_callback: Optional[Callable[[str], None]] = None) -> str:
+        return self.llm.chat(messages[-1]["content"], on_token=streaming_callback)
 
     def formulate_initial_differential(
         self,
@@ -378,13 +262,13 @@ class ClinicalLLMClient:
         if not primary_diag:
             raise RuntimeError(f"LLM synthesis missing 'primary_diagnosis'. Raw response: {raw_response[:200]}")
         
-        raw_disp = str(data.get("disposition", "ADMIT_INPATIENT")).upper()
+        raw_disp = str(data.get("disposition", "ESCALATE_TO_PHYSICIAN")).upper()
         if "DISCHARGE" in raw_disp:
             disposition = DispositionType.DISCHARGE_WITH_FOLLOWUP
-        elif "ESCALATE" in raw_disp:
-            disposition = DispositionType.ESCALATE_TO_PHYSICIAN
-        else:
+        elif "ADMIT" in raw_disp:
             disposition = DispositionType.ADMIT_INPATIENT
+        else:  # missing or unrecognised -> hand to a human, never silently admit/discharge
+            disposition = DispositionType.ESCALATE_TO_PHYSICIAN
 
         impression = data.get("clinical_impression", "")
         if not impression:

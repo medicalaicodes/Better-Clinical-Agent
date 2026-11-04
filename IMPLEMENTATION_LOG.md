@@ -250,3 +250,44 @@ Personal daily development log and research notebook tracking architecture, math
 - Updated `README.md` with system overview, architecture flowchart, benchmark results, and academic citations.
 - Ran full unit test suite: `pytest tests/` -> 14/14 tests passing in 5.8s.
 - All code clean, verified, documented, and ready for deployment.
+
+---
+
+## Nov 2, 2026 — Audit of v2: what is actually broken
+- Re-read every file and checked library sources instead of trusting my own comments. Findings:
+  - **Double sigmoid in the chest X-ray wrapper.** For `densenet121-res224-all`, TorchXRayVision's `forward()` already applies `sigmoid` + `op_norm` (checked in `torchxrayvision/models.py`). My wrapper applied a second sigmoid, so every "probability" sat in [0.50, 0.73] and "certainty" could never be negative. The 0.65 cut-off was only accidentally close to the model's real operating point.
+  - The calibrated operating thresholds (`op_threshs`) were loaded but never used.
+  - MedSAM CTR comes from fixed prompt boxes (heart box = 25–75% of the width), so CTR is capped at about 0.54 by geometry, not anatomy.
+  - `get_intake_view()` was never called: the "sequential" workup saw everything from turn 1, and `ground_truth` was never compared.
+  - **The guideline RAG was circular:** 9 hand-written summaries, keywords repeated twice per chunk, and a synonym map pointing words straight at diseases. The 8 test vignettes used the same keywords. **The Aug 26 "8/8 = 100%" is a smoke test, not a result.** With n=8 the 95% CI is roughly 63–100% even before the circularity.
+  - "Grounding rate" only checked that evidence exists; top-k matching used substrings both ways.
+  - A missing disposition defaulted to `ADMIT_INPATIENT`.
+  - An API key was committed in `settings.json` (rotated, file removed).
+
+## Nov 3, 2026 — Literature pass and redesign of retrieval
+- Read the current medical RAG work and pulled exact numbers:
+  - **MIRAGE/MedRAG** (ACL Findings 2024): the benchmark plus the Textbooks/StatPearls corpora; RRF of several retrievers was best.
+  - **i-MedRAG** (PSB 2025), Llama-3.1-8B: MedQA 64.73 → 66.54 (MedRAG) → 75.02 (i-MedRAG); MMLU-Med 77.23 → 78.05 → 79.61.
+  - **RAG²** (NAACL 2025), Llama-3-8B MedQA: no RAG 57.7, MedRAG 56.4 (*worse*), RAG² 64.6.
+  - **"Rethinking RAG for Medicine"** (arXiv 2511.06738): only 22% of the top-16 passages relevant; standard RAG often lowered factuality.
+  - MedRAG-KG (WWW 2025) discriminative features; MEDDxAgent (ACL 2025) interactive DDXPlus; ACTMED / MedClarify information-gain question selection.
+- Takeaway: **retrieval quality and evidence selection are the bottleneck**, and RAG needs a way to *not* hurt.
+- Designed **DDx-RAG**: an option-free differential → SUPPORT/DISCRIMINATE/REFUTE queries → hybrid retrieval with quotas → cited fact-check → evidence-justified adjudication against closed-book votes, with verification depth gated by vote agreement. Full design: `docs/RAG_PIPELINE.md`.
+
+## Nov 4, 2026 — Phase 1 implementation (RAG engine + MIRAGE harness)
+- **Removed dead v2 code:**
+  - `tools/clinical_notes.py` (unused regex)
+  - `evaluation/metrics.py`, `simulated_ehr.py`, `run_benchmark.py` (misleading or no-op)
+  - `prompts/orchestrator_skills.md`, the old `scratch/test_rag*.py`, `settings.json`
+  - `litellm` (one OpenAI-compatible client now serves everything)
+- **New modules:**
+  - `retrieval/corpus.py`: Textbooks (HF) + StatPearls (NCBI, chunked with a port of MedRAG's chunker so snippet boundaries match the baselines).
+  - `retrieval/indexes.py`: BM25 (`bm25s`), MedCPT bi-encoder + exact FAISS inner product, MedCPT cross-encoder.
+  - `retrieval/search.py`: RRF fusion, rerank, per-query quotas, near-duplicate removal, neighbour expansion, noise injection for robustness tests.
+  - `llm.py`: one client for vLLM/Ollama/llama.cpp with per-thread call/token accounting and robust JSON/answer parsing.
+  - `rag/methods.py`: `cot`, `cot_sc`, `medrag`, `rationale_rag`, `imedrag` (baselines) and `ddx_rag` (ours), each with every switch needed for ablations.
+  - `evaluation/mirage.py` + `stats.py`: resumable runner, Wilson CIs, exact McNemar, fixed/broke counts, cost per question, option-shuffle robustness, MedQA-train "dev" split for tuning.
+- **Fixed:** double sigmoid; operating-point thresholds; unknown disposition now escalates; the knowledge tool now queries the real retriever.
+- **Bug found during the smoke test:** servers that ignore `n` (llama.cpp, Ollama) produced identical "independent" votes because each top-up call reused the same seed. Each extra sample now gets `seed + i`.
+- **Tests:** 16 new CPU-only tests (fake LLM + toy corpus). They also check that the PLAN prompt never sees the answer options (question-only retrieval).
+- **Serving config:** the server now has a dedicated 40 GB A100, so Llama-3.1-8B runs in **bf16** (the same precision as the published baselines, with no quantization caveat). vLLM uses 85% of the card with prefix caching (the votes and later DDx-RAG steps share a prompt prefix), 128 concurrent sequences and 48 benchmark workers. FP8 is kept as a one-flag fallback for a shared GPU. MedGemma-27B (FP8) is an optional second model.

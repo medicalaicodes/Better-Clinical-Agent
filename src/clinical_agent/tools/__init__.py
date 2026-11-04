@@ -1,14 +1,10 @@
-"""
-Clinical AI Agent: Specialist Diagnostic Tools Hub
-Exports all verified multimodal perception, laboratory, knowledge, and clinical text tools.
-"""
+"""The agent's specialist tools: chest X-ray classifier, segmentation, labs, medical knowledge."""
 
 from .base import BaseClinicalTool
 from .chest_xray import ChestXRayClassifierTool
-from .medsam import MedSAMSegmenterTool
 from .laboratory import LaboratoryTestsTool
 from .medical_knowledge import MedicalKnowledgeRAGTool
-from .clinical_notes import ClinicalNotesExtractorTool
+from .medsam import MedSAMSegmenterTool
 
 __all__ = [
     "BaseClinicalTool",
@@ -16,5 +12,4 @@ __all__ = [
     "MedSAMSegmenterTool",
     "LaboratoryTestsTool",
     "MedicalKnowledgeRAGTool",
-    "ClinicalNotesExtractorTool",
 ]

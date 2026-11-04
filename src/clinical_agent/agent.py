@@ -25,7 +25,6 @@ from .tools import (
     MedSAMSegmenterTool,
     LaboratoryTestsTool,
     MedicalKnowledgeRAGTool,
-    ClinicalNotesExtractorTool,
 )
 
 

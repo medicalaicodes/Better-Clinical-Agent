@@ -53,17 +53,15 @@ class DenseNetCXRModel:
             self.model = xrv.models.DenseNet(weights=self.weights_name).to(self.device)
             self.model.eval()
             self.pathologies = list(self.model.pathologies)
-            if hasattr(self.model, "op_threshs") and self.model.op_threshs is not None:
-                for idx, p in enumerate(self.pathologies):
-                    if idx < len(self.model.op_threshs):
-                        val = self.model.op_threshs[idx]
-                        if not np.isnan(val):
-                            self.op_threshs[p] = float(val)
-                        else:
-                            self.op_threshs[p] = 0.50
-            else:
-                for p in self.pathologies:
-                    self.op_threshs[p] = 0.50
+            # Labels with a NaN operating threshold were not trained in this checkpoint.
+            self.op_threshs_valid = set()
+            thresholds = getattr(self.model, "op_threshs", None)
+            for idx, p in enumerate(self.pathologies):
+                if thresholds is None:
+                    self.op_threshs_valid.add(p)
+                elif idx < len(thresholds) and not np.isnan(float(thresholds[idx])):
+                    self.op_threshs[p] = float(thresholds[idx])
+                    self.op_threshs_valid.add(p)
         except Exception as e:
             self.model = None
             raise RuntimeError(f"Failed to load TorchXRayVision DenseNet model '{self.weights_name}': {e}")
@@ -93,9 +91,16 @@ class DenseNetCXRModel:
         with torch.no_grad():
             preds = self.model(tensor).cpu().numpy()[0]
 
+        # For weights that ship operating thresholds (e.g. densenet121-res224-all), the model's
+        # forward() ALREADY applies sigmoid + op_norm: outputs are in [0, 1] and 0.5 is the
+        # model's calibrated operating point. The old code applied a second sigmoid here, which
+        # squashed every output into [0.50, 0.73]. Only models without op_threshs return logits.
+        already_probabilities = getattr(self.model, "op_threshs", None) is not None
         results = {}
         for path_name, score in zip(self.pathologies, preds):
-            prob = 1.0 / (1.0 + np.exp(-float(score)))
-            results[path_name] = round(float(prob), 4)
+            if not path_name or path_name not in self.op_threshs_valid:
+                continue  # label this checkpoint was never trained on (output is a constant 0.5)
+            prob = float(score) if already_probabilities else 1.0 / (1.0 + np.exp(-float(score)))
+            results[path_name] = round(prob, 4)
 
         return results

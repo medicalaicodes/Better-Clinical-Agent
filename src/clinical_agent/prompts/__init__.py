@@ -8,10 +8,6 @@ Academic Citations & Foundations:
   * MedRAX: "A Medical Reasoning Agent for Chest X-ray" (Bo Wang Lab, 2025; arXiv:2502.02618).
 """
 
-ORCHESTRATOR_SYSTEM_PROMPT = """You are an Attending Emergency Physician orchestrating a sequential clinical diagnostic evaluation.
-You utilize specialist diagnostic tools that output explicit model probabilities, operating thresholds, and biomarker deviation metrics.
-Your goal is to reliably evaluate patient presentations, interpret tool confidence margins, coordinate multimodal evidence against clinical practice guidelines via RAG, and synthesize a verified diagnostic consultation report."""
-
 DIFFERENTIAL_PROMPT_TEMPLATE = """You are an emergency physician conducting a comprehensive patient intake evaluation.
 Thoroughly analyze the presenting clinical history, vitals, and physician notes (handling any clinical abbreviations or shorthand).
 

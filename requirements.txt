@@ -1,28 +1,27 @@
-# Clinical AI Agent: Requirements and Core Dependencies
-# Compatible with Python 3.10+ / 3.11+ on Windows, Linux, and macOS
+# Core
+pydantic>=2.5
+pydantic-settings>=2.1
+openai>=1.40            # one client for vLLM / Ollama / llama.cpp / OpenAI
+langgraph>=0.2
+langchain-core>=0.3
+numpy>=1.24
+requests>=2.31
+tqdm>=4.66
 
-# Deep Learning & Foundation Vision Models
-torch>=2.0.0
-torchvision>=0.15.0
-torchxrayvision>=1.2.0
-transformers>=4.36.0
-pydicom>=2.4.0
-Pillow>=10.0.0
+# Retrieval
+bm25s>=0.2.6
+PyStemmer>=2.2
+faiss-cpu>=1.8          # exact inner-product search; GPU not needed at ~427k vectors
+transformers>=4.44      # MedCPT encoders and cross-encoder
+torch>=2.1
+huggingface_hub>=0.24
 
-# LLM Providers & Agentic Orchestration
-litellm>=1.40.0
-langgraph>=0.2.0
-langchain-core>=0.3.0
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
+# Agent vision tools
+torchxrayvision>=1.2
+scikit-image>=0.22
+Pillow>=10.0
 
-# Scientific Computing, Embeddings & Data Structures
-numpy>=1.24.0
-scipy>=1.10.0
-scikit-learn>=1.3.0
-requests>=2.31.0
-tqdm>=4.66.0
+# Tests
+pytest>=8.0
 
-# Testing and Verification
-pytest>=8.0.0
-pytest-asyncio>=0.23.0
+# The LLM server (vLLM) is installed in its OWN virtualenv: see docs/RUNNING_BENCHMARKS.md

@@ -45,53 +45,42 @@ class ChestXRayClassifierTool(BaseClinicalTool):
                 raw_output={"status": "image_not_found"},
             )
 
-        # Execute TorchXRayVision DenseNet inference directly
+        # Outputs are operating-point calibrated: 0.5 is the threshold TorchXRayVision chose
+        # per label on its validation data, so ">= 0.5" means "positive at that operating point".
         model = self._get_model()
         probabilities = model.predict(image_path)
-        thresholds = model.op_threshs
 
-        # Zero-centered clinical certainty scaling: 0.50 = 0% baseline (unsure), 0.60 = +20% present, 0.40 = 20% absent
         findings: List[FindingItem] = []
-        positive_pathologies = []
-
-        for path_name, prob in sorted(probabilities.items(), key=lambda x: x[1], reverse=True):
-            thresh = thresholds.get(path_name, 0.50)
-            # Scaled certainty: (prob - 0.50) * 2
-            certainty_score = round(float((prob - 0.50) * 2.0), 3)
-            certainty_pct = round(certainty_score * 100.0, 1)
-
-            # Clinically meaningful positive signal requires certainty >= +30% (prob >= 0.65)
-            is_present = certainty_score >= 0.30
-
-            if is_present:
-                positive_pathologies.append((path_name, prob, certainty_pct))
-                findings.append(
-                    FindingItem(
-                        name=f"CXR: {path_name}",
-                        status=FindingStatus.PRESENT,
-                        confidence=prob,
-                        quantitative_value=prob,
-                        unit="probability",
-                        details={
-                            "operating_threshold": thresh,
-                            "certainty_pct": f"{certainty_pct:+.1f}%",
-                            "is_positive": True,
-                        },
-                    )
-                )
-
-        if positive_pathologies:
-            lead_name, lead_prob, lead_cert = positive_pathologies[0]
-            summary_items = [f"{p} (Prob: {pr:.3f}, Certainty: {cert:+.1f}%)" for p, pr, cert in positive_pathologies[:3]]
-            summary = f"Chest radiograph demonstrates positive radiographic signs: {', '.join(summary_items)}."
-        else:
-            summary = "Chest radiograph demonstrates clear lung fields bilaterally without evidence of focal consolidation, pneumothorax, pulmonary edema, or pleural effusion."
+        positives = []
+        for label, prob in sorted(probabilities.items(), key=lambda x: x[1], reverse=True):
+            if prob < 0.5:
+                continue
+            positives.append((label, prob))
             findings.append(
                 FindingItem(
-                    name="CXR: Clear Lung Fields / No Focal Acute Pathology",
+                    name=f"CXR: {label}",
                     status=FindingStatus.PRESENT,
-                    confidence=0.95,
-                    details={"certainty": "Clear bilaterally"},
+                    confidence=prob,
+                    quantitative_value=prob,
+                    unit="calibrated score (0.5 = operating point)",
+                    details={"raw_operating_threshold": model.op_threshs.get(label)},
+                )
+            )
+
+        if positives:
+            items = [f"{label} ({prob:.2f})" for label, prob in positives[:4]]
+            summary = (f"Chest radiograph classifier is positive (score >= 0.5 operating point) for: "
+                       f"{', '.join(items)}.")
+        else:
+            top_label, top_prob = max(probabilities.items(), key=lambda x: x[1])
+            summary = (f"Chest radiograph classifier is negative for all {len(probabilities)} labels "
+                       f"(highest: {top_label} {top_prob:.2f}, below the 0.5 operating point).")
+            findings.append(
+                FindingItem(
+                    name="CXR: No label above operating point",
+                    status=FindingStatus.ABSENT,
+                    confidence=round(1.0 - top_prob, 3),
+                    details={"highest_label": top_label, "highest_score": top_prob},
                 )
             )
 

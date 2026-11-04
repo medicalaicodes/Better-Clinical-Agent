@@ -11,6 +11,7 @@ The complete academic report detailing the system architecture, mathematical for
 - **Academic Paper (PDF)**: [`docs/CLINICAL_AGENT_REPORT.pdf`](docs/CLINICAL_AGENT_REPORT.pdf)
 - **Live Diagnostic Trace (Case 5)**: [`docs/demo_case5.md`](docs/demo_case5.md) *(Complete turn-by-turn trace with neural model outputs, lab deviations, and guideline RAG)*
 - **Implementation Log**: [`IMPLEMENTATION_LOG.md`](IMPLEMENTATION_LOG.md)
+- **Medical RAG design**: [`docs/RAG_PIPELINE.md`](docs/RAG_PIPELINE.md)
 
 
 
@@ -49,7 +50,7 @@ The system executes this process across distinct stages:
 1. **Intake and Differential Formulation**: The attending language model parses demographics, symptoms, and vitals to formulate an initial list of 3 to 5 candidate conditions (`HIGH_SUSPICION`, `MODERATE_SUSPICION`, `RULE_OUT`).
 2. **Sequential Tool Selection**: At each turn, the agent evaluates the evidence collected so far. It inspects model classification margins ($|p_k - \theta_k|$) and lab deviations to pick the most informative next test.
 3. **Specialist Model Execution**: The selected tool runs directly on the patient case data, returning quantitative metrics and structured findings.
-4. **Guideline Verification via RAG**: Proposed treatments and diagnostic suspicions are matched against indexed society guidelines (IDSA, ATS, AHA, ACC, ESC, NIH) using TF-IDF cosine similarity.
+4. **Knowledge Retrieval**: Queries go to a hybrid medical retriever (BM25 + MedCPT + cross-encoder) over ~427k passages from 18 medical textbooks and StatPearls; see [Medical RAG](#medical-rag-ddx-rag) below.
 5. **Report Synthesis**: When the agent has enough evidence (or hits the 4-turn limit), it generates a final consultation report with the primary diagnosis, clinical impression, actionable treatment plan, and disposition (`ADMIT_INPATIENT`, `DISCHARGE_WITH_FOLLOWUP`, `ESCALATE_TO_PHYSICIAN`).
 
 ---
@@ -62,7 +63,7 @@ The agent coordinates real specialist tools alongside direct LLM clinical intake
   - *Details*: The Attending LLM directly ingests unstructured clinical notes, triage history, and clinical shorthand, synthesizing structured pertinent positives (confirmed present) and pertinent negatives (denied or normal on exam) directly into the Evidence Ledger.
 - **Chest X-Ray Classifier (`ChestXRayClassifierTool`)**:
   - *Model*: 121-layer DenseNet (`DenseNet-121`) from `TorchXRayVision` (`densenet121-res224-all`).
-  - *Details*: Computes calibrated probabilities with zero-centered clinical certainty scaling ($\text{Certainty} = 2(p - 0.50)$, where $0.50$ represents the uninformative baseline). Genuinely positive radiographic signs require $\ge +30\%$ certainty ($p \ge 0.65$), while clear radiographs are classified as normal without false-positive noise.
+  - *Details*: Uses TorchXRayVision's operating-point calibrated outputs (0.5 = the per-label operating threshold chosen on validation data); a label is reported positive at >= 0.5. Labels the checkpoint was not trained on are dropped.
 - **Thoracic Anatomical Segmenter (`MedSAMSegmenterTool`)**:
   - *Model*: Medical Segment Anything Model (`wanglab/medsam-vit-base`) Vision Transformer.
   - *Details*: Performs multi-prompt anatomical segmentation of bilateral hemithoraces and the cardiac silhouette to extract objective spatial biomarkers:
@@ -73,37 +74,28 @@ The agent coordinates real specialist tools alongside direct LLM clinical intake
   - *Reference*: Uses standard physiological reference intervals from the *Tietz Textbook of Clinical Chemistry*.
   - *Details*: Evaluates complete blood count, inflammatory markers (Procalcitonin, CRP), cardiac markers (Troponin I, BNP, NT-proBNP), coagulation (D-Dimer), and basic metabolic panels, calculating quantitative percentage deviations ($\Delta = \frac{|v - \lambda|}{\lambda}$).
 - **Guideline Retrieval RAG (`MedicalKnowledgeRAGTool`)**:
-  - *Details*: Uses MedRAG clinical concept mapping and TF-IDF cosine similarity against indexed disease monographs and practice guidelines, featuring a strict relevance threshold ($\tau \ge 0.25$) to explicitly signal unindexed or non-diagnostic queries.
+  - *Details*: Thin wrapper over the hybrid retriever (`src/clinical_agent/retrieval/`), returning cited passages (snippet ids) from Textbooks + StatPearls.
 
 
 ---
 
-## Benchmark Evaluation Results
+## Medical RAG (DDx-RAG)
 
-The evaluation suite (`src/clinical_agent/evaluation/sample_cases.py`) covers **11 diverse clinical presentations** (8 standard cases + 3 stress-test cases) sourced from open-access hospital datasets (NIH ChestX-ray14, IEEE CXR, and emergency medicine records).
+The knowledge layer is a real retrieval system, evaluated on a public benchmark against published methods. Full design, failure modes and fixes: [`docs/RAG_PIPELINE.md`](docs/RAG_PIPELINE.md).
 
-### 1. Standard Clinical Cases
+- **Corpora:** 18 USMLE textbooks + StatPearls (~427k passages), the same corpora as MedRAG / i-MedRAG.
+- **Retriever:** BM25 ∥ MedCPT (exact FAISS) → Reciprocal Rank Fusion → MedCPT cross-encoder → per-query quotas, de-duplication, neighbour-paragraph expansion.
+- **DDx-RAG (ours):**
+  1. Form a differential from the question alone.
+  2. Retrieve evidence that would **support, discriminate or refute** each hypothesis.
+  3. Fact-check the hypotheses with mandatory citations.
+  4. Let evidence overturn the model's closed-book answer only when it is cited. Verification depth is set by how much the model's own samples disagree.
+- **Benchmark:** MIRAGE (MedQA-US, MMLU-Med) with Llama-3.1-8B. Every baseline (CoT, self-consistency, MedRAG, RAG²-style, i-MedRAG) is rerun in the same setup. Results include paired McNemar tests, fixed/broke counts, cost per question, ablations and robustness tests.
+- **Results:** pending the GPU runs (see [`docs/RUNNING_BENCHMARKS.md`](docs/RUNNING_BENCHMARKS.md)).
 
-| Case ID | Etiology & Presentation | Key Findings | Agent Diagnosis | Disposition |
-|---|---|---|---|---|
-| `PT_STREP_65M` | Typical Pneumococcal CAP | Dense RUL Opacity, PCT 1.85 ug/L, WBC 17.8 | Bacterial Pneumonia | `ADMIT_INPATIENT` |
-| `PT_ADHF_71M` | Acute Decompensated Heart Failure | BNP 1680 pg/mL, Cardiomegaly, JVD | Decompensated HF | `ADMIT_INPATIENT` |
-| `PT_PE_48F` | Acute Pulmonary Embolism | D-Dimer 3.85 ug/mL, Clear CXR, Calf swelling | Pulmonary Embolism | `ADMIT_INPATIENT` |
-| `PT_COSTO_34M` | Costochondritis / Chest Wall Strain | Parasternal point tenderness, Normal labs & CXR | Costochondritis | `DISCHARGE_WITH_FOLLOWUP` |
-| `PT_PJP_HIV_40M` | PJP Pneumonia in HIV Host | SpO2 84%, CD4 85, Perihilar haziness | PJP Pneumonia | `ADMIT_INPATIENT` |
-| [`PT_KLEB_DM_62F`](docs/demo_case5.md) | Klebsiella Necrotizing Pneumonia *(See Trace)* | Currant-jelly sputum, Upper lobe cavitation, WBC 21.4 | Klebsiella Pneumonia | `ADMIT_INPATIENT` |
-| `PT_LEGIONELLA_60M` | Legionnaires' Disease | Hyponatremia (Na 126), Watery diarrhea, Faget sign | Legionnaires' Disease | `ADMIT_INPATIENT` |
-| `PT_COVID_VIRAL_58M` | COVID-19 Acute Viral Infection | Anosmia, Bilateral ground-glass opacities, CRP 78 | COVID-19 Infection | `ADMIT_INPATIENT` |
+### Demo cases
 
-### 2. Stress-Test Cases (Handling Uncertainty & Safety)
-
-| Case ID | Stress Test Scenario & Pathology | Multimodal Challenge | Target Safety Behavior | Expected Disposition |
-|---|---|---|---|---|
-| `PT_AORTIC_DISSECT_54M` | Acute Aortic Syndrome / Dissection | Tearing back pain, BP asymmetry ($174/98$ vs $118/72$), normal PCT/D-Dimer, **unindexed in toy RAG** | Avoids false pneumonia commitment, identifies life-threatening vascular emergency, orders emergent CTA | `ESCALATE_TO_PHYSICIAN` |
-| `PT_FUO_INDETERMINATE_68F` | Subacute Fever of Unknown Origin | 3 weeks waxing fevers, clear CXR, normal PCT/WBC, non-focal exam | Avoids false inpatient admission for acute sepsis/CAP, orders outpatient specialist workup | `DISCHARGE_WITH_FOLLOWUP` |
-| `PT_PNEUMOTHORAX_SPONT_22M` | Primary Spontaneous Pneumothorax | Sudden unilateral pleuritic pain, absent breath sounds, non-infectious labs | Accurately diagnoses structural thoracic emergency without defaulting to pneumonia RAG | `ADMIT_INPATIENT` |
-
-
+`src/clinical_agent/evaluation/sample_cases.py` holds 11 hand-written cases (8 typical + 3 stress tests). They are useful for demos and traces. **They are not a benchmark:** they were written by the author, and the earlier "8/8 correct" relied on a toy retrieval index built with the same keywords (see the Nov 2026 entries in `IMPLEMENTATION_LOG.md`). Interactive diagnosis will be benchmarked on DDXPlus.
 
 ---
 
@@ -177,34 +169,34 @@ pip install -r requirements.txt
 
 ### 2. Configure the LLM
 
-The framework connects via `LiteLLM` to local Ollama models (`medgemma`, `medllama2`) or cloud providers.
+All LLM calls go through one OpenAI-compatible client (`src/clinical_agent/llm.py`), so any of these work:
+- vLLM (used for the benchmarks): `bash scripts/serve_vllm.sh`
+- Ollama: `LLM_BASE_URL=http://localhost:11434/v1`
+- llama.cpp server
 
-To run locally with MedGemma:
-```bash
-ollama pull medgemma
-```
+Put the settings in `.env`:
 
-Settings can be changed in `settings.json` or by setting environment variables:
 ```bash
-export LLM_MODEL="ollama/medgemma"
-export LLM_TEMPERATURE="0.1"
+LLM_BASE_URL=http://localhost:8000/v1
+LLM_MODEL=llama31-8b
+DATA_DIR=/path/to/data      # corpora + indexes (~8 GB)
 ```
 
 ### 3. Run the Tests
 
-Execute the 14-test suite covering schemas, vision models, lab tools, RAG retrieval, and the LangGraph engine:
-
 ```bash
-python -m pytest tests/ -v
+python -m pytest tests/ -q        # retrieval, RAG methods and stats tests run on CPU without models
 ```
 
-### 4. Run the 8-Case Benchmark Runner
-
-To evaluate all 8 benchmark cases sequentially:
+### 4. Build the Knowledge Index and Run MIRAGE
 
 ```bash
-python -m src.clinical_agent.evaluation.run_benchmark
+python scripts/build_index.py download --corpora textbooks statpearls
+python scripts/build_index.py build --corpora textbooks statpearls
+python scripts/run_mirage.py --dataset medqa --methods cot medrag ddx_rag
 ```
+
+Full instructions, ablations and robustness runs: [`docs/RUNNING_BENCHMARKS.md`](docs/RUNNING_BENCHMARKS.md).
 
 ### 5. Interactive CLI Demonstration
 
@@ -247,45 +239,30 @@ python demo_execution.py --case 0 --graph
 ## Repository Layout
 
 ```
-.
-├── src/
-│   └── clinical_agent/
-│       ├── schemas.py              # Pydantic data models for cases, findings, and reports
-│       ├── config.py               # Runtime settings and model configurations
-│       ├── llm_client.py           # LiteLLM client with structured JSON parsing
-│       ├── agent.py                # Attending clinical agent sequential loop
-│       ├── graph.py                # Compiled LangGraph state machine
-│       ├── models/
-│       │   ├── densenet_cxr.py     # TorchXRayVision DenseNet-121 wrapper
-│       │   └── medsam_wrapper.py   # MedSAM ViT-Base segmentation wrapper
-│       ├── tools/
-│       │   ├── base.py             # Specialist tool base interface
-│       │   ├── chest_xray.py       # Radiograph classifier with threshold margins
-│       │   ├── medsam.py           # Thoracic lung area segmenter & symmetry ratio
-│       │   ├── laboratory.py       # Lab biomarker validator with deviation metrics
-│       │   ├── medical_knowledge.py# Guideline retrieval tool (MedRAG style)
-│       │   └── clinical_notes.py   # Triage note and physical exam parser
-│       ├── prompts/
-│       │   └── __init__.py         # Differential, action, and report prompts
-│       └── evaluation/
-│           ├── sample_cases.py     # 8 benchmark clinical cases
-│           ├── simulated_ehr.py    # Multi-turn EHR simulation environment
-│           └── run_benchmark.py    # Automated benchmark runner
-├── tests/                          # 14 pytest unit and integration tests
-├── demo_execution.py               # Interactive CLI demo script
-├── requirements.txt                # Pinned dependency requirements
-├── data/sample_images/             # Radiographic images from NIH and IEEE datasets
-├── docs/
-│   ├── CLINICAL_AGENT_REPORT.pdf   # Compiled academic technical report PDF
-│   ├── demo_case5.md               # End-to-end transparent diagnostic trace for Case 5
-│   ├── survey/                     # Literature surveys, taxonomy, & gap analyses
-│   ├── presentations/              # Milestone slide decks (1 through 6)
-│   ├── progress_tracker.md         # Research progress dashboard
-│   └── cxr_case0_streptococcus.jpg # Radiograph asset for Case 0
-├── paper_catalog/                  # 300+ paper index & annotated catalogs
-├── pytest.ini                      # Pytest configuration
-├── settings.json                   # Runtime configuration
-└── IMPLEMENTATION_LOG.md           # Implementation and change log
+src/clinical_agent/
+├── config.py               # settings from env / .env
+├── llm.py                  # one OpenAI-compatible LLM client (+ JSON parsing, thread pool)
+├── retrieval/
+│   ├── corpus.py           # Textbooks + StatPearls download, chunking, in-memory store
+│   ├── indexes.py          # BM25, MedCPT + FAISS, MedCPT cross-encoder
+│   └── search.py           # hybrid search, RRF, rerank, quotas, dedupe, neighbour expansion
+├── rag/
+│   ├── prompts.py          # baseline prompts (verbatim from MedRAG) + DDx-RAG prompts
+│   └── methods.py          # cot, cot_sc, medrag, rationale_rag, imedrag, ddx_rag
+├── evaluation/
+│   ├── mirage.py           # MIRAGE loader, resumable runner, comparison table
+│   ├── stats.py            # Wilson CI, exact McNemar, fixed/broke counts
+│   └── sample_cases.py     # 11 demo cases for the agent
+├── agent.py / graph.py     # sequential diagnostic agent (loop / LangGraph)
+├── llm_client.py           # agent prompts -> structured differential, actions, report
+├── tools/                  # chest X-ray, MedSAM, labs, medical knowledge (retriever)
+├── models/                 # TorchXRayVision DenseNet, MedSAM wrappers
+└── schemas.py              # Pydantic models
+scripts/                    # build_index.py, run_mirage.py, serve_vllm.sh
+docs/RAG_PIPELINE.md        # RAG design, failure modes and fixes, evaluation protocol
+docs/RUNNING_BENCHMARKS.md  # how to run everything on the GPU server
+tests/                      # CPU-only unit tests (fake LLM, toy corpus)
+IMPLEMENTATION_LOG.md       # dated log, including the audit of v2
 ```
 
 ---

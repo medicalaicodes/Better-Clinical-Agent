@@ -15,7 +15,6 @@ Usage:
   python demo_execution.py --case 0           # Run Case 0 (Streptococcal Pneumonia)
   python demo_execution.py --case 6           # Run Case 6 (Legionnaires' Disease)
   python demo_execution.py --case 0 --graph   # Run Case 0 via compiled LangGraph state machine
-  python demo_execution.py --benchmark        # Run automated benchmark evaluation on all 8 cases
 """
 
 import sys
@@ -28,7 +27,6 @@ from src.clinical_agent.agent import AttendingClinicalAgent
 from src.clinical_agent.graph import ClinicalAgentGraph
 from src.clinical_agent.models import ensure_models_downloaded
 from src.clinical_agent.evaluation.sample_cases import BENCHMARK_CASES
-from src.clinical_agent.evaluation.run_benchmark import run_clinical_benchmark
 from src.clinical_agent.config import get_settings
 
 
@@ -235,11 +233,6 @@ def main():
         help="Run via LangGraph state machine instead of sequential agent loop",
     )
     parser.add_argument(
-        "--benchmark",
-        action="store_true",
-        help="Run automated sequential benchmark on all 11 clinical cases (8 canonical + 3 stress-tests)",
-    )
-    parser.add_argument(
         "--stress-only",
         action="store_true",
         help="Run automated benchmark on only the 3 stress-test cases (Cases 8 to 10)",
@@ -253,7 +246,7 @@ def main():
         "--model",
         type=str,
         default=None,
-        help="Override LLM model name (e.g. gemini/gemini-2.0-flash, ollama/medgemma)",
+        help="Override the served LLM model name (default: LLM_MODEL from .env)",
     )
     parser.add_argument(
         "--download-models",
@@ -285,9 +278,6 @@ def main():
         for idx in canonical_indices:
             run_transparent_diagnostic_demo(case_idx=idx, model_name=args.model)
             print("\n" + "=" * 80 + "\n")
-    elif args.benchmark:
-        run_clinical_benchmark(model_name=args.model, verbose=True)
-
     elif args.graph:
         case_idx = args.case if args.case is not None else 0
         run_graph_mode(case_idx=case_idx, model_name=args.model)
@@ -295,7 +285,7 @@ def main():
         run_transparent_diagnostic_demo(case_idx=args.case, model_name=args.model)
     else:
         print("No specific case provided. Running Case 0 (Streptococcal Pneumonia)...")
-        print("Use --help to see all options (e.g. --case 8, --benchmark, --stress-only, --graph).\n")
+        print("Use --help to see all options (e.g. --case 8, --stress-only, --graph).\n")
         run_transparent_diagnostic_demo(case_idx=0, model_name=args.model)
 
 

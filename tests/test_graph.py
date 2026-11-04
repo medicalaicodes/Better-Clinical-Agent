@@ -5,12 +5,10 @@ Clinical AI Agent: Unit Tests for LangGraph State Machine Workflow
 import json
 import pytest
 from unittest.mock import patch
-from src.clinical_agent import (
-    AttendingClinicalAgent,
-    PatientCase,
-    ClinicalReport,
-    build_clinical_graph,
-)
+from src.clinical_agent.agent import AttendingClinicalAgent
+from src.clinical_agent.schemas import PatientCase
+from src.clinical_agent.schemas import ClinicalReport
+from src.clinical_agent.graph import build_clinical_graph
 from src.clinical_agent.evaluation import BENCHMARK_CASES
 
 

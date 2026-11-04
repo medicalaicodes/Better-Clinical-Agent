@@ -57,3 +57,10 @@ ref
 
 
 
+
+# Retrieval data and benchmark outputs (large; live on the server, see docs/RUNNING_BENCHMARKS.md)
+data/corpus/
+data/index/
+data/benchmarks/
+results/
+*.patch
