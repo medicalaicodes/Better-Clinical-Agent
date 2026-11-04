@@ -76,6 +76,15 @@ def main():
     parser.add_argument("--batch-size", type=int, default=128)
     args = parser.parse_args()
 
+    if args.step == "build" and args.device is None:
+        # Fail loudly instead of silently encoding ~427k passages on CPU (many hours).
+        # This happened once: a torch build newer than the GPU driver reports no GPU.
+        import torch
+        if not torch.cuda.is_available():
+            sys.exit("No GPU visible to torch (driver too old for this torch build?).\n"
+                     "Check: python -c \"import torch; print(torch.version.cuda, torch.cuda.is_available())\"\n"
+                     "Fix torch (see docs/RUNNING_BENCHMARKS.md), or pass --device cpu on purpose.")
+
     if args.step == "download":
         download(args.corpora, settings.corpus_dir)
     else:

@@ -1,0 +1,11 @@
+# The LLM server, installed in its OWN environment (it pins its own torch):
+#
+#   uv venv $WORK/vllm-env --python 3.12
+#   uv pip install --python $WORK/vllm-env -r requirements-vllm.txt --torch-backend=cu128
+#
+# Pinned for GPU drivers that only support CUDA 12.x (e.g. driver 535 = CUDA 12.2):
+# newer vLLM wheels are built for CUDA 13 (ImportError: libcudart.so.13), and vLLM 0.11
+# does not cap transformers, but transformers 5.x breaks its tokenizer code.
+# On a CUDA 13 driver you can instead install the latest vLLM with --torch-backend=cu130.
+vllm==0.11.0
+transformers>=4.56,<5

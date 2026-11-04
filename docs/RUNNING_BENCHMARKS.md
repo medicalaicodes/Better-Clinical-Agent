@@ -78,12 +78,27 @@ nvidia-smi                                   # should show the A100 with ~40 GB 
 
 # project environment
 uv venv .venv --python 3.12
-uv pip install --python .venv -r requirements.txt
+uv pip install --python .venv -r requirements.txt --torch-backend=cu126
 
 # vLLM in its OWN environment (it pins its own torch version)
 uv venv $WORK/vllm-env --python 3.12
-uv pip install --python $WORK/vllm-env vllm --torch-backend=auto
+uv pip install --python $WORK/vllm-env -r requirements-vllm.txt --torch-backend=cu128
 ```
+
+**Match torch to the GPU driver.** Look at the "CUDA Version" in the top-right corner of `nvidia-smi`.
+
+On our server it showed **12.2** (driver 535), which can only run CUDA 12.x builds. The default PyPI wheels are CUDA 13 and fail in two different ways:
+- **The project's torch silently reports no GPU.** `build_index.py` now refuses to run in that case instead of encoding on CPU for hours.
+- **vLLM fails with `libcudart.so.13`.** That is why `requirements-vllm.txt` pins `vllm==0.11.0` (the CUDA 12 line) and `transformers<5`.
+
+Check both environments. Each must end with `True`:
+
+```bash
+.venv/bin/python -c "import torch; print(torch.version.cuda, torch.cuda.is_available())"
+$WORK/vllm-env/bin/python -c "import torch, vllm; print(vllm.__version__, torch.version.cuda, torch.cuda.is_available())"
+```
+
+On a CUDA 13 driver, use `--torch-backend=cu130` and the latest `vllm` instead.
 
 Then create two small settings files. Neither contains a secret:
 
@@ -191,8 +206,18 @@ Results go to `results/medgemma-27b/`, separate from the Llama runs.
 ```bash
 python scripts/run_mirage.py --dataset medqa --report-only > report_medqa.md
 python scripts/run_mirage.py --dataset mmlu  --report-only > report_mmlu.md
-tar czf results.tgz results/ report_*.md
+python scripts/analyze_results.py --dataset medqa > analysis_medqa.md
+python scripts/analyze_results.py --dataset mmlu  > analysis_mmlu.md
+tar czf results.tgz results/ report_*.md analysis_*.md
 ```
+
+`analyze_results.py` looks inside the traces:
+- whether vote agreement predicts correctness
+- light vs. full path accuracy
+- good vs. bad overrules of the closed-book majority
+- which query intents supplied the evidence
+- per-subject accuracy
+- the exact questions each method fixed or broke
 
 The `.jsonl` files contain the full traces (queries, evidence ids, outputs), which I need for error analysis.
 

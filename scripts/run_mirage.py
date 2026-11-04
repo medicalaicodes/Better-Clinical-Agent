@@ -76,6 +76,9 @@ def main():
         retriever = None
         if any(m not in RETRIEVAL_FREE for m in args.methods):
             from src.clinical_agent.retrieval import Retriever
+            import torch
+            if args.device is None and not torch.cuda.is_available():
+                print("WARNING: no GPU visible to torch - MedCPT retrieval will run on CPU (slow).")
             retriever = Retriever.load(settings.index_dir, device=args.device)
             retriever.noise_snippets = args.noise
 

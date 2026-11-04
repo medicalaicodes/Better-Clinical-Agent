@@ -291,3 +291,16 @@ Personal daily development log and research notebook tracking architecture, math
 - **Bug found during the smoke test:** servers that ignore `n` (llama.cpp, Ollama) produced identical "independent" votes because each top-up call reused the same seed. Each extra sample now gets `seed + i`.
 - **Tests:** 16 new CPU-only tests (fake LLM + toy corpus). They also check that the PLAN prompt never sees the answer options (question-only retrieval).
 - **Serving config:** the server now has a dedicated 40 GB A100, so Llama-3.1-8B runs in **bf16** (the same precision as the published baselines, with no quantization caveat). vLLM uses 85% of the card with prefix caching (the votes and later DDx-RAG steps share a prompt prefix), 128 concurrent sequences and 48 benchmark workers. FP8 is kept as a one-flag fallback for a shared GPU. MedGemma-27B (FP8) is an optional second model.
+
+## Nov 4, 2026 (evening) — First GPU runs and server lessons
+- **Server setup problems, each now guarded in code or docs:**
+  - Driver 535 = CUDA 12.2. Default PyPI torch (CUDA 13.2) silently reported no GPU, so MedCPT started encoding on CPU. `build_index.py` now refuses to run without a visible GPU unless `--device cpu` is passed.
+  - Latest vLLM wheels need `libcudart.so.13`. Pinned `vllm==0.11.0` (CUDA 12 line) in `requirements-vllm.txt`.
+  - vLLM 0.11 + transformers 5.x breaks the tokenizer (`all_special_tokens_extended`). Pinned `transformers<5`.
+  - Serving by repo id offline failed because we skip Meta's `original/` weights. `serve_vllm.sh` now serves the local snapshot folder automatically.
+- **Sanity run (50 MedQA questions, Llama-3.1-8B bf16):**
+  - CoT 64.0% (published: 64.73%), so the baseline reproduces.
+  - MedRAG 70.0%, DDx-RAG 70.0%. With n=50 the 95% CIs are about ±13 points; this is not a result.
+  - DDx-RAG made 3.3 calls per question (the votes are one request) and had 0 unparsed answers vs 4 for MedRAG.
+  - Fixed/broke vs CoT: DDx-RAG 6/3, MedRAG 9/6. That is a first hint of less retrieval harm, still to be confirmed on the full set.
+- **Added `scripts/analyze_results.py`** for trace-level error analysis: does the gate signal predict correctness, light vs full path, good vs bad overrules, evidence by intent, per-subject accuracy, fixed/broke question ids.
