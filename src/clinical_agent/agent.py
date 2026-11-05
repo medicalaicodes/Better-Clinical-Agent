@@ -10,10 +10,9 @@ Academic Citations & Foundations:
   * MedRAX: "A Medical Reasoning Agent for Chest X-ray" (Bo Wang Lab, 2025; arXiv:2502.02618).
 """
 
-from typing import Dict, List, Optional, Callable, Any
+from typing import Dict, List, Optional, Callable
 from .schemas import (
     PatientCase,
-    DifferentialHypothesis,
     ToolResult,
     ClinicalReport,
 )

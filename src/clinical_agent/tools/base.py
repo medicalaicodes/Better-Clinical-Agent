@@ -8,8 +8,6 @@ Academic Citations & Foundations:
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
-from pydantic import BaseModel
 
 from ..schemas import PatientCase, ToolResult, ModalityType
 

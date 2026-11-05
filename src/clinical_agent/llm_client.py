@@ -236,7 +236,6 @@ class ClinicalLLMClient:
         Synthesizes the comprehensive final clinical consultation report,
         refined differential, clinical impression prose, recommendations, and disposition.
         """
-        top_condition = active_ddx[0].condition if active_ddx else "Undifferentiated Presentation"
         ddx_str = "\n".join([f"- {h.condition} [{h.tier.value}]: {h.clinical_rationale}" for h in active_ddx])
         
         completed_tests = [e.tool_name for e in evidence_history]

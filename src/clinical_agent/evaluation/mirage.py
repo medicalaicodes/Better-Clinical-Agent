@@ -46,7 +46,7 @@ def load_questions(dataset: str, data_dir: str, limit: Optional[int] = None, see
                    shuffle_options: Optional[int] = None) -> List[MCQ]:
     """Loads a MIRAGE dataset (or the MedQA dev split) as a list of MCQ.
 
-    limit            only the first N questions (for medqa_dev: sample size, default 300)
+    limit            only the first N questions (medqa_dev: first N of its fixed 300-question sample)
     shuffle_options  robustness test: reorder every question's options with this seed
     """
     benchmarks_dir = os.path.join(data_dir, "benchmarks")
@@ -56,8 +56,13 @@ def load_questions(dataset: str, data_dir: str, limit: Optional[int] = None, see
         with open(path, encoding="utf-8") as f:
             rows = [json.loads(line) for line in f]
 
-        sample_size = min(limit or 300, len(rows))
+        # Always draw the same sample (300 questions, or more if asked), then cut to `limit`.
+        # Sampling `limit` questions directly would give DIFFERENT questions with the same ids
+        # (train-0, train-1, ...) and silently mix them up with earlier result files.
+        sample_size = min(max(limit or 0, 300), len(rows))
         rows = random.Random(seed).sample(rows, sample_size)
+        if limit:
+            rows = rows[:limit]
 
         questions = []
         for number, row in enumerate(rows):

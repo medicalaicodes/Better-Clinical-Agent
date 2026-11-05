@@ -11,6 +11,7 @@ Sections (all computed on questions answered by every method that is compared):
   4. Which evidence intents ended up in the prompt, for right vs wrong answers.
   5. Per-subject accuracy (MMLU-Med has 6 subjects in the question id).
   6. Question ids that each method fixed / broke relative to CoT, for manual reading.
+  7. DxAgent: harm / recovery against its own first answer, critic activity, open issues.
 """
 
 import argparse
@@ -123,6 +124,54 @@ def section_intents(ddx):
     print("\n(average number of evidence snippets per question found by each intent)\n")
 
 
+def section_agent(name, rows):
+    """DxAgent: what the loop did, measured against its OWN first answer (before any evidence)."""
+    print(f"## 7. Agent loop: `{name}`\n")
+    first_right = first_wrong = harm = recovery = 0
+    new_hypothesis_wins = fallback = critic_changed = open_issue_rows = open_issue_right = 0
+    turns = critiques = 0
+    for row in rows.values():
+        trace = row["trace"]
+        turns += trace.get("turns", 0)
+        critiques += trace.get("critiques", 0)
+        fallback += bool(trace.get("mapping_fallback"))
+
+        first_correct = trace.get("first", {}).get("choice") == row["gold"]
+        if first_correct:
+            first_right += 1
+            if not row["correct"]:
+                harm += 1                           # the loop broke a right first answer
+        else:
+            first_wrong += 1
+            if row["correct"]:
+                recovery += 1                       # the loop fixed a wrong first answer
+
+        # Did the final answer come from a hypothesis that was NOT in the first differential?
+        final = (trace.get("final", {}).get("hypothesis") or "").lower()
+        for hypothesis_name, h in trace.get("hypotheses", {}).items():
+            if hypothesis_name.lower() == final and h.get("origin") != "frame" and row["correct"]:
+                new_hypothesis_wins += 1
+
+        for event in trace.get("events", []):
+            if event.get("event") == "critique" and (event.get("blocking") or event.get("new_hypotheses")):
+                critic_changed += 1
+                break
+
+        if trace.get("open_issues"):
+            open_issue_rows += 1
+            open_issue_right += row["correct"]
+
+    n = max(1, len(rows))
+    print(f"- First answer (options-free, before any evidence) correct: {pct(first_right, len(rows))}")
+    print(f"- Harm: right first answer ended wrong: **{harm}** of {first_right}")
+    print(f"- Recovery: wrong first answer ended right: **{recovery}** of {first_wrong}")
+    print(f"- Right answers that came from a hypothesis added during the loop: {new_hypothesis_wins}")
+    print(f"- Critic raised a blocking issue or a new diagnosis: {critic_changed} questions")
+    print(f"- Questions ending with an open issue: {open_issue_rows}, accuracy on them {pct(open_issue_right, open_issue_rows)}")
+    print(f"- Mapping fallbacks (no option matched the free-text answer): {fallback}")
+    print(f"- Average turns {turns / n:.2f}, critiques {critiques / n:.2f}\n")
+
+
 def section_subjects(runs, ids):
     """MMLU ids look like 'anatomy-000', 'college_medicine-012'."""
     subjects = defaultdict(list)
@@ -188,6 +237,9 @@ def main():
         section_paths(ddx, cot)
         section_adjudication(ddx)
         section_intents(ddx)
+    for name, rows in runs.items():
+        if name.startswith("dx_agent"):
+            section_agent(name, {qid: rows[qid] for qid in ids})
     section_subjects(runs, ids)
     section_fixed_broke(runs, ids, args.baseline, os.path.join(run_dir, "fixed_broke.json"))
 

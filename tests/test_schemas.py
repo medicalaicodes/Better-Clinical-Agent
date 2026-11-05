@@ -2,7 +2,6 @@
 Clinical AI Agent: Data Schema Unit Tests
 """
 
-import pytest
 from src.clinical_agent.schemas import (
     ModalityType,
     FindingStatus,

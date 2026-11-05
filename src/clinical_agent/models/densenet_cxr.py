@@ -11,10 +11,9 @@ Academic Citations & Foundations:
 
 import os
 import threading
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 import numpy as np
 import torch
-from PIL import Image
 
 try:
     import torchxrayvision as xrv

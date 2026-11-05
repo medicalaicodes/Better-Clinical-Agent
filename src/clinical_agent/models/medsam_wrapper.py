@@ -11,7 +11,7 @@ Academic Citations & Foundations:
 
 import os
 import threading
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional, Any
 import numpy as np
 import torch
 from PIL import Image

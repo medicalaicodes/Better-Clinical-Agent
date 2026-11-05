@@ -340,3 +340,17 @@ Personal daily development log and research notebook tracking architecture, math
 - **Fallback, threshold chosen on medqa_dev** (needs RAG² on dev: 73.3 vs SC 81.7 there, so retrieval hurts even more on the easier, possibly memorised dev questions):
   - Dev picks "retrieve only when at most 2 of 5 votes agree". On MedQA test: 74.5 vs 73.7 (+0.8, p=0.09), retrieval on only 81 of 1273 questions. Not significant.
 - **Bugs fixed:** unparsed votes are stored as "null" in JSON and were counted as a candidate by the probe's baseline (73.4 instead of 73.7) and by analyze_results; the report scripts crashed on the probe's feature file in the results folder.
+
+## Nov 5, 2026 (evening) — DxAgent: an options-free, verify-don't-decide diagnostic agent
+- **Why a new design:** every RAG method lowered accuracy on questions the model already knew; v1 was pulled by passages it read (91 bad vs 54 good overrules); a relevance model cannot judge diagnoses (book-scoring probe); 45% of errors never had the right answer among the votes; real cases come without options.
+- **The agent (`rag/agent.py`, prompts in `rag/agent_prompts.py`):**
+  - FRAME (1 call, no options): findings, what is asked, k ranked hypotheses with checkable claims, a first answer.
+  - ROUNDS (budget shown every turn): all claims of all live hypotheses are checked together (no hypothesis goes "first"); each claim is marked SUPPORTED / CONTRADICTED / NOT_ADDRESSED. Tools: consult_reference, rule_out (only with a real card or finding id, checked in code), add_hypothesis, request_critique.
+  - CRITIC (fresh context, called as a tool, compulsory before finishing): argues for the best alternative, flags unexplained findings and weak rule-outs, proposes overlooked diagnoses (checked like any other).
+  - Loop safety: only new answer-changing issues force another round; repeated issues do not count; the agent may rebut with evidence; stop when the answer is stable across critiques or the caps are hit; open issues are recorded as uncertainty.
+  - MAP (1 call): first and final free-text answers are matched to the options by a call that never sees the case.
+- **The evidence tool (`retrieval/evidence_tool.py`):** article-first search inside the hypothesis's own StatPearls article, section routing by claim type, MedCPT picks sentences (relevance only), whole sentences with pronoun/list repair and a source header, nothing below a relevance threshold ("NOT FOUND" instead of filler), up to two cards from different documents.
+- **Bugs caught by tests before any GPU run:** ids like "F3"/"E1" were blanked by the placeholder filter (every citation would have been rejected); "(Chap. 9)" was split as a sentence end.
+- **Fixed:** `--limit` on medqa_dev now takes the first N of the fixed 300-question sample (it used to draw a different sample with the same ids).
+- **Removed:** the book-scoring probe code (its result is recorded above; reproducible from git history), unused imports and variables across the v2 code.
+- **New analysis:** `analyze_results.py` section 7 reports harm / recovery against the agent's own first answer, critic activity, open issues and mapping fallbacks.

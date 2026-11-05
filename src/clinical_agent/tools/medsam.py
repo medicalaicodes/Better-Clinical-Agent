@@ -9,9 +9,7 @@ Academic Citations & Foundations:
 """
 
 import os
-import numpy as np
-from typing import Dict, List, Optional, Any
-from PIL import Image
+from typing import List, Optional
 
 from .base import BaseClinicalTool
 from ..schemas import PatientCase, ToolResult, ModalityType, FindingItem, FindingStatus

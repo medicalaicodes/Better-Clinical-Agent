@@ -9,7 +9,7 @@ Academic Citations & Foundations:
 """
 
 import os
-from typing import Dict, List, Optional, Any
+from typing import List, Optional
 
 from .base import BaseClinicalTool
 from ..schemas import PatientCase, ToolResult, ModalityType, FindingItem, FindingStatus

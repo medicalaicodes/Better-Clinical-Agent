@@ -8,7 +8,7 @@ Academic Citations & Foundations:
   * Schuetz et al., "Procalcitonin to initiate or discontinue antibiotics in acute respiratory tract infections" (Cochrane Database of Systematic Reviews, 2017).
 """
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 from .base import BaseClinicalTool
 from ..schemas import PatientCase, ToolResult, ModalityType, FindingItem, FindingStatus
 
@@ -76,7 +76,6 @@ class LaboratoryTestsTool(BaseClinicalTool):
             low_val = ref_info["low"]
             high_val = ref_info["high"]
             unit_str = ref_info["unit"]
-            clin_name = ref_info["clinical_name"]
 
             if value > high_val:
                 label = ref_info["high_label"]

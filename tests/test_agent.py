@@ -3,10 +3,8 @@ Clinical AI Agent: Unit Tests for Attending Agent & Graph Workflow
 """
 
 import json
-import pytest
 from unittest.mock import patch
 from src.clinical_agent.agent import AttendingClinicalAgent
-from src.clinical_agent.schemas import PatientCase
 from src.clinical_agent.schemas import ClinicalReport
 from src.clinical_agent.graph import build_clinical_graph
 from src.clinical_agent.evaluation import BENCHMARK_CASES
