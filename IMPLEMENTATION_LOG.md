@@ -304,3 +304,39 @@ Personal daily development log and research notebook tracking architecture, math
   - DDx-RAG made 3.3 calls per question (the votes are one request) and had 0 unparsed answers vs 4 for MedRAG.
   - Fixed/broke vs CoT: DDx-RAG 6/3, MedRAG 9/6. That is a first hint of less retrieval harm, still to be confirmed on the full set.
 - **Added `scripts/analyze_results.py`** for trace-level error analysis: does the gate signal predict correctness, light vs full path, good vs bad overrules, evidence by intent, per-subject accuracy, fixed/broke question ids.
+- **Throughput check during the overnight run:** the benchmark client showed ~588% CPU and ~5% GPU, which looked like a retrieval bottleneck. vLLM's own metrics said otherwise: GPU at 99%, 48/48 requests running, 0 waiting, ~5k prompt tokens/s, KV cache 83-89% full. The LLM is the bottleneck; i-MedRAG sends ~30-40k prompt tokens per question. I drafted a GPU dense-search patch, then dropped it: it would not speed up this run, and the card had only ~2 GB free. Lesson: measure the server side before "fixing" the client.
+
+## Nov 5, 2026 — Full Phase 1 results, what they mean, and the next idea
+- **Headline numbers** (Llama-3.1-8B bf16, all baselines rerun by us; MedQA n=1273, MMLU-Med n=1089):
+
+  | method | LLM calls/q | MedQA | MMLU-Med |
+  |---|---|---|---|
+  | CoT | 1 | 70.7 | 78.3 |
+  | **CoT-SC (5 votes) - the real bar** | 1 request (n=5) | **73.7** | **81.9** |
+  | MedRAG | 1 | 67.8 (p=.038 vs CoT: RAG *hurts*) | 77.0 |
+  | RAG²-style | 2 | 72.1 | - |
+  | i-MedRAG | 10.6 (28.5k tokens) | 71.9 (published 75.0) | - |
+  | DDx-RAG v1 | 3.2 | 71.0 | 81.7 |
+
+- **Ablations of DDx-RAG v1 on MedQA:** no REFUTE 70.9, no VERIFY 70.9, no votes shown to DECIDE 68.6. REFUTE and VERIFY add nothing measurable; showing the votes is the only part that matters. Honest conclusion: v1's novelty did not work.
+- **Where retrieval helps and where it hurts** (MedQA, split by closed-book vote agreement):
+  - 5/5 agreement (54% of questions): SC 89.2, i-MedRAG 86.0, RAG² 84.1, MedRAG 80.6. Every RAG method damages answers the model already knows.
+  - 3/5 or less: RAG² and i-MedRAG beat SC by 3-13 points.
+  - So "retrieve only when unsure" is directionally right, but v1 still let retrieval overrule confident votes (91 bad vs 54 good overrules).
+- **Diagnostics** (computed on test, used for direction only, never reported as results): any-method oracle 90.7; pooling SC votes with the three RAG answers 76.3; "SC if ≥4/5 agree, else RAG²" 75.4. The right answer is usually on the table; selection is the failure.
+- **Tuning split:** medqa_dev (300 MedQA *train* questions): CoT 78.0, SC 81.7, 5/5 agreement on 57% at 95.3%. It is easier than the test set (possible training-data exposure), so weights fitted there may over-trust the votes. Noted as a risk.
+- **Next idea, book scoring:** the library *judges* candidates instead of being *read* by the LLM. Posterior ∝ vote share × cross-encoder fit of each candidate's textbook passages to the case, scored finding by finding, minus a null-patient baseline, skipping "differential diagnosis" sections. A conditional logit is fitted on medqa_dev (seconds, CPU), with an MLP ablation. Probe: `scripts/probe_book_scoring.py`, zero extra LLM calls, so it is compute-matched to SC.
+- **Known limit, found before running:** only about 15% of MedQA questions ask for the diagnosis itself; many answers are actions or mechanisms ("Thumb spica cast", "No tests required") that a textbook passage cannot "fit". If the probe works on the diagnosis subset, the full design scores the *latent diagnosis* and lets the LLM answer the actual question closed-book.
+
+## Nov 5, 2026 (later) — Book-scoring probe: a clean negative result
+- **Result** (weights and feature set chosen on medqa_dev only; test sets scored once):
+  - MedQA: self-consistency 73.7, votes + textbook fit 73.8 (+0.1, p=1.0). MMLU-Med: 81.9 vs 82.2 (+0.3, p=0.63).
+  - The fitted weight on textbook fit is ~0: the combiner learned to ignore the book.
+- **Why it failed** (diagnostics on the saved features):
+  - Textbook fit alone picks the right option 33.0% (MedQA) and 37.1% (MMLU), barely above chance (25%).
+  - On split questions where the answer is among the top two voted options, the book picks correctly 51.7% on MedQA, i.e. a coin flip (61.4% on MMLU).
+  - The "unexplained findings" trigger cannot tell questions where no vote was right from the others (AUC 0.50).
+  - Interpretation: MedQA distractors are designed to be topically plausible. A relevance model (trained on PubMed clicks) sees every option's textbook passages as "about this patient"; telling them apart needs reasoning, not relevance.
+- **Fallback, threshold chosen on medqa_dev** (needs RAG² on dev: 73.3 vs SC 81.7 there, so retrieval hurts even more on the easier, possibly memorised dev questions):
+  - Dev picks "retrieve only when at most 2 of 5 votes agree". On MedQA test: 74.5 vs 73.7 (+0.8, p=0.09), retrieval on only 81 of 1273 questions. Not significant.
+- **Bugs fixed:** unparsed votes are stored as "null" in JSON and were counted as a candidate by the probe's baseline (73.4 instead of 73.7) and by analyze_results; the report scripts crashed on the probe's feature file in the results folder.

@@ -38,7 +38,7 @@ def load_run(run_dir):
     for file_name in sorted(os.listdir(run_dir)):
         if file_name.endswith(".jsonl"):
             rows = read_results(os.path.join(run_dir, file_name))
-            if rows:
+            if rows and "correct" in next(iter(rows.values())):     # skip non-result files
                 runs[file_name[:-len(".jsonl")]] = rows
     return runs
 
@@ -58,7 +58,7 @@ def section_gate_signal(ddx, cot):
         majority_correct = 0
         for qid in ids:
             votes = ddx[qid]["trace"].get("votes", {})
-            letters = {k: v for k, v in votes.items() if k != "None"}
+            letters = {k: v for k, v in votes.items() if k not in ("None", "null")}
             if letters and max(letters, key=lambda k: (letters[k], k)) == ddx[qid]["gold"]:
                 majority_correct += 1
         cot_correct = sum(1 for qid in ids if qid in cot and cot[qid]["correct"])
@@ -88,7 +88,7 @@ def section_adjudication(ddx):
     bad = 0       # majority was right, DDx-RAG wrong
     neutral = 0   # both wrong
     for row in changed:
-        votes = {k: v for k, v in row["trace"].get("votes", {}).items() if k != "None"}
+        votes = {k: v for k, v in row["trace"].get("votes", {}).items() if k not in ("None", "null")}
         majority = max(votes, key=lambda k: (votes[k], k)) if votes else None
         if row["correct"]:
             good += 1

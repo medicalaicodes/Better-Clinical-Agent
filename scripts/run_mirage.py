@@ -102,7 +102,9 @@ def main():
     for path in sorted(glob.glob(os.path.join(run_dir, "*.jsonl"))):
         name = os.path.basename(path)[:-len(".jsonl")]
         rows = {i: r for i, r in read_results(path).items() if i in ids}
-        if rows:
+        # Other tools (e.g. the book-scoring probe) save their own .jsonl files here too;
+        # only files whose rows carry a "correct" field are method results.
+        if rows and "correct" in next(iter(rows.values())):
             results[name] = rows
     if results:
         print(f"\n### {args.dataset} - {settings.llm_model} (questions answered by every method)\n")

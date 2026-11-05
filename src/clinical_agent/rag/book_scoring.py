@@ -326,8 +326,11 @@ def cross_validated_accuracy(questions, folds: int = 5, **fit_args) -> float:
 
 
 def majority_letter(votes: Dict[str, int]) -> Optional[str]:
-    """Same tie rule as the cot_sc baseline (ties go to the later letter)."""
-    counts = Counter({k: v for k, v in votes.items() if k != "None"})
+    """Same tie rule as the cot_sc baseline (ties go to the later letter).
+
+    Unparsed votes are saved under the key "null" (JSON's spelling of Python's None);
+    they are not a candidate and must never win the majority."""
+    counts = Counter({k: v for k, v in votes.items() if k not in ("None", "null")})
     if not counts:
         return None
     return max(counts, key=lambda k: (counts[k], k))

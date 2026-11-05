@@ -87,7 +87,7 @@ def pct(correct, total):
 
 
 def agreement_of(votes):
-    valid = [v for k, v in votes.items() if k != "None"]
+    valid = [v for k, v in votes.items() if k not in ("None", "null")]
     return max(valid) / sum(valid) if valid else 0.0
 
 
