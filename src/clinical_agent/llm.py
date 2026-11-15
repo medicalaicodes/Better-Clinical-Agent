@@ -78,11 +78,14 @@ class LLM:
     # ------------------------------------------------------------------------------------
     def chat(self, prompt: str, system: Optional[str] = None, temperature: Optional[float] = None,
              max_tokens: Optional[int] = None, n: int = 1, seed: Optional[int] = None,
-             on_token: Optional[Callable[[str], None]] = None) -> Union[str, List[str]]:
+             on_token: Optional[Callable[[str], None]] = None, json_mode: bool = False) -> Union[str, List[str]]:
         """Sends one user prompt (plus an optional system prompt).
 
         Returns the reply text, or a list of `n` independent samples when n > 1.
         `on_token` streams the reply token by token (used by the interactive demo).
+        `json_mode` asks the server to only produce syntactically valid JSON (vLLM does this
+        with constrained decoding). Without it, Llama-3.1-8B broke the JSON of ~half of the
+        agent's long structured replies, which silently disabled the agent's loop.
         """
         messages = []
         if system:
@@ -100,6 +103,8 @@ class LLM:
         }
         if seed is not None:
             request["seed"] = seed      # makes sampled answers reproducible on vLLM
+        if json_mode:
+            request["response_format"] = {"type": "json_object"}
 
         # --- streaming path (demo only) ---
         if on_token is not None:

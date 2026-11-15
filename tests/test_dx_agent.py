@@ -71,7 +71,10 @@ def critic_reply(prompt):
         # First critique: one blocking issue and one overlooked diagnosis.
         return json.dumps({"strongest_alternative": {"hypothesis": "Pneumothorax", "case_for_it": "sudden onset"},
                            "issues": [{"type": "alternative", "detail": "pneumothorax not excluded by exam",
-                                       "action": "check breath sounds", "changes_answer": True}],
+                                       "action": "check breath sounds", "changes_answer": True,
+                                       "alternative_answer": "Pneumothorax"},
+                                      {"type": "alternative", "detail": "vague doubt without an alternative",
+                                       "action": "think", "changes_answer": True}],
                            "new_hypotheses": [{"name": "Peripartum cardiomyopathy", "why": "dyspnea",
                                                "claims": [{"text": "Peripartum cardiomyopathy causes heart failure near delivery",
                                                            "about": "presentation"}]}],
@@ -118,12 +121,17 @@ def test_agent_full_loop(toy_retriever):
     # Two critiques, then the loop ended: the second found nothing new.
     assert trace["critiques"] == 2 and trace["open_issues"] == []
 
+    # A "changes the answer" issue that names no alternative answer does not block.
+    vague = [i for i in trace["issues"].values() if i["detail"].startswith("vague")][0]
+    assert vague["changes_answer"] is False
+
 
 def test_loop_always_ends_when_the_critic_never_agrees(toy_retriever):
     def stubborn_critic(prompt):
         number = prompt.count("colleague replied") + 1
         return json.dumps({"issues": [{"type": "alternative", "detail": f"new doubt number {number}",
-                                       "action": "think again", "changes_answer": True}]})
+                                       "action": "think again", "changes_answer": True,
+                                       "alternative_answer": f"Something else {number}"}]})
 
     def flip_flopping_agent(prompt):
         answer = "Pneumothorax" if prompt.count("colleague replied") % 2 else "Pulmonary embolism"
@@ -173,3 +181,20 @@ def test_sentence_completion_keeps_subject_and_lists():
                                 "Triggers include:\nFasting.\nIllness.")
     assert EvidenceTool.complete(sentences, 1) == [0, 1]           # "It" needs the sentence before
     assert EvidenceTool.complete(sentences, 2) == [2, 3, 4]        # "include:" needs its list
+
+
+def test_select_mode_reveals_options_only_at_the_end(toy_retriever):
+    toy_retriever.reranker = OverlapReranker()
+
+    def select_reply(prompt):
+        return json.dumps({"reasoning": "matches", "answer_choice": "B"})
+
+    llm = FakeLLM([("Propose up to", frame_reply), ("turn(s) left", round_reply),
+                   ("Review, in this order", critic_reply), ("Answers to match", map_reply),
+                   ("Your work-up", select_reply)])
+    result = DxAgent(llm, toy_retriever, final="select")(MCQ("q4", CASE, OPTIONS, "B"))
+    assert result["answer"] == "B" and result["trace"]["final_step"] == "select"
+
+    # Only the mapper and the final selection ever see the options list.
+    seen = [p for p in llm.prompts if "A. Pneumothorax" in p]
+    assert len(seen) == 2 and "Your work-up" in seen[-1]

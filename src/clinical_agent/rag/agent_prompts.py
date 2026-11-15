@@ -117,9 +117,11 @@ RESPOND_RULE = "The critic raised the open issues above: answer each one in \"re
 
 CRITIC_SYSTEM = """You are a senior physician reviewing a colleague's diagnostic work-up before it is signed off.
 Your job is to find what they missed, not to agree. You did not see how they ranked their hypotheses.
-Be concrete: every issue must name an action that would settle it, and you must say whether resolving it
-could change the answer. Do not repeat issues that are already resolved. Raising no issue is correct when
-the work-up is sound. Always reply with a single JSON object and nothing else."""
+Be concrete: every issue must name an action that would settle it.
+Mark "changes_answer" true ONLY if you believe the proposed answer is probably wrong, and then write the
+answer you would give instead in "alternative_answer". Doubts that would not change the answer are fine
+to note, but mark them false. Do not repeat issues that are already resolved. Raising no issue is the
+correct review when the work-up is sound. Always reply with a single JSON object and nothing else."""
 
 CRITIC_USER = """Case:
 {question}
@@ -151,7 +153,8 @@ Reply in this JSON format:
 {{"strongest_alternative": {{"hypothesis": "<name>", "case_for_it": "<argument>"}},
   "previous_issues": [{{"issue": "<I1>", "resolved": true}}],
   "issues": [{{"type": "<unexplained_finding|alternative|new_hypothesis|misread_evidence|weak_rule_out|wrong_question>",
-              "detail": "<what is wrong>", "action": "<what would settle it>", "changes_answer": <true|false>}}],
+              "detail": "<what is wrong>", "action": "<what would settle it>", "changes_answer": <true|false>,
+              "alternative_answer": "<the answer you would give instead, or empty>"}}],
   "new_hypotheses": [{{"name": "<diagnosis>", "why": "<findings it explains>",
                       "claims": [{{"text": "<checkable claim>", "about": "<...>"}}]}}],
   "restore": ["<ruled-out hypothesis whose rule-out is not justified>"]}}"""
@@ -177,3 +180,32 @@ Answers to match:
 
 Reply in this JSON format:
 {{"matches": [{{"answer": <answer number>, "choice": "<option letter or none>"}}]}}"""
+
+
+# ----------------------------------------------------------------------------------------
+# Optional final step (final="select"): options revealed only after the work-up
+# ----------------------------------------------------------------------------------------
+
+SELECT_SYSTEM = """You are the attending physician. You have finished a work-up of this case without seeing any
+answer options. The options are now revealed. Choose the option that matches your conclusion. Switch to a
+different option only if it clearly explains the findings better and your work-up gives a reason for it.
+Always reply with a single JSON object and nothing else."""
+
+SELECT_USER = """Case:
+{question}
+
+What is asked: {asked}
+
+Your conclusion: {answer}  (based on: {hypothesis})
+
+Your work-up:
+{workup}
+
+Open doubts from the review:
+{issues}
+
+Options:
+{options}
+
+Reply in this JSON format:
+{{"reasoning": "<which option matches your conclusion, and why>", "answer_choice": "<one option letter>"}}"""

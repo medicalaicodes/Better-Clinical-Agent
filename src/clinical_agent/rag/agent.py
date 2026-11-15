@@ -24,9 +24,11 @@ Loop safety (agent <-> critic can ping-pong forever):
   - issues still open at the end are recorded as uncertainty (for escalation), not looped on.
 
 Ablation switches (all via --set): max_rounds=0 (frame + map only: the cost of going
-options-free), library=false (same loop, no retrieval), critic=false, article_first=false.
+options-free), library=false (same loop, no retrieval), critic=false, article_first=false,
+final=select (options hidden during the work-up, revealed only for the final choice).
 """
 
+import json
 import random
 import re
 from typing import List, Optional
@@ -73,7 +75,7 @@ class DxAgent:
                  k: int = 4, claims: int = 2, max_rounds: int = 4, max_critiques: int = 2,
                  max_new_hypotheses: int = 2, library: bool = True, critic: bool = True,
                  article_first: bool = True, cards_per_claim: int = 2, min_score: float = 0.0,
-                 max_tokens: int = 1500):
+                 final: str = "map", max_tokens: int = 1500):
         self.llm = llm
         self.k = k                                  # hypotheses in the first differential
         self.claims = claims                        # claims per hypothesis per turn
@@ -81,6 +83,13 @@ class DxAgent:
         self.max_critiques = max_critiques if critic else 0
         self.max_new_hypotheses = max_new_hypotheses   # per turn, from the agent or the critic
         self.library = library
+        # How the free-text conclusion becomes an option letter:
+        #   "map"    the strict options-free rule: a case-blind call matches the answer to an option
+        #   "select" options stay hidden during the whole work-up and are revealed only for the
+        #            final choice, together with the case and a summary of the work-up
+        if final not in ("map", "select"):
+            raise ValueError("final must be 'map' or 'select'")
+        self.final = final
         self.max_tokens = max_tokens
         self.tool = None
         if library and max_rounds > 0:
@@ -101,8 +110,16 @@ class DxAgent:
             self.check_pending_claims(state)
             self.run_loop(q, state, rng)
 
-        mapped = self.map_to_options(q, state["asked"], [first["answer"], state["leading"]["answer"]])
+        # The open-ended answers (first and final) are always mapped, so the trace shows how
+        # the strictly options-free agent did, whichever final step is used.
+        mapped = self.map_to_options(q, state, [first["answer"], state["leading"]["answer"]])
         first_choice, final_choice = mapped[0], mapped[1]
+        state["open_choice"] = final_choice
+
+        if self.final == "select":
+            selected = self.select_option(q, state)
+            if selected is not None:
+                return {"answer": selected, "trace": self.trace(state, first, first_choice, False)}
 
         fallback = False
         if final_choice is None:
@@ -115,19 +132,38 @@ class DxAgent:
         return {"answer": final_choice, "trace": self.trace(state, first, first_choice, fallback)}
 
     # ====================================================================================
+    # Every structured call goes through here
+    # ====================================================================================
+    def ask(self, state: dict, prompt: str, system: str, max_tokens: Optional[int] = None) -> dict:
+        """One LLM call that must return a JSON object. Returns {} if it still fails to parse.
+
+        json_mode makes vLLM produce valid JSON (constrained decoding). If a reply still cannot
+        be parsed, its beginning is kept in the trace, so failures can be read, not guessed.
+        """
+        reply = self.llm.chat(prompt, system=system, temperature=0.0,
+                              max_tokens=max_tokens or self.max_tokens, json_mode=True)
+        parsed = parse_json(reply)
+        if parsed:
+            return parsed
+        state["parse_failures"] += 1
+        if len(state["raw_failures"]) < 3:
+            state["raw_failures"].append(str(reply)[:1500])
+        return {}
+
+    # ====================================================================================
     # Step 1: FRAME
     # ====================================================================================
     def frame(self, q: MCQ) -> dict:
-        reply = self.llm.chat(P.FRAME_USER.format(question=q.question, k=self.k, claims=self.claims),
-                              system=P.AGENT_SYSTEM, temperature=0.0, max_tokens=self.max_tokens)
-        parsed = parse_json(reply) or {}
+        state = {"parse_failures": 0, "raw_failures": []}
+        parsed = self.ask(state, P.FRAME_USER.format(question=q.question, k=self.k, claims=self.claims),
+                          P.AGENT_SYSTEM)
 
         findings = []
         for item in parsed.get("findings", []):
             if clean(item):
                 findings.append(clean(item))
 
-        state = {
+        state.update({
             "findings": findings,
             "asked": clean(parsed.get("asked")) or question_stem(q.question),
             "hypotheses": {},          # name -> {"why", "worst_fit", "status", "origin", "claims": [ids]}
@@ -138,8 +174,7 @@ class DxAgent:
             "issues": {},              # "I1" -> critic issue
             "critiques": 0,
             "turns": 0,
-            "parse_failures": 0 if parsed else 1,
-        }
+        })
         for item in parsed.get("hypotheses", [])[:self.k]:
             if isinstance(item, dict):
                 self.add_hypothesis(state, item, origin="frame")
@@ -324,10 +359,8 @@ class DxAgent:
             turns_left=self.max_rounds - state["turns"] + 1, claims=self.claims,
             status_rule=P.STATUS_RULE_LIBRARY if self.library else P.STATUS_RULE_NO_LIBRARY,
             respond_rule=P.RESPOND_RULE if open_ids else "")
-        parsed = parse_json(self.llm.chat(prompt, system=P.AGENT_SYSTEM, temperature=0.0,
-                                          max_tokens=self.max_tokens))
+        parsed = self.ask(state, prompt, P.AGENT_SYSTEM)
         if not parsed:
-            state["parse_failures"] += 1
             state["messages"].append("Your last reply was not valid JSON. Reply with the JSON object only.")
             return False, False
 
@@ -370,6 +403,11 @@ class DxAgent:
                     new_hypotheses += 1
             elif tool == "rule_out":
                 self.rule_out(state, action)
+
+        # A turn with no new evidence, hypotheses or critique request means the agent has
+        # nothing left to check: treat it as "I am done" instead of wasting the next turn.
+        if not new_claims and new_hypotheses == 0 and not wants_critique:
+            wants_critique = True
 
         leading = parsed.get("leading") if isinstance(parsed.get("leading"), dict) else {}
         if clean(leading.get("answer")):
@@ -432,10 +470,8 @@ class DxAgent:
             dossier=self.render_dossier(state, rng), rule_outs="\n".join(rule_outs) or "(none)",
             answer=state["leading"]["answer"], hypothesis=state["leading"]["hypothesis"] or "?",
             previous="\n".join(previous) or "(none)")
-        parsed = parse_json(self.llm.chat(prompt, system=P.CRITIC_SYSTEM, temperature=0.0,
-                                          max_tokens=self.max_tokens))
+        parsed = self.ask(state, prompt, P.CRITIC_SYSTEM)
         if not parsed:
-            state["parse_failures"] += 1
             return []
 
         # Previous issues the critic now considers unresolved are re-opened.
@@ -454,10 +490,19 @@ class DxAgent:
             if clean(item.get("detail")).lower() in known:
                 continue                            # a repeated issue is not a new one
             iid = f"I{len(state['issues']) + 1}"
-            changes = item.get("changes_answer") is True
+
+            # An issue blocks only if the critic names a DIFFERENT answer it would give.
+            # In the first dev run the critic marked 296 of 298 reviews as answer-changing,
+            # mostly without saying what the better answer was; that kept every loop open.
+            alternative = clean(item.get("alternative_answer"))
+            current = state["leading"]["answer"].lower()
+            changes = (item.get("changes_answer") is True and bool(alternative)
+                       and alternative.lower() != current)
+
             state["issues"][iid] = {"type": clean(item.get("type")) or "other", "detail": clean(item.get("detail")),
-                                    "action": clean(item.get("action")), "changes_answer": changes,
-                                    "resolved": not changes, "critique": state["critiques"]}
+                                    "action": clean(item.get("action")), "alternative_answer": alternative,
+                                    "changes_answer": changes, "resolved": not changes,
+                                    "critique": state["critiques"]}
             if changes:
                 blocking.append(iid)
 
@@ -481,7 +526,7 @@ class DxAgent:
     # ====================================================================================
     # Step 4: MAP (the case is never shown here)
     # ====================================================================================
-    def map_to_options(self, q: MCQ, asked: str, answers: List[str]) -> List[Optional[str]]:
+    def map_to_options(self, q: MCQ, state: dict, answers: List[str]) -> List[Optional[str]]:
         unique = []
         for answer in answers:
             if answer and answer not in unique:
@@ -493,9 +538,9 @@ class DxAgent:
         for number, answer in enumerate(unique, start=1):
             numbered.append(f"{number}. {answer}")
 
-        prompt = P.MAP_USER.format(asked=asked, stem=question_stem(q.question), options=q.options_text(),
+        prompt = P.MAP_USER.format(asked=state["asked"], stem=question_stem(q.question), options=q.options_text(),
                                    answers="\n".join(numbered))
-        parsed = parse_json(self.llm.chat(prompt, system=P.MAP_SYSTEM, temperature=0.0, max_tokens=200)) or {}
+        parsed = self.ask(state, prompt, P.MAP_SYSTEM, max_tokens=200)
         choice_of = {}
         for item in parsed.get("matches", []) or []:
             if not isinstance(item, dict):
@@ -508,6 +553,32 @@ class DxAgent:
             if 1 <= number <= len(unique) and letter in q.options:
                 choice_of[unique[number - 1]] = letter
         return [choice_of.get(answer) for answer in answers]
+
+    def select_option(self, q: MCQ, state: dict) -> Optional[str]:
+        """final="select": the options are revealed only now, after the whole work-up."""
+        lines = []
+        for name, h in state["hypotheses"].items():
+            supported = contradicted = 0
+            for cid in h["claims"]:
+                if state["claims"][cid]["status"] == "SUPPORTED":
+                    supported += 1
+                elif state["claims"][cid]["status"] == "CONTRADICTED":
+                    contradicted += 1
+            status = "ruled out" if h["status"] == "ruled_out" else "live"
+            lines.append(f"- {name} [{status}]: {supported} claims supported, {contradicted} contradicted")
+
+        open_issues = []
+        for iid in self.open_issues(state):
+            open_issues.append(f"- {state['issues'][iid]['detail']}")
+
+        prompt = P.SELECT_USER.format(question=q.question, asked=state["asked"],
+                                      hypothesis=state["leading"]["hypothesis"] or "?",
+                                      answer=state["leading"]["answer"] or "?",
+                                      workup="\n".join(lines) or "(none)",
+                                      issues="\n".join(open_issues) or "(none)",
+                                      options=q.options_text())
+        parsed = self.ask(state, prompt, P.SELECT_SYSTEM, max_tokens=600)
+        return parse_choice(json.dumps(parsed), q.options) if parsed else None
 
     # ====================================================================================
     # Trace (everything the analysis needs)
@@ -539,4 +610,7 @@ class DxAgent:
             "issues": state["issues"],
             "events": state["events"],
             "parse_failures": state["parse_failures"],
+            "raw_failures": state["raw_failures"],
+            "open_choice": state.get("open_choice"),       # the strictly options-free answer
+            "final_step": self.final,
         }
