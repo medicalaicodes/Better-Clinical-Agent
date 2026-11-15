@@ -24,7 +24,6 @@ Design rules, each answering a problem we measured or a requirement of the agent
 """
 
 import re
-from functools import lru_cache
 from typing import Dict, List, Optional, Sequence
 
 # Which section-title words each kind of claim should be looked up in.
@@ -59,25 +58,33 @@ ABBREVIATIONS = ("chap.", "fig.", "figs.", "e.g.", "i.e.", "vs.", "al.", "approx
 
 
 def split_sentences(text: str) -> List[str]:
-    """Whole sentences only. Splits after . ! ? when the next sentence starts with a capital,
-    a digit or a bracket, and also at line breaks (StatPearls lists are one item per line).
-    A piece that ends with an abbreviation is glued back onto the next one."""
+    """Cuts a passage into whole sentences.
+
+    A new sentence starts after . ! or ? when the next word begins with a capital, a digit or a
+    bracket, and at every line break (StatPearls lists put one item per line). A full stop after
+    an abbreviation like "Chap." doesn't count - we glue that piece onto the next one.
+    """
     sentences = []
     for line in text.split("\n"):
         pieces = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9(\[])", line.strip())
-        carry = ""
+
+        unfinished = ""
         for piece in pieces:
-            piece = (carry + " " + piece).strip() if carry else piece.strip()
-            carry = ""
+            piece = piece.strip()
+            if unfinished:
+                piece = unfinished + " " + piece
+                unfinished = ""
             if not piece:
                 continue
+
             last_word = piece.split()[-1].lower()
             if last_word.endswith(ABBREVIATIONS):
-                carry = piece                     # "...(Chap." -> wait for "9)."
+                unfinished = piece         # "...see (Chap." - the sentence isn't over yet
                 continue
             sentences.append(piece)
-        if carry:
-            sentences.append(carry)
+
+        if unfinished:
+            sentences.append(unfinished)
     return sentences
 
 
@@ -91,71 +98,86 @@ class EvidenceTool:
         self.corpus = retriever.corpus
         self.cards_per_claim = cards_per_claim
         self.sentences_per_card = sentences_per_card
-        self.min_score = min_score             # cross-encoder logit below which nothing is shown
+        self.min_score = min_score             # below this cross-encoder score we'd rather say NOT FOUND
         self.article_first = article_first
-        self.global_chunks = global_chunks     # chunks from the whole-library search
+        self.global_chunks = global_chunks     # chunks taken from the whole-library search
         self.article_chunks = article_chunks   # chunks taken from the hypothesis's own article
 
-        # StatPearls titles look like "Gilbert Syndrome -- Pathophysiology". Group rows by article
-        # name once, so "find the article about X" is a dictionary lookup later.
+        # StatPearls titles look like "Gilbert Syndrome -- Pathophysiology". Grouping the rows by
+        # article name once means "find the article about X" is just a dictionary lookup later.
         self.article_rows: Dict[str, List[int]] = {}
         for row, title in enumerate(self.corpus.titles):
             if " -- " in title:
                 article = title.split(" -- ")[0].strip().lower()
-                self.article_rows.setdefault(article, []).append(row)
+                if article not in self.article_rows:
+                    self.article_rows[article] = []
+                self.article_rows[article].append(row)
+
         self.article_words = {}
-        for name in self.article_rows:
-            self.article_words[name] = words(name)
+        for article in self.article_rows:
+            self.article_words[article] = words(article)
+
+        self.article_for_name = {}            # remembers find_article() answers; names repeat a lot
 
     # ------------------------------------------------------------------------------------
-    # Finding the right chunks
+    # Step 1: which chunks might hold the answer to a claim
     # ------------------------------------------------------------------------------------
-    @lru_cache(maxsize=4096)
     def find_article(self, hypothesis: str) -> Optional[str]:
         """The StatPearls article about this hypothesis, or None.
 
-        Exact title match first; otherwise the article whose title words overlap most with the
-        hypothesis name (Jaccard >= 0.6), so "Gilbert's syndrome" finds "Gilbert Syndrome"
-        but "Crigler-Najjar type II" does not grab some unrelated liver article.
+        An exact title match wins. Otherwise we take the title sharing the most words with the
+        name, but only if the overlap is big (Jaccard >= 0.6) - so "Gilbert's syndrome" finds
+        "Gilbert Syndrome", while "Crigler-Najjar type II" doesn't grab some random liver article.
         """
-        name = hypothesis.lower().replace("'s", "").strip()
-        if name in self.article_rows:
-            return name
-        target = words(name)
-        if not target:
-            return None
-        best, best_overlap = None, 0.0
-        for article, article_words in self.article_words.items():
-            if not article_words:
-                continue
-            overlap = len(target & article_words) / len(target | article_words)
-            if overlap > best_overlap:
-                best, best_overlap = article, overlap
-        return best if best_overlap >= 0.6 else None
+        if hypothesis in self.article_for_name:
+            return self.article_for_name[hypothesis]
 
-    def article_candidates(self, hypothesis: str, claim: str, about: str) -> List[int]:
-        """Rows from the hypothesis's own article, in the right sections, best word overlap first."""
-        article = self.find_article(hypothesis) if hypothesis else None
+        name = hypothesis.lower().replace("'s", "").strip()
+        best = None
+        if name in self.article_rows:
+            best = name
+        else:
+            target = words(name)
+            best_overlap = 0.0
+            for article, article_words in self.article_words.items():
+                if not target or not article_words:
+                    continue
+                overlap = len(target & article_words) / len(target | article_words)
+                if overlap > best_overlap:
+                    best = article
+                    best_overlap = overlap
+            if best_overlap < 0.6:
+                best = None
+
+        self.article_for_name[hypothesis] = best
+        return best
+
+    def chunks_from_own_article(self, hypothesis: str, claim: str, about: str) -> List[int]:
+        """Chunks from the hypothesis's own article, preferring the section that fits the claim."""
+        if not hypothesis:
+            return []
+        article = self.find_article(hypothesis)
         if article is None:
             return []
+
         rows = []
         for row in self.article_rows[article]:
             title = self.corpus.titles[row].lower()
             if any(mixed in title for mixed in MIXED_SECTIONS):
-                continue
+                continue                       # differential-diagnosis sections talk about everything
             rows.append(row)
 
-        # Prefer the sections that match the kind of claim (if any such section exists).
+        # A claim about a lab test should be checked in "Evaluation", not in "Treatment".
         wanted = SECTIONS_FOR.get(about, ())
-        in_section = []
+        in_right_section = []
         for row in rows:
             title = self.corpus.titles[row].lower()
             if any(word in title for word in wanted):
-                in_section.append(row)
-        if in_section:
-            rows = in_section
+                in_right_section.append(row)
+        if in_right_section:
+            rows = in_right_section
 
-        # Cheap pre-filter before the cross-encoder: most shared words with the claim.
+        # Articles can have 50+ chunks; the cross-encoder only needs to see the likeliest few.
         claim_words = words(claim)
 
         def shared_words(row):
@@ -164,96 +186,122 @@ class EvidenceTool:
         rows.sort(key=shared_words, reverse=True)
         return rows[:self.article_chunks]
 
-    def global_candidates(self, claim: str) -> List[int]:
+    def chunks_from_whole_library(self, claim: str) -> List[int]:
         evidence = self.retriever.search(claim, k=self.global_chunks, expand=False, dedupe=True)
         rows = []
         for item in evidence:
-            if not any(mixed in item.snippet.title.lower() for mixed in MIXED_SECTIONS):
-                rows.append(item.row)
+            if any(mixed in item.snippet.title.lower() for mixed in MIXED_SECTIONS):
+                continue
+            rows.append(item.row)
         return rows
 
     # ------------------------------------------------------------------------------------
-    # Turning chunks into self-contained cards
+    # Step 3 helpers: making a card that reads on its own
     # ------------------------------------------------------------------------------------
     @staticmethod
     def source_header(title: str, source: str) -> str:
-        # "Gilbert Syndrome -- Pathophysiology" -> "StatPearls: Gilbert Syndrome, Pathophysiology"
-        label = "StatPearls" if source == "statpearls" else "Textbook"
+        # "Gilbert Syndrome -- Pathophysiology"  ->  "StatPearls: Gilbert Syndrome, Pathophysiology"
+        if source == "statpearls":
+            label = "StatPearls"
+        else:
+            label = "Textbook"
         return f"{label}: {title.replace(' -- ', ', ')}"
 
     @staticmethod
     def complete(sentences: List[str], index: int) -> List[int]:
-        """The sentence at `index` plus whatever it needs to be understood on its own."""
+        """The sentence at `index`, plus whatever it needs to make sense by itself."""
         keep = [index]
         if index > 0 and NEEDS_PREVIOUS.match(sentences[index]):
-            keep.insert(0, index - 1)              # "It is caused by..." -> what is "it"?
+            keep.insert(0, index - 1)          # "It is caused by..." - we need to know what "it" is
         if sentences[index].rstrip().endswith(":"):
-            keep += list(range(index + 1, min(index + 6, len(sentences))))   # the list that follows
+            last = min(index + 6, len(sentences))
+            for following in range(index + 1, last):
+                keep.append(following)         # "Causes include:" is useless without the list
         return keep
 
-    def consult(self, requests: Sequence[dict]) -> List[List[dict]]:
-        """requests: [{"hypothesis", "claim", "about"}, ...] -> one list of cards per request.
+    def make_card(self, row: int, sentences: List[str], best_indexes: List[int], score: float) -> dict:
+        keep = set()
+        for index in best_indexes[:self.sentences_per_card]:
+            keep.update(self.complete(sentences, index))
 
-        All claims of a round arrive together and are answered together (one cross-encoder
-        batch), so no hypothesis is checked "first".
+        # Back in the order they were written, so the card reads like the original text.
+        text = " ".join(sentences[i] for i in sorted(keep))
+        return {
+            "source": self.source_header(self.corpus.titles[row], self.corpus.sources[row]),
+            "text": text,
+            "score": round(score, 2),
+            "doc_id": self.corpus.ids[row],
+        }
+
+    # ------------------------------------------------------------------------------------
+    # The tool itself
+    # ------------------------------------------------------------------------------------
+    def consult(self, requests: Sequence[dict]) -> List[List[dict]]:
+        """requests: [{"hypothesis", "claim", "about"}, ...]  ->  a list of cards for each request.
+
+        All the claims of one turn come in together and get scored together, so no hypothesis
+        is looked up "first".
         """
-        # 1. Candidate chunks per claim (the retriever locks its own models internally).
-        chunk_lists = []
+        # Step 1 - candidate chunks for each claim: its own article first, then the whole library.
+        chunks_for = []
         for request in requests:
             rows = []
             if self.article_first:
-                rows += self.article_candidates(request.get("hypothesis", ""), request["claim"],
-                                                request.get("about", "other"))
-            for row in self.global_candidates(request["claim"]):
+                rows += self.chunks_from_own_article(request.get("hypothesis", ""), request["claim"],
+                                                     request.get("about", "other"))
+            for row in self.chunks_from_whole_library(request["claim"]):
                 if row not in rows:
                     rows.append(row)
-            chunk_lists.append(rows)
+            chunks_for.append(rows)
 
-        # 2. Every (claim, sentence) pair of the whole round in ONE cross-encoder batch.
-        pairs, owners = [], []          # owners[i] = (request index, row, sentence index)
+        # Step 2 - score every (claim, sentence) pair of the turn in one cross-encoder batch.
+        pairs = []
+        where = []                             # where[i] = (which request, chunk row, sentence index)
         sentences_of = {}
-        for r, (request, rows) in enumerate(zip(requests, chunk_lists)):
-            for row in rows:
+        for request_number, request in enumerate(requests):
+            for row in chunks_for[request_number]:
                 if row not in sentences_of:
                     sentences_of[row] = split_sentences(self.corpus.contents[row])
-                for s, sentence in enumerate(sentences_of[row]):
-                    if len(sentence) < 25:          # headings and fragments
-                        continue
+                for index, sentence in enumerate(sentences_of[row]):
+                    if len(sentence) < 25:
+                        continue               # headings and scraps aren't evidence
                     pairs.append((request["claim"], sentence))
-                    owners.append((r, row, s))
-        with self.retriever._lock:
-            scores = list(self.retriever.reranker.score(pairs)) if pairs else []
+                    where.append((request_number, row, index))
 
-        # 3. Per claim: best sentences, grouped into at most `cards_per_claim` cards from
-        #    different documents, each completed so it reads on its own.
-        by_request = [[] for _ in requests]
-        for (r, row, s), score in zip(owners, scores):
-            by_request[r].append((float(score), row, s))
+        scores = []
+        if pairs:
+            with self.retriever._lock:          # the models are shared between benchmark threads
+                scores = list(self.retriever.reranker.score(pairs))
 
+        scored_for = []
+        for _ in requests:
+            scored_for.append([])
+        for (request_number, row, index), score in zip(where, scores):
+            scored_for[request_number].append((float(score), row, index))
+
+        # Step 3 - for each claim, its best sentences become at most `cards_per_claim` cards,
+        # each from a different document, so two cards mean two independent sources.
         results = []
-        for scored in by_request:
+        for scored in scored_for:
             scored.sort(reverse=True)
-            cards, used_documents = [], set()
-            for score, row, s in scored:
+            cards = []
+            documents_used = set()
+
+            for score, row, index in scored:
                 if score < self.min_score or len(cards) >= self.cards_per_claim:
                     break
                 document = self.corpus.titles[row].split(" -- ")[0]
-                if document in used_documents:
+                if document in documents_used:
                     continue
-                used_documents.add(document)
+                documents_used.add(document)
 
-                # The best sentence, plus up to (sentences_per_card - 1) other good sentences
-                # from the same chunk, each completed, shown in their original order.
-                same_chunk = []
-                for other_score, other_row, index in scored:
+                # The best few sentences of this same chunk, best first.
+                best_indexes = []
+                for other_score, other_row, other_index in scored:
                     if other_row == row and other_score >= self.min_score:
-                        same_chunk.append(index)
-                keep = set()
-                for index in same_chunk[:self.sentences_per_card]:
-                    keep.update(self.complete(sentences_of[row], index))
-                text = " ".join(sentences_of[row][i] for i in sorted(keep))
-                cards.append({"source": self.source_header(self.corpus.titles[row], self.corpus.sources[row]),
-                              "text": text, "score": round(score, 2), "doc_id": self.corpus.ids[row]})
+                        best_indexes.append(other_index)
+                cards.append(self.make_card(row, sentences_of[row], best_indexes, score))
+
             for card in cards:
                 card["single_source"] = len(cards) == 1
             results.append(cards)

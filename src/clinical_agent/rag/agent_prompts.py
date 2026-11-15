@@ -66,7 +66,10 @@ Reply in this JSON format:
       "claims": [{{"text": "<checkable textbook claim>", "about": "<presentation|tests|mechanism|treatment|other>"}}]}}
   ],
   "leading": {{"hypothesis": "<name of your current best hypothesis>",
-               "answer": "<your answer to what is asked, in a few words>"}}}}"""
+               "answer": "<the specific answer to what is asked>"}}}}
+
+The "answer" must BE the answer, not a description of it: write "Hydralazine" or "Arcuate fasciculus",
+never "the next step in management" or "ECG finding"."""
 
 
 # ----------------------------------------------------------------------------------------
@@ -94,7 +97,8 @@ You have {turns_left} turn(s) left (this one included). Tools you can call in "a
     "claims": [{{"text": "<checkable claim>", "about": "<...>"}}]}}
 - {{"tool": "request_critique"}}  submit your current answer to an independent critic (required before you are done).
 
-First give every claim a status from its evidence: SUPPORTED or CONTRADICTED (cite the card), or NOT_ADDRESSED.
+Claims waiting for your judgement: {to_judge}
+Give a status to exactly these claims, no others: SUPPORTED or CONTRADICTED (cite the card), or NOT_ADDRESSED.
 {status_rule}
 Then compare the live hypotheses against ALL findings, and decide your actions.
 {respond_rule}
@@ -103,7 +107,7 @@ Reply in this JSON format:
   "reasoning": "<compare the hypotheses against all findings>",
   "responses": [{{"issue": "<I1>", "reply": "<how you resolved it>", "evidence": "<E#, F# or none>"}}],
   "actions": [{{"tool": "<tool name>"}}],
-  "leading": {{"hypothesis": "<name>", "answer": "<your answer to what is asked, in a few words>"}}}}"""
+  "leading": {{"hypothesis": "<name>", "answer": "<the specific answer to what is asked, e.g. a drug, a structure, a test>"}}}}"""
 
 STATUS_RULE_LIBRARY = "Use only the cards for SUPPORTED / CONTRADICTED; with no relevant card the status is NOT_ADDRESSED."
 STATUS_RULE_NO_LIBRARY = ("The library is switched off for this case: judge each claim from your own knowledge "

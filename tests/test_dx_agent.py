@@ -198,3 +198,26 @@ def test_select_mode_reveals_options_only_at_the_end(toy_retriever):
     # Only the mapper and the final selection ever see the options list.
     seen = [p for p in llm.prompts if "A. Pneumothorax" in p]
     assert len(seen) == 2 and "Your work-up" in seen[-1]
+
+
+def test_invented_claim_ids_and_repeated_claims_are_ignored(toy_retriever):
+    toy_retriever.reranker = OverlapReranker()
+
+    def chatty_agent(prompt):
+        # Judges a real claim, invents C99, and asks for a claim PE already has.
+        return json.dumps({"claim_status": [{"claim": "C1", "status": "SUPPORTED", "card": "E1"},
+                                            {"claim": "C99", "status": "SUPPORTED", "card": "none"}],
+                           "actions": [{"tool": "consult_reference", "hypothesis": "Pulmonary embolism",
+                                        "claim": "D-dimer is raised in pulmonary embolism", "about": "tests"},
+                                       {"tool": "request_critique"}],
+                           "leading": {"hypothesis": "Pulmonary embolism", "answer": "Pulmonary embolism"}})
+
+    llm = FakeLLM([("Propose up to", frame_reply), ("turn(s) left", chatty_agent),
+                   ("Review, in this order", critic_reply), ("Answers to match", map_reply)])
+    trace = DxAgent(llm, toy_retriever, max_rounds=1)(MCQ("q5", CASE, OPTIONS, "B"))["trace"]
+
+    pe_claims = trace["hypotheses"]["Pulmonary embolism"]["claims"]
+    assert len(pe_claims) == 1                          # the repeat was not added again
+    assert pe_claims[0]["status"] == "SUPPORTED"
+    all_claims = [c for h in trace["hypotheses"].values() for c in h["claims"]]
+    assert all(c["text"] != "C99" for c in all_claims)
