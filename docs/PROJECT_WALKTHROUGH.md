@@ -124,7 +124,7 @@ Folder map (only what matters):
 | `src/clinical_agent/rag/` | Prompts, baselines, DDx-RAG v1, DxAgent |
 | `src/clinical_agent/evaluation/` | MIRAGE loader/runner, statistics |
 | `scripts/` | Build indexes, run benchmarks, analyse results, serve vLLM |
-| `tests/` | 39 CPU-only tests with a fake LLM and a toy corpus |
+| `tests/` | 35 CPU-only tests with a fake LLM and a toy corpus |
 | `src/clinical_agent/{agent,graph,llm_client}.py`, `tools/` | The original LangGraph clinical agent |
 
 ---
@@ -195,8 +195,9 @@ words). Small models sometimes copy the example JSON instead of filling it in.
 `A/B/C/...` (the model echoing the format hint) and words like `BETA`. Then free-text fallbacks
 (`"answer is (B)"`), each with `(?!/)` to avoid the same echo.
 
-**`parallel_map(fn, items, workers)`** — a `ThreadPoolExecutor`. Threads are enough because the
-work is waiting on the server; vLLM batches all concurrent requests on the GPU.
+(The thread pool that runs many questions at once lives in `evaluation/mirage.py: run_method`.
+Threads are enough because each one mostly waits for the server, and vLLM batches all waiting
+requests together on the GPU.)
 
 ### 4.3 `retrieval/corpus.py` — getting and cutting the documents
 - `Snippet(id, title, content, source)`; `.text` = title + content (what we index).
@@ -229,8 +230,8 @@ work is waiting on the server; vLLM batches all concurrent requests on the GPU.
 ### 4.5 `retrieval/search.py` — the hybrid retriever (the heart of the RAG)
 
 **Data classes**
-- `Query(text, intent, about)` — `intent` is a label like SUPPORT / REFUTE (used by DDx-RAG v1).
-- `Evidence(row, snippet, text, score, intents, queries)` — one retrieved snippet plus why it was found.
+- Queries are plain strings.
+- `Evidence(row, snippet, text, score)` — one retrieved snippet, plus `source` and `title` copied from it.
 
 **`reciprocal_rank_fusion(rankings, k=60)`** — for each list, every row gets `1 / (k + rank)`;
 the sums decide the fused order. A passage ranked well by *both* BM25 and MedCPT beats one ranked
@@ -240,21 +241,21 @@ first by only one of them (the test `test_rrf_rewards_documents_ranked_well_by_b
 each other; duplicates waste the evidence budget.
 
 **`class Retriever`**
-- `load(index_dir, device, use_bm25, use_dense, use_reranker)` — loads `corpus.jsonl`, the BM25
-  folder, the FAISS embeddings and the cross-encoder.
-- `self._lock = threading.Lock()` — the benchmark runs many threads but there's one copy of each
-  torch model; the lock stops two threads from using a model at the same time.
+- `load_retriever(index_dir, device)` (a plain function at the bottom of the file) — loads
+  `corpus.jsonl`, the BM25 folder, the FAISS embeddings and the cross-encoder, then builds the Retriever.
+- `self.lock = threading.Lock()` — the benchmark runs many threads but there's one copy of each
+  torch model; the lock makes threads take turns using it.
 - `candidates(texts, k, mode)` — runs BM25 and/or dense search for a batch of queries, then RRF.
   If the requested index doesn't exist it falls back to the one that does (a bug we hit early).
-- `search_many(queries, budget=10, per_query=2, pool=30, mode, rerank, min_score, dedupe, expand)`:
+- `search_many(queries, budget=10, per_query=2, pool=30, mode, rerank, dedupe, expand)`:
   1. **Candidates:** `pool` fused candidates per query (inside the lock).
   2. **Re-rank:** the cross-encoder re-scores each query's candidates.
-  3. **Quota pass (4a):** each query first gets its own top `per_query` hits. Without this, a few
-     strong queries would fill the whole budget and the "refute" evidence would never get in.
+  3. **Quota pass (4a):** each query first gets its own top `per_query` hits. Without this, one
+     strong query could fill the whole budget by itself (RAG² searches with its rationale AND the
+     question, and both should be heard).
   4. **Fill (4b):** the remaining budget goes to the best leftovers from any query.
-  5. `take()` merges a snippet found by two queries (records both reasons) and skips near-duplicates.
-  6. **Noise (optional):** random snippets for robustness tests.
-  7. **Expand:** each snippet gets ±400 characters of its neighbouring paragraphs, but only from the
+  5. `add_if_new()` skips a snippet that's already chosen or is a near-copy of one.
+  6. **Expand:** each snippet gets ±400 characters of its neighbouring paragraphs, but only from the
      same section — "retrieve small, read big", so a snippet starting "It is contraindicated..."
      still says what "it" is.
 - `search(text, k)` — single-query convenience wrapper (what vanilla RAG uses).
@@ -288,7 +289,7 @@ This turns a short claim into a few **evidence cards** that read on their own.
      are scored together, so none goes "first";
   3. per claim, the best sentences become at most 2 cards from **different documents** (two cards =
      two independent sources); each card keeps up to 3 good sentences of its chunk, completed by
-     `complete()` (previous sentence for "It...", the list after "include:"), in original order,
+     `complete_sentence()` (previous sentence for "It...", the list after "include:"), in original order,
      headed by `source_header()` ("StatPearls: Silicosis, Introduction"). Below `min_score`
      nothing is returned, and the agent sees **"NOT FOUND"** rather than loosely related filler.
 
@@ -305,9 +306,8 @@ This turns a short claim into a few **evidence cards** that read on their own.
   both the rationale (textbook language) and the question (patient story).
 - `IMedRAG` — 3 rounds × 3 follow-up questions, each answered by vanilla RAG, then a final answer.
   Note: like the original, it sees the options while writing follow-ups.
-- `DDxRAG` (v1, ours) — votes → option-free plan with SUPPORT / DISCRIMINATE / REFUTE queries →
-  gate by agreement → quota retrieval → cited fact-check → decide. Kept for reproducibility; its
-  results are the evidence for why the final design changed.
+- DDx-RAG v1 (our first idea) was removed from the code once the agent replaced it; its results
+  are in the implementation log and its code is in the git history.
 - `METHODS` maps names to classes; `RETRIEVAL_FREE = {"cot", "cot_sc"}` lets the runner skip
   loading the 3 GB index for those.
 
@@ -344,7 +344,7 @@ answer-changing if it writes the alternative answer.
   matcher, which must never see the patient story.
 
 ### 5.3 `WorkUp` — everything known about one case
-A dataclass: `findings`, `asked`, `hypotheses` (name → why, worst_fit, status, origin, claims,
+A plain class whose `__init__` sets: `findings`, `asked`, `hypotheses` (name → why, worst_fit, status, origin, claims,
 rule_out), `claims` ("C1" → hypothesis, text, about, cards, status, card), `cards` ("E1" → card),
 `issues` ("I1" → critic objection), `leading` (current best hypothesis + answer), `turns`,
 `critiques`, `notes_for_agent`, `events` (a diary), `parse_failures`, `raw_failures`.
@@ -482,7 +482,6 @@ mixes up "diagnosis" with "what the question asks" — exactly the two-hop weakn
 - `load_questions(dataset)` — MIRAGE's `benchmark.json` (MedQA, MMLU-Med, MedMCQA, PubMedQA*, BioASQ)
   or `medqa_dev`: a fixed sample of 300 MedQA **training** questions (seed 0) for tuning — the test
   sets are never used for tuning. `--limit` takes the first N of that same sample.
-- `shuffle_options_of()` — robustness test: same question, options reordered, gold letter moved along.
 - `run_method()` — answers every question not already in the output file (**resumable**), in
   parallel threads; each row stores id, gold, pred, correct, usage (calls/tokens), error, trace. One
   failing question records its error instead of killing a two-hour run; each line is flushed.
@@ -494,22 +493,21 @@ mixes up "diagnosis" with "what the question asks" — exactly the two-hop weakn
 - `wilson_interval(correct, total)`.
 - `mcnemar_exact(a, b)` — b01 = A wrong & B right, b10 = A right & B wrong; under "no difference"
   each disagreement is a coin flip; exact binomial two-sided p-value.
-- `help_harm()` — fixed vs broke counts.
 
 ### 7.3 Scripts
 - `build_index.py download|build` — downloads corpora; builds BM25 and MedCPT embeddings; refuses
   to run on CPU by accident (the server's torch once silently lost the GPU).
 - `run_mirage.py` — `--dataset --methods --limit --workers --set k=v --tag --run-name
-  --shuffle-options --noise --report-only`. `--set` values are passed only to methods whose
-  constructor accepts them (`inspect.signature`). Writes `<method>.config.json` next to results.
-- `analyze_results.py` — gate signal by agreement, light vs full path, good vs bad overrules,
-  evidence by intent, per-subject accuracy, fixed/broke ids, and for the agent: harm, recovery,
-  critic activity, open issues, mapping fallbacks.
+  --report-only`. `--set key=value` values are turned into numbers / True / False where they look
+  like one and passed to the method's constructor. Writes `<method>.config.json` next to results.
+- `analyze_results.py` — every method's accuracy split by how much the 5 votes agree (the
+  "retrieval hurts when sure" table), per-subject accuracy, fixed/broke ids, and for the agent:
+  harm, recovery, critic activity, open issues, mapping fallbacks.
 - `serve_vllm.sh` — `vllm serve` with bf16, max length 16,384, `--gpu-memory-utilization`
   (`GPU_UTIL`), `--max-num-seqs` (`MAX_SEQS`), prefix caching, optional `QUANT=fp8`; serves the
   local snapshot folder so it works offline.
 
-### 7.4 Tests (39, CPU only, ~1.5 min)
+### 7.4 Tests (35, CPU only, ~1.5 min)
 `conftest.py` provides a 6-snippet toy corpus with a BM25-only retriever and a `FakeLLM` that replies
 by keyword. Tests cover RRF, de-duplication, quotas, neighbour expansion, the StatPearls chunker,
 answer parsing (incl. the `A/B/C/...` echo), every baseline's flow, statistics, and the agent: options

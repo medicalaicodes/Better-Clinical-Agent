@@ -1,7 +1,7 @@
-"""Medical knowledge retrieval: corpora, sparse/dense indexes, and the hybrid retriever."""
+"""Medical retrieval: the corpora, the three search engines, and the hybrid retriever."""
 
 from .corpus import CorpusStore, Snippet, load_corpora
-from .search import Evidence, Query, Retriever, reciprocal_rank_fusion
+from .search import Evidence, Retriever, load_retriever, reciprocal_rank_fusion
 
-__all__ = ["CorpusStore", "Snippet", "load_corpora", "Evidence", "Query", "Retriever",
+__all__ = ["CorpusStore", "Snippet", "load_corpora", "Evidence", "Retriever", "load_retriever",
            "reciprocal_rank_fusion"]

@@ -1,6 +1,4 @@
-import random
-
-from src.clinical_agent.evaluation.mirage import comparison_table, shuffle_options_of, run_method
+from src.clinical_agent.evaluation.mirage import comparison_table, run_method
 from src.clinical_agent.evaluation.stats import mcnemar_exact, wilson_interval
 from src.clinical_agent.rag import MCQ
 
@@ -19,13 +17,6 @@ def test_mcnemar_only_counts_discordant_pairs():
     result = mcnemar_exact(a, b)
     assert (result["b01"], result["b10"]) == (10, 2)
     assert result["p_value"] < 0.05
-
-
-def test_option_shuffle_keeps_the_gold_answer_text():
-    q = MCQ("x", "?", {"A": "alpha", "B": "beta", "C": "gamma", "D": "delta"}, answer="C")
-    shuffled = shuffle_options_of(q, random.Random(3))
-    assert shuffled.options[shuffled.answer] == "gamma"
-    assert sorted(shuffled.options.values()) == sorted(q.options.values())
 
 
 def test_runner_resumes_and_reports(tmp_path):

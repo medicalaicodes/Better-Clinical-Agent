@@ -1,95 +1,101 @@
 """
-The medical knowledge corpora we search.
+The medical texts we search, and how we get them onto disk.
 
-We use exactly the snippet-level corpora of MedRAG / MIRAGE (Xiong et al., ACL Findings 2024),
-so our retrieval is comparable with the published baselines:
+We use exactly the same corpora as the MedRAG / MIRAGE paper (Xiong et al., 2024), so our
+numbers can be compared with theirs:
 
-  Textbooks   18 USMLE textbooks (from MedQA), ~125.8k snippets.
-              Downloaded from the HuggingFace dataset `MedRAG/textbooks`.
-  StatPearls  ~9.3k clinical decision-support articles, ~301k snippets.
-              Not on HuggingFace, so we download NCBI's dump (~2 GB) and cut it into snippets
-              with a port of MedRAG's own chunker, so our snippet boundaries match theirs.
+  Textbooks   18 USMLE textbooks, about 125,800 snippets. Downloaded ready-made from the
+              Hugging Face dataset "MedRAG/textbooks".
+  StatPearls  about 9,300 clinical articles, about 301,000 snippets. Not on Hugging Face, so we
+              download NCBI's archive (~2 GB) and cut every article into snippets ourselves,
+              using the same rules as MedRAG's own chunker.
 
-On disk, each corpus is a folder of jsonl files:
-    <corpus_dir>/<name>/chunk/*.jsonl      one {"id", "title", "content"} per line
+On disk every corpus is a folder of .jsonl files, one snippet per line:
+    <corpus_dir>/<name>/chunk/*.jsonl      {"id": ..., "title": ..., "content": ...}
 
-All corpora are then merged into one in-memory CorpusStore. A snippet's row number in the
-store is its id inside every index (BM25 and FAISS), so the row order must never change
-between building and loading. That is why the store is saved as one consolidated file.
+Important: a snippet's position (its "row") in the CorpusStore is also its number inside the
+BM25 index and the FAISS index. So the order must never change between building and loading.
+That's why the whole corpus is saved once as a single corpus.jsonl next to the indexes.
 """
 
 import json
 import os
 import tarfile
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence
 
 STATPEARLS_URL = "https://ftp.ncbi.nlm.nih.gov/pub/litarch/3d/12/statpearls_NBK430685.tar.gz"
 
 
-@dataclass(frozen=True)
 class Snippet:
-    """One retrievable unit of text."""
-    id: str          # e.g. "First_Aid_Step2_496" or "article-12345_3"
-    title: str       # book name, or "Article -- Section -- Subsection" for StatPearls
-    content: str
-    source: str      # "textbooks" | "statpearls"
+    """One searchable piece of text."""
 
-    @property
-    def text(self) -> str:
-        """Title + content: the form we give to BM25 and the cross-encoder.
-        The title carries the topic ("Pulmonary Embolism -- Evaluation") that the
-        paragraph itself often never repeats."""
-        if self.title:
-            return f"{self.title}. {self.content}"
-        return self.content
+    def __init__(self, id, title, content, source):
+        self.id = id              # e.g. "First_Aid_Step2_496" or "article-12345_3"
+        self.title = title        # book name, or "Article -- Section -- Subsection" for StatPearls
+        self.content = content
+        self.source = source      # "textbooks" or "statpearls"
+
+        # What we actually index: the title often says what the paragraph is about
+        # ("Pulmonary Embolism -- Evaluation") even when the paragraph itself never does.
+        if title:
+            self.text = title + ". " + content
+        else:
+            self.text = content
 
 
 class CorpusStore:
-    """All snippets, stored column by column (four parallel lists) to keep memory low."""
+    """All snippets, kept as four plain lists instead of 427k objects (much less memory)."""
 
-    def __init__(self, snippets: Sequence[Snippet]):
-        self.ids: List[str] = [s.id for s in snippets]
-        self.titles: List[str] = [s.title for s in snippets]
-        self.contents: List[str] = [s.content for s in snippets]
-        self.sources: List[str] = [s.source for s in snippets]
+    def __init__(self, snippets):
+        self.ids = []
+        self.titles = []
+        self.contents = []
+        self.sources = []
+        for snippet in snippets:
+            self.ids.append(snippet.id)
+            self.titles.append(snippet.title)
+            self.contents.append(snippet.content)
+            self.sources.append(snippet.source)
 
-    def __len__(self) -> int:
+    def __len__(self):
         return len(self.ids)
 
-    def __getitem__(self, row: int) -> Snippet:
+    def __getitem__(self, row):
+        # corpus[row] gives back a Snippet, built on the fly from the four lists.
         return Snippet(self.ids[row], self.titles[row], self.contents[row], self.sources[row])
 
-    def texts(self) -> Iterator[str]:
-        for row in range(len(self)):
-            yield self[row].text
+    def texts(self):
+        all_texts = []
+        for row in range(len(self.ids)):
+            all_texts.append(self[row].text)
+        return all_texts
 
-    def save(self, path: str) -> None:
+    def save(self, path):
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
-            for row in range(len(self)):
+            for row in range(len(self.ids)):
                 record = {"id": self.ids[row], "title": self.titles[row],
                           "content": self.contents[row], "source": self.sources[row]}
                 f.write(json.dumps(record) + "\n")
 
-    @classmethod
-    def load(cls, path: str) -> "CorpusStore":
-        snippets = []
-        with open(path, encoding="utf-8") as f:
-            for line in f:
-                record = json.loads(line)
-                snippets.append(Snippet(record["id"], record["title"], record["content"], record["source"]))
-        return cls(snippets)
+
+def load_corpus_store(path):
+    snippets = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            record = json.loads(line)
+            snippets.append(Snippet(record["id"], record["title"], record["content"], record["source"]))
+    return CorpusStore(snippets)
 
 
 # ----------------------------------------------------------------------------------------
-# Reading chunked corpora
+# Reading the downloaded corpora
 # ----------------------------------------------------------------------------------------
 
-def iter_chunk_dir(chunk_dir: str, source: str) -> Iterator[Snippet]:
-    """Yields every snippet from a MedRAG-style folder of jsonl files (sorted, so the order
-    is the same on every machine)."""
+def read_chunk_dir(chunk_dir, source):
+    """Every snippet from a folder of .jsonl files. Files are read in sorted order, so the
+    snippet order (and therefore the row numbers) is the same on every machine."""
+    snippets = []
     for file_name in sorted(os.listdir(chunk_dir)):
         if not file_name.endswith(".jsonl"):
             continue
@@ -99,18 +105,18 @@ def iter_chunk_dir(chunk_dir: str, source: str) -> Iterator[Snippet]:
                 if not line:
                     continue
                 record = json.loads(line)
-                yield Snippet(id=record["id"], title=record.get("title", ""),
-                              content=record["content"], source=source)
+                snippets.append(Snippet(record["id"], record.get("title", ""), record["content"], source))
+    return snippets
 
 
-def load_corpora(root: str, names: Iterable[str]) -> CorpusStore:
-    snippets: List[Snippet] = []
+def load_corpora(root, names):
+    snippets = []
     for name in names:
         chunk_dir = os.path.join(root, name, "chunk")
         if not os.path.isdir(chunk_dir):
             raise FileNotFoundError(f"Corpus '{name}' not found at {chunk_dir}. "
                                     f"Run: python scripts/build_index.py download --corpora {name}")
-        snippets.extend(iter_chunk_dir(chunk_dir, source=name))
+        snippets += read_chunk_dir(chunk_dir, name)
     return CorpusStore(snippets)
 
 
@@ -118,8 +124,8 @@ def load_corpora(root: str, names: Iterable[str]) -> CorpusStore:
 # Downloading
 # ----------------------------------------------------------------------------------------
 
-def download_textbooks(root: str) -> str:
-    """MedRAG/textbooks from HuggingFace: already chunked, ~210 MB."""
+def download_textbooks(root):
+    """MedRAG/textbooks from Hugging Face: already cut into snippets, about 210 MB."""
     from huggingface_hub import snapshot_download
 
     destination = os.path.join(root, "textbooks")
@@ -128,8 +134,8 @@ def download_textbooks(root: str) -> str:
     return destination
 
 
-def download_statpearls(root: str, keep_archive: bool = False) -> str:
-    """Downloads the NCBI StatPearls dump (~2 GB), unpacks it, and chunks every article."""
+def download_statpearls(root, keep_archive=False):
+    """Downloads the StatPearls archive from NCBI (~2 GB), unpacks it, and chunks every article."""
     import requests
     from tqdm import tqdm
 
@@ -138,26 +144,27 @@ def download_statpearls(root: str, keep_archive: bool = False) -> str:
     archive = os.path.join(destination, "statpearls_NBK430685.tar.gz")
     raw_dir = os.path.join(destination, "statpearls_NBK430685")
 
-    # 1. Download (to a .part file first, so an interrupted download is never mistaken
-    #    for a finished one) and unpack.
+    # 1. Download and unpack. We write to a ".part" file and rename it only when the download
+    #    finished, so a half-downloaded file is never mistaken for a complete one.
     if not os.path.isdir(raw_dir):
         if not os.path.exists(archive):
             with requests.get(STATPEARLS_URL, stream=True, timeout=60) as response:
                 response.raise_for_status()
                 total = int(response.headers.get("content-length", 0))
-                with open(archive + ".part", "wb") as f, \
-                        tqdm(total=total, unit="B", unit_scale=True, desc="StatPearls") as bar:
-                    for block in response.iter_content(chunk_size=1 << 20):
+                bar = tqdm(total=total, unit="B", unit_scale=True, desc="StatPearls")
+                with open(archive + ".part", "wb") as f:
+                    for block in response.iter_content(chunk_size=1024 * 1024):
                         f.write(block)
                         bar.update(len(block))
+                bar.close()
             os.replace(archive + ".part", archive)
 
         with tarfile.open(archive) as tar:
-            tar.extractall(destination, filter="data")
+            tar.extractall(destination, filter="data")    # "data" blocks files escaping the folder
         if not keep_archive:
             os.remove(archive)
 
-    # 2. Chunk each article (.nxml) into snippets, one jsonl file per article.
+    # 2. Cut each article (.nxml file) into snippets, one .jsonl file per article.
     chunk_dir = os.path.join(destination, "chunk")
     os.makedirs(chunk_dir, exist_ok=True)
     for file_name in sorted(os.listdir(raw_dir)):
@@ -166,98 +173,110 @@ def download_statpearls(root: str, keep_archive: bool = False) -> str:
         try:
             snippets = chunk_statpearls_article(os.path.join(raw_dir, file_name))
         except ET.ParseError:
-            continue          # a handful of files in the dump are malformed XML
+            continue          # a handful of files in the dump are broken XML; we skip them
         if not snippets:
             continue
         out_path = os.path.join(chunk_dir, file_name.replace(".nxml", ".jsonl"))
         with open(out_path, "w", encoding="utf-8") as f:
-            f.write("\n".join(json.dumps(s) for s in snippets))
+            lines = []
+            for snippet in snippets:
+                lines.append(json.dumps(snippet))
+            f.write("\n".join(lines))
     return destination
 
 
 # ----------------------------------------------------------------------------------------
-# StatPearls chunker: a port of MedRAG/src/data/statpearls.py (same snippet boundaries)
-#
-# Rules, in plain words:
+# The StatPearls chunker - same rules as MedRAG's statpearls.py, so snippet boundaries match:
 #   - every <sec> section is walked paragraph by paragraph;
 #   - each snippet's title is "Article -- Section -- Subsection";
-#   - a short paragraph (< 200 chars) is glued onto the previous snippet if the result
-#     stays under 1000 chars, so we don't create tiny, context-free snippets;
-#   - lists are glued on or kept whole when short, split item by item when long.
+#   - a short paragraph (under 200 characters) is glued onto the previous snippet if the
+#     result stays under 1,000 characters, so we don't get tiny snippets with no context;
+#   - a list is glued on or kept whole when short, and split item by item when long.
 # ----------------------------------------------------------------------------------------
 
-def _xml_text(element: ET.Element) -> str:
-    """All the text inside an XML element, including nested tags, as one string."""
+def xml_text(element):
+    """All the text inside an XML element, including text in nested tags, as one string."""
     text = (element.text or "").strip()
     for child in element:
-        child_text = _xml_text(child)
-        text = (text + " " + child_text) if text else child_text
+        child_text = xml_text(child)
+        if text:
+            text = text + " " + child_text
+        else:
+            text = child_text
         if child.tail and child.tail.strip():
-            text = (text + " " + child.tail.strip()) if text else child.tail.strip()
+            if text:
+                text = text + " " + child.tail.strip()
+            else:
+                text = child.tail.strip()
     return text.strip()
 
 
-def _is_subtitle(element: ET.Element) -> bool:
-    """A paragraph that is only a <bold> run acts as a subsection heading."""
+def is_subtitle(element):
+    """A paragraph that is nothing but one bold run works as a subsection heading."""
     children = list(element)
     if element.tag != "p" or len(children) != 1 or children[0].tag != "bold":
         return False
     tail = children[0].tail
-    return not (tail and tail.strip())
+    if tail and tail.strip():
+        return False
+    return True
 
 
-def chunk_statpearls_article(path: str) -> List[Dict[str, str]]:
+def chunk_statpearls_article(path):
     article_id = os.path.basename(path).replace(".nxml", "")
     root = ET.parse(path).getroot()
     title_element = root.find(".//title")
-    article_title = (title_element.text or "").strip() if title_element is not None else article_id
+    if title_element is not None:
+        article_title = (title_element.text or "").strip()
+    else:
+        article_title = article_id
 
-    snippets: List[Dict[str, str]] = []
-
-    def start_new_snippet(prefix: str, content: str) -> Dict[str, str]:
-        snippet = {"id": f"{article_id}_{len(snippets)}", "title": prefix, "content": content}
-        snippets.append(snippet)
-        return snippet
+    snippets = []
 
     for section in root.findall(".//sec"):
-        section_title_element = section.find("./title")
         section_title = ""
+        section_title_element = section.find("./title")
         if section_title_element is not None:
             section_title = (section_title_element.text or "").strip()
 
-        prefix = " -- ".join([article_title, section_title])
-        last: Optional[Dict[str, str]] = None      # the snippet we may still glue text onto
+        prefix = article_title + " -- " + section_title
+        last = None                 # the snippet we may still glue short text onto
         previous_element = None
 
         for element in section:
-            if _is_subtitle(element):
+            if is_subtitle(element):
                 last = None
-                subtitle = _xml_text(element)
-                prefix = " -- ".join(prefix.split(" -- ")[:2] + [subtitle])
+                subtitle = xml_text(element)
+                prefix = article_title + " -- " + section_title + " -- " + subtitle
 
             elif element.tag == "p":
-                paragraph = _xml_text(element)
-                short = len(paragraph) < 200
-                if short and last is not None and len(last["content"] + paragraph) < 1000:
+                paragraph = xml_text(element)
+                is_short = len(paragraph) < 200
+                if is_short and last is not None and len(last["content"] + paragraph) < 1000:
                     last["content"] = last["content"] + " " + paragraph
                 else:
-                    last = start_new_snippet(prefix, paragraph)
+                    last = {"id": f"{article_id}_{len(snippets)}", "title": prefix, "content": paragraph}
+                    snippets.append(last)
 
             elif element.tag == "list":
-                items = [_xml_text(item) for item in element]
+                items = []
+                for item in element:
+                    items.append(xml_text(item))
                 joined = " ".join(items)
+
                 if last is not None and len(joined + last["content"]) < 1000:
-                    last["content"] = " ".join([last["content"]] + items)
+                    last["content"] = last["content"] + " " + joined
                 elif len(joined) < 1000:
-                    last = start_new_snippet(prefix, joined)
+                    last = {"id": f"{article_id}_{len(snippets)}", "title": prefix, "content": joined}
+                    snippets.append(last)
                 else:
                     last = None
                     for item in items:
-                        start_new_snippet(prefix, item)
+                        snippets.append({"id": f"{article_id}_{len(snippets)}", "title": prefix, "content": item})
 
-                # A list right after a subtitle ends that subsection.
-                if previous_element is not None and _is_subtitle(previous_element):
-                    prefix = " -- ".join([article_title, section_title])
+                # A list right after a subtitle closes that subsection.
+                if previous_element is not None and is_subtitle(previous_element):
+                    prefix = article_title + " -- " + section_title
 
             previous_element = element
 

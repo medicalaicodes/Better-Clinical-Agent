@@ -1,43 +1,51 @@
 """
-Small statistics helpers for comparing methods on the same questions.
+Two small statistics helpers.
 
-Why these: with ~1,200 questions a 2-point accuracy gap can be noise. Wilson intervals show
-the uncertainty of each number; McNemar's exact test compares two methods *on the same
-questions* (paired), which is far more sensitive than comparing two independent intervals.
+Why we need them: with ~1,200 questions, a 2-point accuracy difference can easily be luck.
+  - The Wilson interval shows how uncertain one accuracy number is.
+  - McNemar's test compares two methods on the SAME questions, which is much more sensitive
+    than comparing two accuracy numbers, because it only looks at where they disagree.
 """
 
 import math
-from typing import Dict, Sequence, Tuple
 
 
-def wilson_interval(correct: int, total: int, z: float = 1.96) -> Tuple[float, float]:
-    """95% Wilson score interval for a proportion (better than +-1.96*SE near 0 or 1)."""
+def wilson_interval(correct, total, z=1.96):
+    """The 95% Wilson interval for an accuracy. Unlike the simple "p +- 1.96 * SE" formula,
+    it stays sensible near 0% and 100% and for small numbers of questions."""
     if total == 0:
         return (0.0, 0.0)
     p = correct / total
-    denom = 1 + z * z / total
-    centre = (p + z * z / (2 * total)) / denom
-    half = z * math.sqrt(p * (1 - p) / total + z * z / (4 * total * total)) / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
+    denominator = 1 + z * z / total
+    centre = (p + z * z / (2 * total)) / denominator
+    half_width = z * math.sqrt(p * (1 - p) / total + z * z / (4 * total * total)) / denominator
+    return (max(0.0, centre - half_width), min(1.0, centre + half_width))
 
 
-def mcnemar_exact(a_correct: Sequence[bool], b_correct: Sequence[bool]) -> Dict[str, float]:
-    """Exact (binomial) McNemar test on paired outcomes.
+def mcnemar_exact(a_correct, b_correct):
+    """Exact McNemar test for two methods answering the same questions.
 
-    Only discordant questions matter: b01 = A wrong & B right, b10 = A right & B wrong.
-    Under H0 (no difference) each discordant question is a fair coin flip.
+    Only the questions where they disagree matter:
+        b01 = A wrong but B right      (B "fixed" these)
+        b10 = A right but B wrong      (B "broke" these)
+    If the two methods were equally good, each disagreement would be a fair coin flip, so we
+    ask how likely a split at least this uneven would be by chance (a two-sided binomial test).
     """
-    b01 = sum(1 for a, b in zip(a_correct, b_correct) if not a and b)
-    b10 = sum(1 for a, b in zip(a_correct, b_correct) if a and not b)
+    b01 = 0
+    b10 = 0
+    for a, b in zip(a_correct, b_correct):
+        if not a and b:
+            b01 += 1
+        if a and not b:
+            b10 += 1
+
     n = b01 + b10
     if n == 0:
         return {"b01": 0, "b10": 0, "p_value": 1.0}
-    k = min(b01, b10)
-    tail = sum(math.comb(n, i) for i in range(k + 1)) / 2 ** n
-    return {"b01": b01, "b10": b10, "p_value": min(1.0, 2 * tail)}
 
-
-def help_harm(baseline_correct: Sequence[bool], method_correct: Sequence[bool]) -> Dict[str, int]:
-    """How often a method fixes vs breaks the baseline's answer (e.g. RAG vs closed-book)."""
-    stats = mcnemar_exact(baseline_correct, method_correct)
-    return {"fixed": stats["b01"], "broke": stats["b10"]}
+    smaller = min(b01, b10)
+    one_tail = 0
+    for i in range(smaller + 1):
+        one_tail += math.comb(n, i)
+    one_tail = one_tail / 2 ** n
+    return {"b01": b01, "b10": b10, "p_value": min(1.0, 2 * one_tail)}

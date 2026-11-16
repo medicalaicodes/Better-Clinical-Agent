@@ -33,15 +33,10 @@ after a critique. Whatever doubts are still open at the end are kept as "uncerta
 import json
 import random
 import re
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
-
-from ..llm import LLM, is_placeholder, parse_choice, parse_json
-from ..retrieval import Retriever
+from ..llm import is_placeholder, parse_choice, parse_json
 from ..retrieval.evidence_tool import EvidenceTool
 from . import agent_prompts as P
 from . import prompts
-from .methods import MCQ
 
 CLAIM_STATUSES = ("SUPPORTED", "CONTRADICTED", "NOT_ADDRESSED")
 
@@ -50,7 +45,7 @@ CLAIM_STATUSES = ("SUPPORTED", "CONTRADICTED", "NOT_ADDRESSED")
 # Small helpers for reading what the model wrote
 # ----------------------------------------------------------------------------------------
 
-def text_from(value) -> str:
+def text_from(value):
     """A piece of text the model wrote, or "" if it is missing or just the template echoed back
     (8B models sometimes copy "<name>" from the example instead of filling it in)."""
     if not isinstance(value, str):
@@ -60,7 +55,7 @@ def text_from(value) -> str:
     return value.strip()
 
 
-def id_from(value) -> str:
+def id_from(value):
     """An id like "e3 " or "(F4)" turned into "E3" / "F4".
     This can't go through text_from(): an id has no real words, so it would look like a placeholder."""
     if not isinstance(value, str):
@@ -68,7 +63,7 @@ def id_from(value) -> str:
     return value.strip().strip(".()[]").upper()
 
 
-def list_from(parsed: dict, key: str) -> list:
+def list_from(parsed, key):
     """parsed[key] if it is a list, otherwise an empty list - the model sometimes writes null."""
     value = parsed.get(key)
     if isinstance(value, list):
@@ -76,7 +71,7 @@ def list_from(parsed: dict, key: str) -> list:
     return []
 
 
-def question_sentence(question: str) -> str:
+def question_sentence(question):
     """Just the question itself, e.g. "Which of the following is the most likely diagnosis?".
     The answer-matching step gets this line, but never the patient's story."""
     sentences = re.split(r"(?<=[.!?])\s+", question.strip())
@@ -92,42 +87,42 @@ def question_sentence(question: str) -> str:
 # The work-up: everything the agent has figured out so far about one case
 # ----------------------------------------------------------------------------------------
 
-@dataclass
 class WorkUp:
-    findings: List[str] = field(default_factory=list)       # "F1", "F2", ... in that order
-    asked: str = ""                                          # what the question wants, in words
-    hypotheses: Dict[str, dict] = field(default_factory=dict)   # name -> details, see add_hypothesis
-    claims: Dict[str, dict] = field(default_factory=dict)       # "C1" -> claim, see add_claim
-    cards: Dict[str, dict] = field(default_factory=dict)        # "E1" -> evidence card
-    issues: Dict[str, dict] = field(default_factory=dict)       # "I1" -> one critic objection
-    leading: Dict[str, str] = field(default_factory=dict)       # current best {"hypothesis", "answer"}
-    turns: int = 0
-    critiques: int = 0
-    notes_for_agent: List[str] = field(default_factory=list)    # shown once on the next turn
-    events: List[dict] = field(default_factory=list)            # a diary of what happened
-    parse_failures: int = 0
-    raw_failures: List[str] = field(default_factory=list)       # unreadable replies, kept to debug
+    def __init__(self):
+        self.findings = []           # F1, F2, ... in this order
+        self.asked = ""              # what the question really wants, in words
+        self.hypotheses = {}         # name -> details (see add_hypothesis)
+        self.claims = {}             # "C1" -> one claim to check (see add_claim)
+        self.cards = {}              # "E1" -> one evidence card from the library
+        self.issues = {}             # "I1" -> one objection from the critic
+        self.leading = {}            # the current best guess: {"hypothesis": ..., "answer": ...}
+        self.turns = 0
+        self.critiques = 0
+        self.notes_for_agent = []    # messages for the agent's next turn, shown once
+        self.events = []             # a diary of everything that happened
+        self.parse_failures = 0
+        self.raw_failures = []       # replies we couldn't read, kept so we can see why
 
-    def log(self, event: str, **details) -> None:
+    def log(self, event, **details):
         entry = {"turn": self.turns, "event": event}
         entry.update(details)
         self.events.append(entry)
 
-    def live_hypotheses(self) -> List[str]:
+    def live_hypotheses(self):
         names = []
         for name, hypothesis in self.hypotheses.items():
             if hypothesis["status"] == "live":
                 names.append(name)
         return names
 
-    def open_issue_ids(self) -> List[str]:
+    def open_issue_ids(self):
         ids = []
         for issue_id, issue in self.issues.items():
             if not issue["resolved"]:
                 ids.append(issue_id)
         return ids
 
-    def claims_waiting_for_status(self) -> List[str]:
+    def claims_waiting_for_status(self):
         """Claims that have their evidence but haven't been judged yet."""
         ids = []
         for claim_id, claim in self.claims.items():
@@ -139,11 +134,9 @@ class WorkUp:
 class DxAgent:
     name = "dx_agent"
 
-    def __init__(self, llm: LLM, retriever: Optional[Retriever] = None,
-                 k: int = 4, claims: int = 2, max_rounds: int = 4, max_critiques: int = 2,
-                 max_new_hypotheses: int = 2, library: bool = True, critic: bool = True,
-                 article_first: bool = True, cards_per_claim: int = 2, min_score: float = 0.0,
-                 final: str = "map", max_tokens: int = 1500):
+    def __init__(self, llm, retriever=None, k=4, claims=2, max_rounds=4, max_critiques=2,
+                 max_new_hypotheses=2, library=True, critic=True, article_first=True,
+                 cards_per_claim=2, min_score=0.0, final="map", max_tokens=1500):
         self.llm = llm
         self.k = k                                   # how many hypotheses in the first list
         self.claims = claims                         # claims per hypothesis, per turn
@@ -175,7 +168,7 @@ class DxAgent:
     # ====================================================================================
     # One whole question, start to finish
     # ====================================================================================
-    def __call__(self, q: MCQ) -> dict:
+    def __call__(self, q):
         workup = self.frame(q)
         first_guess = dict(workup.leading)          # kept so we can tell later if the loop helped
         shuffler = random.Random(q.id)              # hypothesis order is shuffled, but repeatably
@@ -208,7 +201,7 @@ class DxAgent:
     # ====================================================================================
     # Talking to the model
     # ====================================================================================
-    def ask(self, workup: WorkUp, prompt: str, system: str, max_tokens: Optional[int] = None) -> dict:
+    def ask(self, workup, prompt, system, max_tokens=None):
         """Sends one prompt that must come back as a JSON object.
 
         json_mode makes vLLM physically unable to write broken JSON. Before we had it, about
@@ -229,7 +222,7 @@ class DxAgent:
     # ====================================================================================
     # Step 1 - FRAME: findings, what is asked, hypotheses, first guess
     # ====================================================================================
-    def frame(self, q: MCQ) -> WorkUp:
+    def frame(self, q):
         workup = WorkUp()
         prompt = P.FRAME_USER.format(question=q.question, k=self.k, claims=self.claims)
         parsed = self.ask(workup, prompt, P.AGENT_SYSTEM)
@@ -261,7 +254,7 @@ class DxAgent:
     # ====================================================================================
     # Keeping the work-up tidy
     # ====================================================================================
-    def find_hypothesis(self, workup: WorkUp, name) -> Optional[str]:
+    def find_hypothesis(self, workup, name):
         """The model rarely spells a name the same way twice ("TTP" vs "Thrombotic ... (TTP)"),
         so an exact match is tried first, then one name contained in the other."""
         name = text_from(name).lower()
@@ -275,7 +268,7 @@ class DxAgent:
                 return known
         return None
 
-    def add_claim(self, workup: WorkUp, hypothesis: str, text, about) -> bool:
+    def add_claim(self, workup, hypothesis, text, about):
         """Adds a claim to check. Returns False if it was empty or already there."""
         text = text_from(text)
         if not text:
@@ -298,7 +291,7 @@ class DxAgent:
         workup.hypotheses[hypothesis]["claims"].append(claim_id)
         return True
 
-    def add_hypothesis(self, workup: WorkUp, item: dict, added_by: str) -> Optional[str]:
+    def add_hypothesis(self, workup, item, added_by):
         name = text_from(item.get("name"))
         if not name:
             return None
@@ -324,7 +317,7 @@ class DxAgent:
         workup.log("add_hypothesis", by=added_by, name=name)
         return name
 
-    def look_up_new_claims(self, workup: WorkUp) -> None:
+    def look_up_new_claims(self, workup):
         """Sends every claim that hasn't been looked up yet to the library, all in one go."""
         waiting = []
         for claim_id, claim in workup.claims.items():
@@ -357,7 +350,7 @@ class DxAgent:
     # ====================================================================================
     # Writing the work-up out as text for the prompts
     # ====================================================================================
-    def findings_text(self, workup: WorkUp) -> str:
+    def findings_text(self, workup):
         if not workup.findings:
             return "(none extracted; read the case)"
         lines = []
@@ -365,7 +358,7 @@ class DxAgent:
             lines.append(f"F{number}. {finding}")
         return "\n".join(lines)
 
-    def dossier_text(self, workup: WorkUp, shuffler: random.Random) -> str:
+    def dossier_text(self, workup, shuffler):
         """Every hypothesis with its claims and cards. The order is shuffled each time, so the
         favourite isn't always sitting at the top where the model reads it first."""
         names = list(workup.hypotheses)
@@ -408,7 +401,7 @@ class DxAgent:
             blocks.append("\n".join(lines))
         return "\n\n".join(blocks)
 
-    def open_issues_text(self, workup: WorkUp) -> str:
+    def open_issues_text(self, workup):
         if not workup.open_issue_ids():
             return ""
         lines = ["", "Open issues from the critic:"]
@@ -417,7 +410,7 @@ class DxAgent:
             lines.append(f"{issue_id} ({issue['type']}): {issue['detail']} - to settle it: {issue['action']}")
         return "\n".join(lines) + "\n"
 
-    def notes_text(self, workup: WorkUp) -> str:
+    def notes_text(self, workup):
         """Messages from the harness, like "rule-out rejected". Each is shown once, then cleared."""
         if not workup.notes_for_agent:
             return ""
@@ -430,7 +423,7 @@ class DxAgent:
     # ====================================================================================
     # Steps 3 + 4 - the turns, with the critic in between
     # ====================================================================================
-    def run_turns(self, q: MCQ, workup: WorkUp, shuffler: random.Random) -> None:
+    def run_turns(self, q, workup, shuffler):
         answers_after_each_critique = []
 
         while workup.turns < self.max_rounds:
@@ -463,7 +456,7 @@ class DxAgent:
 
             self.look_up_new_claims(workup)     # the critic's new diagnoses need evidence too
 
-    def agent_turn(self, q: MCQ, workup: WorkUp, shuffler: random.Random):
+    def agent_turn(self, q, workup, shuffler):
         """One turn of the agent. Returns (wants the critic?, asked for new evidence?)."""
         workup.turns += 1
         has_open_issues = bool(workup.open_issue_ids())
@@ -515,7 +508,7 @@ class DxAgent:
         asked_for_more = new_claims > 0 or new_hypotheses > 0
         return wants_critique, asked_for_more
 
-    def read_claim_statuses(self, workup: WorkUp, parsed: dict, waiting: List[str]) -> None:
+    def read_claim_statuses(self, workup, parsed, waiting):
         for item in list_from(parsed, "claim_status"):
             if not isinstance(item, dict):
                 continue
@@ -530,7 +523,7 @@ class DxAgent:
             if card in workup.cards:
                 workup.claims[claim_id]["card"] = card
 
-    def read_replies_to_critic(self, workup: WorkUp, parsed: dict) -> None:
+    def read_replies_to_critic(self, workup, parsed):
         # Answering an objection closes it for now. The critic can reopen it next time,
         # but it sees the reply, so it has to engage with it rather than just repeat itself.
         for item in list_from(parsed, "responses"):
@@ -542,7 +535,7 @@ class DxAgent:
                 workup.issues[issue_id]["reply"] = reply
                 workup.issues[issue_id]["resolved"] = True
 
-    def run_tools(self, workup: WorkUp, parsed: dict):
+    def run_tools(self, workup, parsed):
         """Carries out the tool calls of one turn. Returns (critique wanted?, #claims, #hypotheses)."""
         wants_critique = False
         new_claims_per_hypothesis = {}
@@ -576,7 +569,7 @@ class DxAgent:
 
         return wants_critique, sum(new_claims_per_hypothesis.values()), new_hypotheses
 
-    def rule_out(self, workup: WorkUp, action: dict) -> None:
+    def rule_out(self, workup, action):
         """Drops a hypothesis - but only if the model points at something real: a card the
         library actually returned (E7) or a finding from the case (F3). "I just think so" is refused."""
         name = self.find_hypothesis(workup, action.get("hypothesis"))
@@ -610,7 +603,7 @@ class DxAgent:
     # ====================================================================================
     # The critic
     # ====================================================================================
-    def critique(self, q: MCQ, workup: WorkUp, shuffler: random.Random) -> List[str]:
+    def critique(self, q, workup, shuffler):
         """Runs the critic. Returns the ids of new objections serious enough to keep going."""
         workup.critiques += 1
 
@@ -672,7 +665,7 @@ class DxAgent:
                    alternative=text_from(strongest.get("hypothesis")))
         return blocking
 
-    def record_new_issues(self, workup: WorkUp, parsed: dict) -> List[str]:
+    def record_new_issues(self, workup, parsed):
         already_raised = set()
         for issue in workup.issues.values():
             already_raised.add(issue["detail"].lower())
@@ -709,7 +702,7 @@ class DxAgent:
     # ====================================================================================
     # Step 5 - turning the answer into an option letter
     # ====================================================================================
-    def match_to_options(self, q: MCQ, workup: WorkUp, answers: List[str]) -> List[Optional[str]]:
+    def match_to_options(self, q, workup, answers):
         """Which option means the same as each free-text answer. This call sees the options and
         the question sentence, but NOT the case - so it can't quietly solve the question itself."""
         unique = []
@@ -744,7 +737,7 @@ class DxAgent:
             results.append(letter_for.get(answer))
         return results
 
-    def pick_option(self, q: MCQ, workup: WorkUp) -> Optional[str]:
+    def pick_option(self, q, workup):
         """final="select": the options are revealed only here, after the whole work-up."""
         summary = []
         for name, hypothesis in workup.hypotheses.items():
@@ -779,8 +772,7 @@ class DxAgent:
     # ====================================================================================
     # What gets saved for every question
     # ====================================================================================
-    def trace(self, workup: WorkUp, first_guess: dict, first_choice: Optional[str],
-              open_choice: Optional[str], used_fallback: bool) -> dict:
+    def trace(self, workup, first_guess, first_choice, open_choice, used_fallback):
         # Claims written out in full under each hypothesis, so the trace reads on its own.
         hypotheses = {}
         for name, hypothesis in workup.hypotheses.items():

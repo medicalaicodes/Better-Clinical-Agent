@@ -20,14 +20,13 @@ Usage:
 import sys
 import json
 import argparse
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
-from src.clinical_agent.schemas import PatientCase, ClinicalReport, ToolResult
+from src.clinical_agent.schemas import PatientCase, ToolResult
 from src.clinical_agent.agent import AttendingClinicalAgent
 from src.clinical_agent.graph import ClinicalAgentGraph
 from src.clinical_agent.models import ensure_models_downloaded
 from src.clinical_agent.evaluation.sample_cases import BENCHMARK_CASES
-from src.clinical_agent.config import get_settings
 
 
 def print_banner(title: str, subtitle: str = ""):

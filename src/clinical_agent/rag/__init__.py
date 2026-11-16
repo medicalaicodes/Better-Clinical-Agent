@@ -1,8 +1,8 @@
-"""Medical question answering: baselines from the literature, DDx-RAG (v1) and DxAgent (ours)."""
+"""Medical question answering: the published baselines (methods.py) and our diagnostic agent (agent.py)."""
 
 from .agent import DxAgent
-from .methods import METHODS, MCQ, RETRIEVAL_FREE, DDxRAG, format_evidence
+from .methods import MCQ, METHODS, RETRIEVAL_FREE
 
-METHODS[DxAgent.name] = DxAgent
+METHODS["dx_agent"] = DxAgent
 
-__all__ = ["METHODS", "MCQ", "RETRIEVAL_FREE", "DDxRAG", "DxAgent", "format_evidence"]
+__all__ = ["MCQ", "METHODS", "RETRIEVAL_FREE", "DxAgent"]

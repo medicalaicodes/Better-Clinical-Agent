@@ -193,7 +193,7 @@ python -m pytest tests/ -q        # retrieval, RAG methods and stats tests run o
 ```bash
 python scripts/build_index.py download --corpora textbooks statpearls
 python scripts/build_index.py build --corpora textbooks statpearls
-python scripts/run_mirage.py --dataset medqa --methods cot medrag ddx_rag
+python scripts/run_mirage.py --dataset medqa --methods cot medrag dx_agent --set final=select
 ```
 
 Full instructions, ablations and robustness runs: [`docs/RUNNING_BENCHMARKS.md`](docs/RUNNING_BENCHMARKS.md).
@@ -248,7 +248,7 @@ src/clinical_agent/
 │   └── search.py           # hybrid search, RRF, rerank, quotas, dedupe, neighbour expansion
 ├── rag/
 │   ├── prompts.py          # baseline prompts (verbatim from MedRAG) + DDx-RAG prompts
-│   └── methods.py          # cot, cot_sc, medrag, rationale_rag, imedrag, ddx_rag
+│   └── methods.py          # cot, cot_sc, medrag, rationale_rag, imedrag (agent.py: dx_agent)
 ├── evaluation/
 │   ├── mirage.py           # MIRAGE loader, resumable runner, comparison table
 │   ├── stats.py            # Wilson CI, exact McNemar, fixed/broke counts

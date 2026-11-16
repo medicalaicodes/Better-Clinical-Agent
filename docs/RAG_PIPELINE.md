@@ -1,5 +1,7 @@
 # Medical RAG: Design, Known Failure Modes, and the DDx-RAG Pipeline
 
+> **Historical document.** This describes DDx-RAG v1, our first design. Its results are in `IMPLEMENTATION_LOG.md`; its code was removed after the agent replaced it (it is in the git history before the commit "Simplify the code base"). For the current system read `docs/PROJECT_WALKTHROUGH.md`.
+
 This document explains **what retrieval system the agent uses, why, and how it is evaluated**.
 Code: `src/clinical_agent/retrieval/` (search engine), `src/clinical_agent/rag/` (QA methods),
 `src/clinical_agent/evaluation/mirage.py` (benchmark).

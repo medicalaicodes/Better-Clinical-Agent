@@ -16,7 +16,7 @@ import numpy as np
 
 from src.clinical_agent.rag import METHODS, MCQ
 from src.clinical_agent.rag.agent import DxAgent
-from src.clinical_agent.retrieval.evidence_tool import EvidenceTool, split_sentences
+from src.clinical_agent.retrieval.evidence_tool import EvidenceTool, complete_sentence, split_sentences
 from src.clinical_agent.retrieval.search import word_set
 from tests.conftest import FakeLLM
 
@@ -179,8 +179,8 @@ def test_evidence_cards_are_attributed_and_whole(toy_retriever):
 def test_sentence_completion_keeps_subject_and_lists():
     sentences = split_sentences("Gilbert syndrome is common. It is caused by reduced UGT1A1 activity. "
                                 "Triggers include:\nFasting.\nIllness.")
-    assert EvidenceTool.complete(sentences, 1) == [0, 1]           # "It" needs the sentence before
-    assert EvidenceTool.complete(sentences, 2) == [2, 3, 4]        # "include:" needs its list
+    assert complete_sentence(sentences, 1) == [0, 1]           # "It" needs the sentence before
+    assert complete_sentence(sentences, 2) == [2, 3, 4]        # "include:" needs its list
 
 
 def test_select_mode_reveals_options_only_at_the_end(toy_retriever):

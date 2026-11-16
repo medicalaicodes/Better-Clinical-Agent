@@ -158,32 +158,28 @@ If someone else needs the GPU again, share it with `GPU_UTIL=0.45 QUANT=fp8` in 
 
 ```bash
 cd $WORK/Better-Clinical-Agent && source $WORK/env.sh && source .venv/bin/activate
-python scripts/run_mirage.py --dataset medqa --limit 50 --methods cot medrag ddx_rag --run-name sanity
+python scripts/run_mirage.py --dataset medqa_dev --limit 20 --methods cot dx_agent --set final=select --run-name sanity
 ```
 
 ## 4. Main runs (in a second tmux window: `tmux new -s runs`)
 
 ```bash
-# tuning only, on MedQA *train* questions (never tune on test)
-python scripts/run_mirage.py --dataset medqa_dev --methods cot ddx_rag
+# the published baselines
+python scripts/run_mirage.py --dataset medqa --methods cot cot_sc medrag rationale_rag imedrag
+python scripts/run_mirage.py --dataset mmlu  --methods cot cot_sc medrag rationale_rag imedrag
 
-# headline comparison
-python scripts/run_mirage.py --dataset medqa --methods cot cot_sc medrag rationale_rag imedrag ddx_rag
-python scripts/run_mirage.py --dataset mmlu  --methods cot cot_sc medrag rationale_rag imedrag ddx_rag
+# the agent: tune on MedQA *training* questions only, then run the test set once
+python scripts/run_mirage.py --dataset medqa_dev --methods dx_agent --set final=select
+python scripts/run_mirage.py --dataset medqa     --methods dx_agent --set final=select
 ```
 
-## 5. Ablations and robustness (MedQA)
+## 5. Agent variants (each one changes one thing)
 
 ```bash
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set intents=SUPPORT,DISCRIMINATE --tag no_refute
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set intents=SUPPORT              --tag support_only
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set verify=false                 --tag no_verify
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set show_votes=false             --tag no_votes
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set gate_threshold=1.01          --tag no_gate
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set mode=dense                   --tag dense
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set expand=false                 --tag no_expand
-python scripts/run_mirage.py --dataset medqa --methods cot ddx_rag --shuffle-options 1 --run-name llama31-8b_shuffled
-python scripts/run_mirage.py --dataset medqa --methods ddx_rag --noise 3 --tag noise3
+python scripts/run_mirage.py --dataset medqa_dev --methods dx_agent --set max_rounds=0 final=select    --tag frame_only
+python scripts/run_mirage.py --dataset medqa_dev --methods dx_agent --set library=false final=select   --tag no_library
+python scripts/run_mirage.py --dataset medqa_dev --methods dx_agent --set critic=false final=select    --tag no_critic
+python scripts/run_mirage.py --dataset medqa_dev --methods dx_agent --set article_first=false final=select --tag no_article_first
 ```
 
 ## 5b. Optional: a stronger, medical second model
@@ -196,7 +192,7 @@ Repeat the headline comparison with MedGemma-27B (FP8, about 27 GB) to check whe
 ```bash
 HF_HUB_OFFLINE=1 MODEL=google/medgemma-27b-text-it NAME=medgemma-27b QUANT=fp8 GPU_UTIL=0.88 MAX_SEQS=64 \
   PATH=$WORK/vllm-env/bin:$PATH bash scripts/serve_vllm.sh
-LLM_MODEL=medgemma-27b python scripts/run_mirage.py --dataset medqa --methods cot medrag ddx_rag --workers 32
+LLM_MODEL=medgemma-27b python scripts/run_mirage.py --dataset medqa --methods cot medrag dx_agent --set final=select --workers 32
 ```
 
 Results go to `results/medgemma-27b/`, separate from the Llama runs.
@@ -212,12 +208,10 @@ tar czf results.tgz results/ report_*.md analysis_*.md
 ```
 
 `analyze_results.py` looks inside the traces:
-- whether vote agreement predicts correctness
-- light vs. full path accuracy
-- good vs. bad overrules of the closed-book majority
-- which query intents supplied the evidence
+- every method's accuracy, split by how strongly the 5 self-consistency votes agree
 - per-subject accuracy
 - the exact questions each method fixed or broke
+- for the agent: how often the loop fixed or broke its own first answer, and what the critic did
 
 The `.jsonl` files contain the full traces (queries, evidence ids, outputs), which I need for error analysis.
 
@@ -230,7 +224,7 @@ The `.jsonl` files contain the full traces (queries, evidence ids, outputs), whi
   - Prefix caching is on: the 5 votes and the later steps of a question share the same long prompt prefix, so vLLM computes it once.
 - **Rough cost** with an 8B model:
   - `cot`: a few minutes per dataset
-  - `ddx_rag`: about 4× `cot`
+  - `dx_agent`: about 8 calls per question
   - `imedrag`: the most expensive, at about 13 calls per question
 - **Errors.** Per-question errors are recorded in the `error` field, not raised. If the table shows many errors, look at those first.
 - **Cleanup.** Nothing to revoke on the server. Delete or let expire the two tokens on GitHub and Hugging Face.

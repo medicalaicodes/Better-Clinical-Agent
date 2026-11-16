@@ -1,29 +1,26 @@
 """
-Run medical QA methods on MIRAGE and print a comparison table.
+Runs medical QA methods on MIRAGE and prints a comparison table.
 
-    # all main methods on MedQA (needs the vLLM server running, see scripts/serve_vllm.sh)
-    python scripts/run_mirage.py --dataset medqa --methods cot cot_sc medrag rationale_rag imedrag ddx_rag
+    # the baselines on MedQA (needs the vLLM server running, see scripts/serve_vllm.sh)
+    python scripts/run_mirage.py --dataset medqa --methods cot cot_sc medrag rationale_rag imedrag
 
-    # an ablation: DDx-RAG without REFUTE queries, saved under its own tag
-    python scripts/run_mirage.py --dataset medqa --methods ddx_rag --set intents=SUPPORT,DISCRIMINATE --tag no_refute
+    # the agent on 20 practice questions, with its settings changed through --set
+    python scripts/run_mirage.py --dataset medqa_dev --methods dx_agent --set final=select --limit 20
 
-    # robustness: shuffled options / 3 random snippets injected into every retrieval
-    python scripts/run_mirage.py --dataset medqa --methods ddx_rag --shuffle-options 1 --tag shuffled
-    python scripts/run_mirage.py --dataset medqa --methods ddx_rag --noise 3 --tag noise3
-
-    # just print the table for what has already been run
+    # only print the table for what has already been run
     python scripts/run_mirage.py --dataset medqa --report-only
 
-Results: results/<run-name>/<dataset>/<method>[__<tag>].jsonl   (one line per question, resumable)
+Results go to results/<run-name>/<dataset>/<method>[__<tag>].jsonl - one line per question.
+Running the same command again continues where it stopped.
 """
 
 import argparse
 import glob
-import inspect
 import json
 import os
 import sys
 
+# Lets this script import the project's code when it's run from the repository folder.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.clinical_agent.config import get_settings  # noqa: E402
@@ -33,82 +30,102 @@ from src.clinical_agent.llm import LLM  # noqa: E402
 from src.clinical_agent.rag import METHODS, RETRIEVAL_FREE  # noqa: E402
 
 
-def parse_overrides(pairs):
-    """--set key=value pairs -> dict with ints/floats/bools converted."""
-    overrides = {}
+def read_settings(pairs):
+    """["final=select", "max_rounds=0", "library=false"]  ->  {"final": "select", "max_rounds": 0, "library": False}"""
+    settings = {}
     for pair in pairs or []:
         key, value = pair.split("=", 1)
-        for cast in (int, float):
+        if value.lower() == "true":
+            value = True
+        elif value.lower() == "false":
+            value = False
+        else:
             try:
-                value = cast(value)
-                break
+                value = int(value)
             except ValueError:
-                continue
-        if value in ("true", "false", "True", "False"):
-            value = value.lower() == "true"
-        overrides[key] = value
-    return overrides
+                try:
+                    value = float(value)
+                except ValueError:
+                    pass           # not a number: keep the text as it is
+        settings[key] = value
+    return settings
 
 
 def main():
     settings = get_settings()
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--dataset", choices=DATASETS, default="medqa")
-    parser.add_argument("--methods", nargs="+", default=["cot", "medrag", "ddx_rag"], choices=sorted(METHODS))
-    parser.add_argument("--limit", type=int, help="first N questions only")
-    parser.add_argument("--workers", type=int, default=48, help="questions in flight at once (vLLM batches them)")
-    parser.add_argument("--set", nargs="*", dest="overrides", help="method settings, e.g. gate_threshold=0.6")
-    parser.add_argument("--tag", default="", help="suffix for ablation / robustness runs")
-    parser.add_argument("--run-name", default=None, help="results sub-folder (default: LLM model name)")
-    parser.add_argument("--shuffle-options", type=int, help="robustness: permute options with this seed")
-    parser.add_argument("--noise", type=int, default=0, help="robustness: random snippets added per retrieval")
-    parser.add_argument("--baseline", default="cot", help="method the table compares against")
+    parser.add_argument("--methods", nargs="+", default=["cot"], choices=sorted(METHODS))
+    parser.add_argument("--limit", type=int, help="only the first N questions")
+    parser.add_argument("--workers", type=int, default=48, help="questions answered at the same time")
+    parser.add_argument("--set", nargs="*", dest="method_settings", help="method settings, e.g. max_rounds=2")
+    parser.add_argument("--tag", default="", help="added to the file name, to keep variants apart")
+    parser.add_argument("--run-name", default=None, help="results sub-folder (default: the model name)")
+    parser.add_argument("--baseline", default="cot", help="the method the table compares against")
     parser.add_argument("--report-only", action="store_true")
     parser.add_argument("--device", default=settings.device)
     args = parser.parse_args()
 
-    run_dir = os.path.join("results", args.run_name or settings.llm_model.replace("/", "_"), args.dataset)
-    questions = load_questions(args.dataset, settings.data_dir, limit=args.limit,
-                               shuffle_options=args.shuffle_options)
+    run_name = args.run_name or settings.llm_model.replace("/", "_")
+    run_dir = os.path.join("results", run_name, args.dataset)
+    questions = load_questions(args.dataset, settings.data_dir, limit=args.limit)
 
     if not args.report_only:
         llm = LLM()
+
+        # The big index (~3 GB) is only loaded if some method actually searches the library.
         retriever = None
-        if any(m not in RETRIEVAL_FREE for m in args.methods):
-            from src.clinical_agent.retrieval import Retriever
+        needs_library = False
+        for name in args.methods:
+            if name not in RETRIEVAL_FREE:
+                needs_library = True
+        if needs_library:
             import torch
+            from src.clinical_agent.retrieval import load_retriever
             if args.device is None and not torch.cuda.is_available():
                 print("WARNING: no GPU visible to torch - MedCPT retrieval will run on CPU (slow).")
-            retriever = Retriever.load(settings.index_dir, device=args.device)
-            retriever.noise_snippets = args.noise
+            retriever = load_retriever(settings.index_dir, device=args.device)
 
-        overrides = parse_overrides(args.overrides)
+        method_settings = read_settings(args.method_settings)
         os.makedirs(run_dir, exist_ok=True)
+
         for name in args.methods:
-            # each method only receives the --set keys it actually has
-            accepted = inspect.signature(METHODS[name].__init__).parameters
-            method = METHODS[name](llm, retriever, **{k: v for k, v in overrides.items() if k in accepted})
-            out_path = os.path.join(run_dir, f"{name}{'__' + args.tag if args.tag else ''}.jsonl")
-            with open(out_path.replace(".jsonl", ".config.json"), "w") as f:
-                json.dump({"model": settings.llm_model, "method": name, "overrides": overrides,
-                           "dataset": args.dataset, "limit": args.limit, "noise": args.noise,
-                           "shuffle_options": args.shuffle_options}, f, indent=2)
-            print(f"\n== {name}{' [' + args.tag + ']' if args.tag else ''} on {args.dataset} ({len(questions)} questions)")
+            method = METHODS[name](llm, retriever, **method_settings)
+
+            file_name = name
+            if args.tag:
+                file_name = name + "__" + args.tag
+            out_path = os.path.join(run_dir, file_name + ".jsonl")
+
+            # Save how this run was made, next to its results.
+            with open(os.path.join(run_dir, file_name + ".config.json"), "w") as f:
+                json.dump({"model": settings.llm_model, "method": name, "settings": method_settings,
+                           "dataset": args.dataset, "limit": args.limit}, f, indent=2)
+
+            print(f"\n== {file_name} on {args.dataset} ({len(questions)} questions)")
             run_method(method, questions, out_path, llm, workers=args.workers)
 
-    # Table over every result file in this run folder, restricted to the loaded questions.
-    ids = {q.id for q in questions}
+    # The table covers every result file in this folder, for the questions loaded above.
+    wanted_ids = set()
+    for q in questions:
+        wanted_ids.add(q.id)
+
     results = {}
     for path in sorted(glob.glob(os.path.join(run_dir, "*.jsonl"))):
         name = os.path.basename(path)[:-len(".jsonl")]
-        rows = {i: r for i, r in read_results(path).items() if i in ids}
-        # Other tools (e.g. the book-scoring probe) save their own .jsonl files here too;
-        # only files whose rows carry a "correct" field are method results.
-        if rows and "correct" in next(iter(rows.values())):
+        rows = {}
+        for question_id, row in read_results(path).items():
+            if question_id in wanted_ids and "correct" in row:      # skip files that aren't method results
+                rows[question_id] = row
+        if rows:
             results[name] = rows
+
     if results:
+        baseline = args.baseline
+        if baseline not in results:
+            baseline = list(results)[0]
         print(f"\n### {args.dataset} - {settings.llm_model} (questions answered by every method)\n")
-        print(comparison_table(results, baseline=args.baseline if args.baseline in results else next(iter(results))))
+        print(comparison_table(results, baseline))
 
 
 if __name__ == "__main__":

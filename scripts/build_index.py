@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.clinical_agent.config import get_settings  # noqa: E402
 from src.clinical_agent.retrieval.corpus import (CorpusStore, download_statpearls,  # noqa: E402
-                                                 download_textbooks, iter_chunk_dir)
+                                                 download_textbooks, read_chunk_dir)
 from src.clinical_agent.retrieval.indexes import BM25Index, DenseIndex, MedCPTEncoder  # noqa: E402
 
 
@@ -41,9 +41,15 @@ def build(corpora, root, index_dir, files=None, limit=None, device=None, batch_s
     snippets = []
     for name in corpora:
         chunk_dir = os.path.join(root, name, "chunk")
-        for snippet in iter_chunk_dir(chunk_dir, source=name):
-            if files and not any(snippet.id.startswith(f) for f in files):
-                continue
+        for snippet in read_chunk_dir(chunk_dir, name):
+            # --files keeps only snippets from some books (for a quick test on a laptop)
+            if files:
+                wanted = False
+                for prefix in files:
+                    if snippet.id.startswith(prefix):
+                        wanted = True
+                if not wanted:
+                    continue
             snippets.append(snippet)
     if limit:
         snippets = snippets[:limit]
@@ -54,7 +60,7 @@ def build(corpora, root, index_dir, files=None, limit=None, device=None, batch_s
     corpus.save(os.path.join(index_dir, "corpus.jsonl"))
 
     start = time.time()
-    BM25Index().build(list(corpus.texts())).save(os.path.join(index_dir, "bm25"))
+    BM25Index().build(corpus.texts()).save(os.path.join(index_dir, "bm25"))
     print(f"BM25 index built in {time.time() - start:.0f}s")
 
     start = time.time()

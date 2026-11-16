@@ -1,4 +1,4 @@
-from src.clinical_agent.retrieval import Query, reciprocal_rank_fusion
+from src.clinical_agent.retrieval import reciprocal_rank_fusion
 from src.clinical_agent.retrieval.search import is_near_duplicate
 
 
@@ -22,15 +22,16 @@ def test_single_query_search_finds_the_right_snippet(toy_retriever):
     assert hits[0].snippet.id == "PTX_0"
 
 
-def test_quota_keeps_refuting_evidence_in_a_small_budget(toy_retriever):
+def test_quota_gives_every_query_its_share_of_a_small_budget(toy_retriever):
     queries = [
-        Query("pulmonary embolism CT pulmonary angiography D-dimer", "SUPPORT"),
-        Query("pulmonary embolism D-dimer pretest probability", "SUPPORT"),
-        Query("pneumothorax breath sounds", "REFUTE"),
+        "pulmonary embolism CT pulmonary angiography D-dimer",
+        "pulmonary embolism D-dimer pretest probability",
+        "pneumothorax breath sounds",
     ]
     evidence = toy_retriever.search_many(queries, budget=3, per_query=1, expand=False)
     assert len(evidence) == 3
-    assert "REFUTE" in {intent for e in evidence for intent in e.intents}
+    # Two strong embolism queries can't crowd out the third one: its snippet is still there.
+    assert "PTX_0" in [item.snippet.id for item in evidence]
 
 
 def test_neighbour_expansion_stays_inside_the_section(toy_retriever):
@@ -40,12 +41,6 @@ def test_neighbour_expansion_stays_inside_the_section(toy_retriever):
     assert "chest radiograph" in text                 # next paragraph, same section
     row = toy_retriever.row_of_id["PPCM_0"]
     assert "Pneumothorax" not in toy_retriever.expand(row)   # different article: not added
-
-
-def test_noise_injection_for_robustness_runs(toy_retriever):
-    toy_retriever.noise_snippets = 2
-    evidence = toy_retriever.search("pulmonary embolism", k=1, expand=False)
-    assert [e.intents for e in evidence[-2:]] == [["NOISE"], ["NOISE"]]
 
 
 def test_statpearls_chunker_on_a_small_article(tmp_path):
