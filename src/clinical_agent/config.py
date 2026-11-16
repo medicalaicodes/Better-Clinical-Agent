@@ -1,7 +1,8 @@
 """
-Project settings, read from environment variables or a local `.env` file.
+Project settings. Each one is read from an environment variable, or from a `.env` file in the
+folder you run from, or falls back to the default written below.
 
-Example `.env` for the benchmark server:
+Example `.env` on the GPU server:
 
     LLM_BASE_URL=http://localhost:8000/v1
     LLM_MODEL=llama31-8b
@@ -9,46 +10,59 @@ Example `.env` for the benchmark server:
 """
 
 import os
-from typing import Optional
-
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
-
-    # Any OpenAI-compatible server: vLLM, Ollama (http://localhost:11434/v1), llama.cpp, OpenAI.
-    llm_base_url: str = Field(default="http://localhost:8000/v1", alias="LLM_BASE_URL")
-    llm_model: str = Field(default="llama31-8b", alias="LLM_MODEL")
-    llm_api_key: str = Field(default="EMPTY", alias="LLM_API_KEY")
-    llm_temperature: float = Field(default=0.0, alias="LLM_TEMPERATURE")
-    llm_max_tokens: int = Field(default=1024, alias="LLM_MAX_TOKENS")
-    llm_timeout: float = Field(default=300.0, alias="LLM_TIMEOUT")
-
-    # Where corpora and indexes live (several GB, so point this at a big disk on the server).
-    data_dir: str = Field(default=os.path.join(REPO_ROOT, "data"), alias="DATA_DIR")
-    device: Optional[str] = Field(default=None, alias="TORCH_DEVICE")  # None = cuda if available
-
-    # Agent loop
-    max_inquiry_turns: int = Field(default=4, alias="MAX_INQUIRY_TURNS")
-
-    @property
-    def corpus_dir(self) -> str:
-        return os.path.join(self.data_dir, "corpus")
-
-    @property
-    def index_dir(self) -> str:
-        return os.path.join(self.data_dir, "index")
+def read_env_file(path=".env"):
+    """Reads KEY=VALUE lines from a .env file into a dictionary (blank lines and # comments skipped)."""
+    values = {}
+    if not os.path.exists(path):
+        return values
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
 
 
-_SETTINGS: Optional[Settings] = None
+class Settings:
+    def __init__(self):
+        file_values = read_env_file()
+
+        def setting(name, default):
+            # A real environment variable wins over the .env file, which wins over the default.
+            if name in os.environ:
+                return os.environ[name]
+            if name in file_values:
+                return file_values[name]
+            return default
+
+        # Any server that speaks the OpenAI API: vLLM, Ollama (http://localhost:11434/v1), ...
+        self.llm_base_url = setting("LLM_BASE_URL", "http://localhost:8000/v1")
+        self.llm_model = setting("LLM_MODEL", "llama31-8b")
+        self.llm_api_key = setting("LLM_API_KEY", "EMPTY")
+        self.llm_temperature = float(setting("LLM_TEMPERATURE", "0.0"))
+        self.llm_max_tokens = int(setting("LLM_MAX_TOKENS", "1024"))
+        self.llm_timeout = float(setting("LLM_TIMEOUT", "300"))
+
+        # Where the corpora and indexes live (several GB, so a big disk on the server).
+        self.data_dir = setting("DATA_DIR", os.path.join(REPO_ROOT, "data"))
+        self.corpus_dir = os.path.join(self.data_dir, "corpus")
+        self.index_dir = os.path.join(self.data_dir, "index")
+
+        # "cuda" or "cpu"; empty means: use the GPU if there is one.
+        self.device = setting("TORCH_DEVICE", None) or None
 
 
-def get_settings() -> Settings:
-    global _SETTINGS
-    if _SETTINGS is None:
-        _SETTINGS = Settings()
-    return _SETTINGS
+settings_cache = []
+
+
+def get_settings():
+    """The settings are read once and then reused."""
+    if not settings_cache:
+        settings_cache.append(Settings())
+    return settings_cache[0]

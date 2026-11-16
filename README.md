@@ -228,11 +228,8 @@ python demo_execution.py --case 6
 python demo_execution.py --case 7
 ```
 
-To run through the compiled **LangGraph state machine**:
-
-```bash
-python demo_execution.py --case 0 --graph
-```
+The agent runs as a **LangGraph state machine** (intake → choose → run tool → … → report);
+the demo prints every step as it happens.
 
 ---
 
@@ -241,25 +238,28 @@ python demo_execution.py --case 0 --graph
 ```
 src/clinical_agent/
 ├── config.py               # settings from env / .env
-├── llm.py                  # one OpenAI-compatible LLM client (+ JSON parsing, thread pool)
+├── llm.py                  # one OpenAI-compatible LLM client (+ JSON / answer parsing)
 ├── retrieval/
 │   ├── corpus.py           # Textbooks + StatPearls download, chunking, in-memory store
 │   ├── indexes.py          # BM25, MedCPT + FAISS, MedCPT cross-encoder
-│   └── search.py           # hybrid search, RRF, rerank, quotas, dedupe, neighbour expansion
+│   ├── search.py           # hybrid search, RRF, rerank, quotas, dedupe, neighbour expansion
+│   └── evidence_tool.py    # the diagnostic agent's claim checker (sentence-level evidence cards)
 ├── rag/
-│   ├── prompts.py          # baseline prompts (verbatim from MedRAG) + DDx-RAG prompts
-│   └── methods.py          # cot, cot_sc, medrag, rationale_rag, imedrag (agent.py: dx_agent)
+│   ├── prompts.py          # baseline prompts (verbatim from MedRAG)
+│   ├── methods.py          # cot, cot_sc, medrag, rationale_rag, imedrag
+│   ├── agent.py            # DxAgent: options-free diagnostic agent (verify, critique, answer)
+│   └── agent_prompts.py    # its prompts
 ├── evaluation/
 │   ├── mirage.py           # MIRAGE loader, resumable runner, comparison table
-│   ├── stats.py            # Wilson CI, exact McNemar, fixed/broke counts
+│   ├── stats.py            # Wilson interval, exact McNemar test
 │   └── sample_cases.py     # 11 demo cases for the agent
-├── agent.py / graph.py     # sequential diagnostic agent (loop / LangGraph)
-├── llm_client.py           # agent prompts -> structured differential, actions, report
-├── tools/                  # chest X-ray, MedSAM, labs, medical knowledge (retriever)
-├── models/                 # TorchXRayVision DenseNet, MedSAM wrappers
-└── schemas.py              # Pydantic models
-scripts/                    # build_index.py, run_mirage.py, serve_vllm.sh
-docs/RAG_PIPELINE.md        # RAG design, failure modes and fixes, evaluation protocol
+├── agent.py                # clinical agent: LangGraph state machine over the tools
+├── clinical_prompts.py     # its prompts (intake, next test, report)
+├── tools/                  # chest X-ray (DenseNet), MedSAM segmentation, labs, medical library
+└── schemas.py              # Pydantic data classes
+scripts/                    # build_index.py, run_mirage.py, analyze_results.py, serve_vllm.sh
+docs/PROJECT_WALKTHROUGH.md # the whole project explained, file by file
+docs/RAG_PIPELINE.md        # historical: the first RAG design (DDx-RAG v1)
 docs/RUNNING_BENCHMARKS.md  # how to run everything on the GPU server
 tests/                      # CPU-only unit tests (fake LLM, toy corpus)
 IMPLEMENTATION_LOG.md       # dated log, including the audit of v2

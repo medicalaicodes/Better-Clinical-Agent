@@ -373,3 +373,12 @@ Personal daily development log and research notebook tracking architecture, math
 - **Plainer Python everywhere in the RAG code:** plain classes with `__init__` instead of `@dataclass`; plain functions (`load_retriever`, `load_bm25`, `load_dense`, `load_corpus_store`, `complete_sentence`, `source_header`) instead of `@classmethod` / `@staticmethod`; no `typing` annotations; loops instead of comprehensions and lambdas; the retriever's quota logic is a named method (`add_if_new`) instead of a nested function.
 - **Analysis script refocused** on what we present: accuracy by vote agreement (the "retrieval hurts when sure" table), per-subject accuracy, fixed/broke lists, and the agent's harm / recovery / critic numbers.
 - **Checks:** 35 tests pass (5 v1 tests and 2 robustness tests removed, 2 baseline tests added); lint clean; with the real MedCPT models, search and the evidence tool return the same passages and cards as before.
+- **The clinical agent simplified the same way** (same day):
+  - One loop instead of two: `agent.py` used to run the workup as a Python loop while `graph.py` re-implemented it in LangGraph. Now the agent's four steps (`intake`, `choose`, `run_tool`, `report`) are the LangGraph nodes, and `diagnose()` runs the graph. `llm_client.py` (a layer that only wrapped the LLM calls) was merged into the agent.
+  - The LLM now reads each tool's own `description`; the separate copy of the tool descriptions is gone.
+  - `models/` (two singleton wrappers with locks and `__new__`) was folded into the tools: each tool loads its model the first time it's used.
+  - The lab tool's three copy-pasted branches (high / low / normal) are one block; the reference ranges are a plain table.
+  - `schemas.py`: unused class (`DiagnosticOrder`), fields (`icd10_code`) and enum value (`UNCERTAIN`) removed; no `Field(...)` boilerplate.
+  - `config.py`: a plain `.env` reader instead of `pydantic-settings` (one dependency fewer); `langchain-core` dropped from the requirements (only `langgraph` is used).
+  - `demo_execution.py`: 294 → 100 lines; it prints the agent's steps through two hooks instead of re-implementing the loop.
+  - 33 tests pass (the two duplicate graph tests merged into `test_agent.py`); the chest X-ray and segmentation tools pass with their real models.

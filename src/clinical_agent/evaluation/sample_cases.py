@@ -1,21 +1,13 @@
 """
-Clinical AI Agent: Benchmark Clinical Evaluation Cases
-
-Academic Citations & Foundations:
-- Validated Clinical Radiograph Datasets:
-  * NIH ChestX-ray14: Wang et al., "ChestX-ray8: Hospital-scale Chest X-ray Database and Benchmarks" (CVPR 2017).
-  * IEEE COVID-19 & Atypical Pneumonia Dataset: Cohen et al., "COVID-19 Image Data Collection" (arXiv:2003.11597).
-  * TorchXRayVision Evaluation Zoo: Cohen et al. (MIDL 2022; arXiv:2111.00595).
-- Clinical Vignettes Design:
-  * NEJM Case Records of the Massachusetts General Hospital format.
-  * SDBench: "A Benchmark for Sequential Diagnosis with Language Models" (Microsoft Research, 2025; arXiv:2506.22405).
-  * MedAgent-Pro Benchmark Suite (Wang et al., ICLR 2026; arXiv:2503.18968).
+Eleven patient cases for trying the clinical agent:
+  - cases 0-7: everyday emergency presentations (pneumonia, heart failure, embolism, ...), each with
+    a real chest X-ray from a public dataset (NIH ChestX-ray14, the IEEE COVID-19 collection) and lab values;
+  - cases 8-10: stress tests (e.g. aortic dissection) where the right move is to escalate to a human.
 """
 
-from typing import List
 from ..schemas import PatientCase
 
-BENCHMARK_CASES: List[PatientCase] = [
+CANONICAL_CASES = [
     # Case 0: Streptococcus pneumoniae Lobar Pneumonia (Validated CXR from IEEE dataset)
     PatientCase(
         patient_id="PT_STREP_65M",
@@ -116,7 +108,7 @@ BENCHMARK_CASES: List[PatientCase] = [
 # =============================================================================
 # STRESS-TEST & DIAGNOSTIC UNCERTAINTY CASES (Unindexed / Refusal / Escalation)
 # =============================================================================
-STRESS_TEST_CASES: List[PatientCase] = [
+STRESS_TEST_CASES = [
     # Case 8: Acute Aortic Syndrome / Aortic Dissection (Out-of-Distribution, Unindexed in toy RAG)
     # Tests whether agent recognizes life-threatening non-coronary pathology & escalates to emergent CTA rather than guessing.
     PatientCase(
@@ -158,6 +150,6 @@ STRESS_TEST_CASES: List[PatientCase] = [
 ]
 
 # Complete 11-Case Evaluation Suite
-CANONICAL_CASES: List[PatientCase] = BENCHMARK_CASES
-BENCHMARK_CASES: List[PatientCase] = CANONICAL_CASES + STRESS_TEST_CASES
+# All cases in one list: the 8 everyday cases (0-7) followed by the 3 stress tests (8-10).
+BENCHMARK_CASES = CANONICAL_CASES + STRESS_TEST_CASES
 

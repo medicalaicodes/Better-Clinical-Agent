@@ -1,14 +1,9 @@
 """
-Clinical AI Agent: Prompt Engineering & Persona System
-
-Academic Citations & Foundations:
-- Two-Level Reasoning and Dynamic Hypothesis Refinement:
-  * MedAgent-Pro: "Towards Evidence-Based Multi-Modal Medical Diagnosis via Reasoning Agentic Workflow" (Wang et al., ICLR 2026; arXiv:2503.18968).
-  * SDBench & MAI-DxO: "A Benchmark for Sequential Diagnosis with Language Models" (Microsoft Research, 2025; arXiv:2506.22405).
-  * MedRAX: "A Medical Reasoning Agent for Chest X-ray" (Bo Wang Lab, 2025; arXiv:2502.02618).
+Prompts for the clinical agent (agent.py): intake and first differential, choosing the next test,
+and writing the final report. Each asks for a JSON reply so the agent can read it reliably.
 """
 
-DIFFERENTIAL_PROMPT_TEMPLATE = """You are an emergency physician conducting a comprehensive patient intake evaluation.
+INTAKE_PROMPT = """You are an emergency physician conducting a comprehensive patient intake evaluation.
 Thoroughly analyze the presenting clinical history, vitals, and physician notes (handling any clinical abbreviations or shorthand).
 
 Patient Demographics: {age}-year-old {gender}
@@ -44,7 +39,7 @@ Return strictly a JSON object:
 """
 
 
-ACTION_SELECTION_PROMPT_TEMPLATE = """You are the Attending Physician managing an active sequential diagnostic workup.
+NEXT_TEST_PROMPT = """You are the Attending Physician managing an active sequential diagnostic workup.
 
 Patient: {age}-year-old {gender} | Chief Complaint: {chief_complaint}
 Vitals: {vitals}
@@ -74,7 +69,7 @@ Return strictly a JSON object:
 }}
 """
 
-REPORT_SYNTHESIS_PROMPT_TEMPLATE = """You are the Attending Physician finalizing the definitive diagnostic consultation report for this patient.
+REPORT_PROMPT = """You are the Attending Physician finalizing the definitive diagnostic consultation report for this patient.
 
 Patient Demographics: {age}-year-old {gender}
 Chief Complaint: {chief_complaint}
@@ -119,7 +114,3 @@ Return strictly a JSON object:
   ]
 }}
 """
-
-
-
-

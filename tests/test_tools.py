@@ -1,6 +1,4 @@
-"""
-Clinical AI Agent: Specialist Tools Test Suite
-"""
+"""Tests for the clinical agent's tools. The image tests are skipped if their libraries are missing."""
 
 import pytest
 from src.clinical_agent.schemas import ModalityType, FindingStatus
@@ -37,9 +35,8 @@ def test_medsam_segmenter_tool():
     assert result.tool_name == "medsam_segmenter"
     assert result.modality == ModalityType.SEGMENTATION
     assert len(result.findings) >= 2
-    # Area and symmetry metrics should be present
-    area_findings = [f for f in result.findings if "Area" in f.name]
-    assert len(area_findings) >= 2
+    names = [finding.name for finding in result.findings]
+    assert "MedSAM: Left Lung Field Segmentation Area" in names
 
 
 def test_laboratory_tests_tool():
@@ -49,8 +46,11 @@ def test_laboratory_tests_tool():
     
     assert result.tool_name == "laboratory_tests"
     assert result.modality == ModalityType.LABORATORY
-    abnormal_findings = [f for f in result.findings if f.status == FindingStatus.PRESENT and ("Elevated" in f.name or "Low" in f.name)]
-    assert len(abnormal_findings) >= 3
+    abnormal = []
+    for finding in result.findings:
+        if finding.status == FindingStatus.PRESENT and (finding.name.startswith("Elevated") or finding.name.startswith("Low")):
+            abnormal.append(finding)
+    assert len(abnormal) >= 3
 
 
 def test_medical_knowledge_tool_uses_the_retriever(toy_retriever):

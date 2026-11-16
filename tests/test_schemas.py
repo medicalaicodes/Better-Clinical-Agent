@@ -1,6 +1,4 @@
-"""
-Clinical AI Agent: Data Schema Unit Tests
-"""
+"""Tests for the clinical agent's data classes (schemas.py)."""
 
 from src.clinical_agent.schemas import (
     ModalityType,

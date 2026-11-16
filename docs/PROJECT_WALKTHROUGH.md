@@ -124,8 +124,8 @@ Folder map (only what matters):
 | `src/clinical_agent/rag/` | Prompts, baselines, DDx-RAG v1, DxAgent |
 | `src/clinical_agent/evaluation/` | MIRAGE loader/runner, statistics |
 | `scripts/` | Build indexes, run benchmarks, analyse results, serve vLLM |
-| `tests/` | 35 CPU-only tests with a fake LLM and a toy corpus |
-| `src/clinical_agent/{agent,graph,llm_client}.py`, `tools/` | The original LangGraph clinical agent |
+| `tests/` | 33 CPU-only tests with a fake LLM and a toy corpus |
+| `src/clinical_agent/agent.py`, `clinical_prompts.py`, `tools/`, `schemas.py` | The clinical agent: a LangGraph state machine over imaging, lab and library tools |
 
 ---
 
@@ -158,10 +158,11 @@ Folder map (only what matters):
 ## 4. Code tour — the shared foundation
 
 ### 4.1 `config.py` — settings
-A `pydantic-settings` class reads `.env` and environment variables:
+A plain `Settings` class. `read_env_file()` reads `KEY=VALUE` lines from `.env`; each setting
+comes from a real environment variable first, then `.env`, then the default:
 `LLM_BASE_URL` (default `http://localhost:8000/v1`), `LLM_MODEL` (`llama31-8b`), `LLM_TEMPERATURE`,
-`LLM_MAX_TOKENS`, `LLM_TIMEOUT`, `DATA_DIR`, `TORCH_DEVICE`. Two properties derive folders:
-`corpus_dir = data_dir/corpus`, `index_dir = data_dir/index`. **Why:** no paths or server URLs are
+`LLM_MAX_TOKENS`, `LLM_TIMEOUT`, `DATA_DIR`, `TORCH_DEVICE`. Two folders are derived:
+`corpus_dir = data_dir/corpus`, `index_dir = data_dir/index`. `get_settings()` reads them once. **Why:** no paths or server URLs are
 hard-coded; the same code runs on a laptop (Ollama) or the A100 (vLLM) by changing `.env`.
 
 ### 4.2 `llm.py` — the single door to the language model
@@ -293,7 +294,7 @@ This turns a short claim into a few **evidence cards** that read on their own.
      headed by `source_header()` ("StatPearls: Silicosis, Introduction"). Below `min_score`
      nothing is returned, and the agent sees **"NOT FOUND"** rather than loosely related filler.
 
-### 4.7 `rag/prompts.py` and `rag/methods.py` — baselines and DDx-RAG v1
+### 4.7 `rag/prompts.py` and `rag/methods.py` — the published baselines
 - CoT and MedRAG prompts are copied **word for word** from the MedRAG toolkit, so baselines match
   the paper's setup.
 - `MCQ(id, question, options, answer, dataset)`; `options_text()` prints "A. ...".
@@ -443,6 +444,53 @@ diary, parse failures. Everything needed to audit or demo any answer.
 
 ---
 
+## 5b. Code tour — the clinical agent (`agent.py`, `tools/`, `schemas.py`)
+
+This is the interactive agent from the original project, rewritten simply. It works up one patient
+like an emergency doctor: read the notes, order tests one at a time, write a report.
+
+### `schemas.py` — the data
+Pydantic classes (pydantic checks the types when an object is made): `PatientCase` (age, complaint,
+vitals, notes, X-ray path, lab values), `FindingItem` (one finding, present/absent, value + unit),
+`ToolResult` (a tool's findings + summary + raw output), `DifferentialHypothesis` (condition, suspicion
+tier, rationale), `ClinicalReport` (diagnosis, disposition, differential, impression, recommendations,
+evidence trail). The enums fix the allowed values, e.g. `DispositionType` = admit / discharge / escalate.
+
+### `tools/` — four tools with the same shape
+Every tool has a `name`, a one-line `description` (shown to the LLM so it knows what each tool does)
+and `run(case, **options)` returning a `ToolResult`.
+- `laboratory.py` — `REFERENCE_RANGES` maps each lab to (low, high, unit, meaning if high, meaning if
+  low). Each value is marked HIGH / LOW / NORMAL; a normal value is an "absent" finding.
+- `chest_xray.py` — TorchXRayVision DenseNet-121. `load_model()` keeps only labels with a real
+  threshold (NaN thresholds = labels never trained); `classify()` normalises, crops and resizes the
+  image to 224×224 and returns calibrated scores (0.5 = positive). Bug fixed in Phase 1: the old code
+  applied a sigmoid twice.
+- `medsam.py` — MedSAM gets three boxes (right lung, left lung, heart) and outlines each; we measure
+  lung symmetry (smaller/bigger area), collapse %, and the cardiothoracic ratio (heart width / chest
+  width; > 0.50 = enlarged heart).
+- `medical_knowledge.py` — calls the same hybrid retriever we benchmarked (`retriever.search(query, k)`).
+Image models load the first time they're used (`self.model is None` → `load_model()`).
+
+### `agent.py` — the LangGraph state machine
+- `WorkupState` lists what flows between steps: case, differential, evidence, tools used, next tool,
+  reason, query, turns, max turns, report.
+- Four methods are the graph's nodes:
+  - `intake` — prompt with age, complaint, vitals, notes → pertinent positives/negatives (repeats
+    removed by `unique_texts`) and a first differential (`hypotheses_from`, tiers via `tier_from`).
+  - `choose` — lists the unused tools with their descriptions plus the evidence so far; the LLM picks
+    one or says STOP. An unknown name falls back to the first unused tool; the turn limit forces STOP.
+  - `run_tool` — runs it (with the library query if there is one) and appends the result.
+  - `report` — writes the final report. **Anything other than a clear admit or discharge becomes
+    ESCALATE_TO_PHYSICIAN** — the agent never silently sends someone home because a reply was unclear.
+- `build_graph()` wires them: intake → choose → (run_tool → choose)* → report, with `next_step()`
+  deciding after each choose. `diagnose(case)` builds the start state and runs the graph.
+- `on_token` / `on_event` are optional hooks: the demo uses them to print the reasoning live and each
+  step's result.
+
+### `demo_execution.py`
+`python demo_execution.py --case 0` prints the patient, then streams every step through those hooks
+and prints the final report. Cases 8–10 are stress tests where escalation is the right answer.
+
 ## 6. A real case, step by step (from the check run, question `train-7`)
 
 **Case:** 54-year-old man, worsening chronic cough, shortness of breath, low fever; **30 years in a
@@ -507,13 +555,15 @@ mixes up "diagnosis" with "what the question asks" — exactly the two-hop weakn
   (`GPU_UTIL`), `--max-num-seqs` (`MAX_SEQS`), prefix caching, optional `QUANT=fp8`; serves the
   local snapshot folder so it works offline.
 
-### 7.4 Tests (35, CPU only, ~1.5 min)
+### 7.4 Tests (33, CPU only, under a minute)
 `conftest.py` provides a 6-snippet toy corpus with a BM25-only retriever and a `FakeLLM` that replies
 by keyword. Tests cover RRF, de-duplication, quotas, neighbour expansion, the StatPearls chunker,
 answer parsing (incl. the `A/B/C/...` echo), every baseline's flow, statistics, and the agent: options
 never reach the agent or critic, the matcher never sees the case, fake citations are rejected, the
 critic's new diagnosis is checked in the library, the loop always ends, invented claim ids and repeated
-claims are ignored, evidence cards are attributed and whole.
+claims are ignored, evidence cards are attributed and whole. For the clinical agent: the whole LangGraph
+workup runs (intake → choose → tool → choose → report), the turn limit stops it, an unclear disposition
+is escalated to a human, and each tool returns the right findings (the image tests use the real models).
 
 ---
 
@@ -568,8 +618,8 @@ loop run only on the uncertain cases, which also cuts cost.
 **Why not LangGraph for the new agent?**
 The loop is small (frame → check → turn → critique → answer) and the benchmark needs exact control
 and counting of every call; strict JSON validated in our code is more reliable on an 8B model than
-native function calling. The original clinical agent does use LangGraph, and the new loop maps
-one-to-one onto a LangGraph StateGraph if we want it there.
+native function calling. The clinical agent (`agent.py`) does use LangGraph: its intake → choose →
+run tool → report loop is a StateGraph, and the DxAgent loop would map onto one the same way.
 
 **Why Llama-3.1-8B?**
 Open weights, fits one GPU, and it's the model the published baselines (i-MedRAG) report — so our

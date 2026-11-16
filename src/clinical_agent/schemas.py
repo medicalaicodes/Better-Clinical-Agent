@@ -1,16 +1,11 @@
 """
-Clinical AI Agent: Core Data Schemas
-
-Academic Citations & Foundations:
-- Diagnostic action, observation state, and multi-turn inquiry structures inspired by:
-  * SDBench & MAI-DxO: "A Benchmark for Sequential Diagnosis with Language Models" (Microsoft Research, 2025; arXiv:2506.22405).
-  * MedAgent-Pro: "Towards Evidence-Based Multi-Modal Medical Diagnosis via Reasoning Agentic Workflow" (Wang et al., ICLR 2026; arXiv:2503.18968).
-  * MedRAX: "A Medical Reasoning Agent for Chest X-ray" (Bo Wang Lab, 2025; arXiv:2502.02618).
+The data the clinical agent passes around. They are pydantic models: like plain classes, but
+pydantic checks the types when an object is created (an age of "abc" is refused straight away).
 """
 
 from enum import Enum
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel
 
 
 class ModalityType(str, Enum):
@@ -24,7 +19,6 @@ class ModalityType(str, Enum):
 class FindingStatus(str, Enum):
     PRESENT = "present"
     ABSENT = "absent"
-    UNCERTAIN = "uncertain"
 
 
 class SuspicionTier(str, Enum):
@@ -39,64 +33,52 @@ class DispositionType(str, Enum):
     ESCALATE_TO_PHYSICIAN = "ESCALATE_TO_PHYSICIAN"
 
 
-class FindingItem(BaseModel):
-    """Atomic structured clinical finding extracted by a specialist tool."""
-    model_config = ConfigDict(frozen=True)
+class PatientCase(BaseModel):
+    """Everything we know about the patient at the start."""
+    patient_id: str
+    age: int
+    gender: str
+    chief_complaint: str
+    vitals: dict = {}               # e.g. {"HR": 112, "BP": "124/78", "SpO2": 90}
+    clinical_notes: str = ""
+    image_path: str | None = None   # chest X-ray, if there is one
+    available_labs: dict = {}       # e.g. {"WBC": 17.8, "CRP": 64.0}
 
-    name: str = Field(..., description="Clinical finding name (e.g., Lung Opacity, Leukocytosis)")
-    status: FindingStatus = Field(default=FindingStatus.PRESENT, description="Presence status")
-    confidence: float = Field(default=1.0, ge=0.0, le=1.0, description="Model confidence score")
-    quantitative_value: Optional[float] = Field(default=None, description="Numerical metric if applicable")
-    unit: Optional[str] = Field(default=None, description="Measurement unit (e.g., mg/L, pg/mL)")
-    details: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata or context")
+
+class FindingItem(BaseModel):
+    """One finding a tool reported, e.g. 'Elevated WBC' or 'CXR: Consolidation'."""
+    name: str
+    status: FindingStatus = FindingStatus.PRESENT
+    confidence: float = 1.0
+    quantitative_value: float | None = None
+    unit: str | None = None
+    details: dict = {}
 
 
 class ToolResult(BaseModel):
-    """Standardized result packet returned by any specialist diagnostic tool."""
-    tool_name: str = Field(..., description="Name of the specialist tool that produced this result")
-    modality: ModalityType = Field(..., description="Clinical data modality")
-    findings: List[FindingItem] = Field(default_factory=list, description="Extracted clinical findings")
-    summary: str = Field(..., description="Natural language summary of the tool output")
-    raw_output: Dict[str, Any] = Field(default_factory=dict, description="Raw model or tool outputs")
+    """What one tool returns: its findings, a one-paragraph summary, and its raw output."""
+    tool_name: str
+    modality: ModalityType
+    findings: list[FindingItem] = []
+    summary: str
+    raw_output: dict = {}
 
 
 class DifferentialHypothesis(BaseModel):
-    """A diagnostic candidate condition in the physician's differential."""
-    condition: str = Field(..., description="Disease or pathology name (e.g., Community-Acquired Pneumonia)")
-    icd10_code: Optional[str] = Field(default=None, description="Standard ICD-10 code if available")
-    tier: SuspicionTier = Field(default=SuspicionTier.MODERATE_SUSPICION, description="Clinical suspicion tier")
-    clinical_rationale: str = Field(..., description="Clinical reasoning explaining the hypothesis")
-
-
-class DiagnosticOrder(BaseModel):
-    """An action or test requested by the attending physician agent."""
-    order_id: str = Field(..., description="Unique identifier for the diagnostic order")
-    tool_name: str = Field(..., description="Target specialist tool name")
-    display_name: str = Field(..., description="Human-readable test name (e.g., Chest X-Ray)")
-    indication: str = Field(..., description="Medical reason for requesting this test")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Tool execution parameters")
-
-
-class PatientCase(BaseModel):
-    """Complete patient presentation with raw multimodal diagnostic data."""
-    patient_id: str = Field(..., description="Unique patient identifier")
-    age: int = Field(..., ge=0, le=120, description="Patient age in years")
-    gender: str = Field(..., description="Patient biological sex")
-    chief_complaint: str = Field(..., description="Primary presenting complaint")
-    vitals: Dict[str, Any] = Field(default_factory=dict, description="Vital signs (HR, BP, Temp, SpO2, RR)")
-    clinical_notes: str = Field(default="", description="Triage history and physical exam notes")
-    image_path: Optional[str] = Field(default=None, description="Path to radiographic or photographic image")
-    available_labs: Dict[str, float] = Field(default_factory=dict, description="Available laboratory biomarker values")
+    """One candidate diagnosis on the agent's list."""
+    condition: str
+    tier: SuspicionTier = SuspicionTier.MODERATE_SUSPICION
+    clinical_rationale: str
 
 
 class ClinicalReport(BaseModel):
-    """Comprehensive final consultation report synthesized by the attending agent."""
-    case_id: str = Field(..., description="Case identifier")
-    patient_id: str = Field(..., description="Patient identifier")
-    primary_diagnosis: str = Field(..., description="Lead clinical diagnosis")
-    disposition: DispositionType = Field(..., description="Recommended triage disposition")
-    differential_diagnosis: List[DifferentialHypothesis] = Field(default_factory=list, description="Ranked differential")
-    key_findings: List[FindingItem] = Field(default_factory=list, description="All gathered clinical findings")
-    clinical_impression: str = Field(..., description="Synthesized diagnostic impression prose")
-    recommendations: List[str] = Field(default_factory=list, description="Actionable clinical management steps")
-    evidence_trail: List[ToolResult] = Field(default_factory=list, description="Chronological record of tool outputs")
+    """The final report the agent writes."""
+    case_id: str
+    patient_id: str
+    primary_diagnosis: str
+    disposition: DispositionType
+    differential_diagnosis: list[DifferentialHypothesis] = []
+    key_findings: list[FindingItem] = []
+    clinical_impression: str
+    recommendations: list[str] = []
+    evidence_trail: list[ToolResult] = []

@@ -1,94 +1,106 @@
 """
-Clinical AI Agent: Chest X-Ray Classifier Specialist Tool
+Chest X-ray tool: a DenseNet-121 from TorchXRayVision (Cohen et al., 2022), trained on several
+large public chest X-ray datasets. It scores the image for up to 18 findings (consolidation,
+effusion, cardiomegaly, ...).
 
-Academic Citations & Foundations:
-- Deep Learning for Chest Radiograph Pathology Classification:
-  * Cohen et al., "TorchXRayVision: A library of chest X-ray datasets and models" (MIDL 2022; arXiv:2111.00595).
-  * Rajpurkar et al., "CheXNet: Radiologist-Level Pneumonia Detection on Chest X-Rays with Deep Learning" (Stanford University, 2017; arXiv:1711.05225).
-  * MedRAX: "A Medical Reasoning Agent for Chest X-ray" (Bo Wang Lab, 2025; arXiv:2502.02618).
+Its scores are already calibrated: for each finding, 0.5 is the threshold the library's authors
+picked on validation data. So a score of 0.5 or more means "positive". (The old code applied a
+sigmoid a second time, which squashed every score into 0.50-0.73 - fixed in Phase 1.)
 """
 
+import math
 import os
-from typing import List, Optional
 
+from ..schemas import FindingItem, FindingStatus, ModalityType, ToolResult
 from .base import BaseClinicalTool
-from ..schemas import PatientCase, ToolResult, ModalityType, FindingItem, FindingStatus
-from ..models import DenseNetCXRModel
 
 
 class ChestXRayClassifierTool(BaseClinicalTool):
-    name: str = "chest_xray_classifier"
-    description: str = (
-        "Analyzes chest radiographs (CXR) using a deep DenseNet-121 model. "
-        "Outputs predicted probabilities across 18 thoracic pathologies including "
-        "Consolidation, Lung Opacity, Effusion, Cardiomegaly, Pneumothorax, Edema, and Atelectasis."
-    )
-    modality: ModalityType = ModalityType.IMAGING
+    name = "chest_xray_classifier"
+    description = ("Chest X-ray classifier (DenseNet-121): scores the radiograph for 18 chest findings "
+                   "such as consolidation, lung opacity, effusion, cardiomegaly, pneumothorax and edema.")
+    modality = ModalityType.IMAGING
 
-    def __init__(self, device: Optional[str] = None):
+    def __init__(self, device=None):
         self.device = device
-        self._model_wrapper: Optional[DenseNetCXRModel] = None
+        self.model = None             # loaded the first time an image is classified
+        self.labels = []
 
-    def _get_model(self) -> DenseNetCXRModel:
-        if self._model_wrapper is None:
-            self._model_wrapper = DenseNetCXRModel(device=self.device)
-        return self._model_wrapper
+    def load_model(self):
+        import torch
+        import torchxrayvision as xrv
 
-    def run(self, case: PatientCase, **kwargs) -> ToolResult:
-        image_path = kwargs.get("image_path") or case.image_path
+        if self.device is None:
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = xrv.models.DenseNet(weights="densenet121-res224-all").to(self.device).eval()
+
+        # Some labels were never trained in this checkpoint: their threshold is NaN and their
+        # output is a meaningless constant, so we keep only the labels with a real threshold.
+        self.labels = []
+        thresholds = self.model.op_threshs
+        for i in range(len(self.model.pathologies)):
+            label = self.model.pathologies[i]
+            if label and not math.isnan(float(thresholds[i])):
+                self.labels.append(label)
+
+    def classify(self, image_path):
+        """{finding: score between 0 and 1} for one image."""
+        import skimage.io
+        import torch
+        import torchxrayvision as xrv
+
+        if self.model is None:
+            self.load_model()
+
+        image = skimage.io.imread(image_path)
+        image = xrv.datasets.normalize(image, 255)        # pixel values into the range the model expects
+        if len(image.shape) > 2:
+            image = image.mean(axis=2)                     # colour -> greyscale
+        image = image[None, ...]                           # add the "channel" dimension
+        image = xrv.datasets.XRayCenterCrop()(image)
+        image = xrv.datasets.XRayResizer(224)(image)       # the model was trained on 224x224 images
+
+        tensor = torch.from_numpy(image).unsqueeze(0).to(self.device).float()
+        with torch.no_grad():
+            outputs = self.model(tensor).cpu().numpy()[0]
+
+        scores = {}
+        for label, score in zip(self.model.pathologies, outputs):
+            if label in self.labels:
+                scores[label] = round(float(score), 4)
+        return scores
+
+    def run(self, case, **options):
+        image_path = options.get("image_path") or case.image_path
         if not image_path or not os.path.exists(image_path):
-            return ToolResult(
-                tool_name=self.name,
-                modality=self.modality,
-                findings=[],
-                summary="No chest radiograph image available for this patient.",
-                raw_output={"status": "image_not_found"},
-            )
+            return ToolResult(tool_name=self.name, modality=self.modality, findings=[],
+                              summary="No chest radiograph available for this patient.",
+                              raw_output={"status": "image_not_found"})
 
-        # Outputs are operating-point calibrated: 0.5 is the threshold TorchXRayVision chose
-        # per label on its validation data, so ">= 0.5" means "positive at that operating point".
-        model = self._get_model()
-        probabilities = model.predict(image_path)
+        scores = self.classify(image_path)
 
-        findings: List[FindingItem] = []
+        # Highest score first.
+        ranked = []
+        for label, score in scores.items():
+            ranked.append((score, label))
+        ranked.sort(reverse=True)
+
+        findings = []
         positives = []
-        for label, prob in sorted(probabilities.items(), key=lambda x: x[1], reverse=True):
-            if prob < 0.5:
-                continue
-            positives.append((label, prob))
-            findings.append(
-                FindingItem(
-                    name=f"CXR: {label}",
-                    status=FindingStatus.PRESENT,
-                    confidence=prob,
-                    quantitative_value=prob,
-                    unit="calibrated score (0.5 = operating point)",
-                    details={"raw_operating_threshold": model.op_threshs.get(label)},
-                )
-            )
+        for score, label in ranked:
+            if score >= 0.5:
+                positives.append(f"{label} ({score:.2f})")
+                findings.append(FindingItem(name=f"CXR: {label}", confidence=score, quantitative_value=score,
+                                            unit="calibrated score (0.5 = threshold)"))
 
         if positives:
-            items = [f"{label} ({prob:.2f})" for label, prob in positives[:4]]
-            summary = (f"Chest radiograph classifier is positive (score >= 0.5 operating point) for: "
-                       f"{', '.join(items)}.")
+            summary = f"Chest radiograph classifier is positive (score >= 0.5) for: {', '.join(positives[:4])}."
         else:
-            top_label, top_prob = max(probabilities.items(), key=lambda x: x[1])
-            summary = (f"Chest radiograph classifier is negative for all {len(probabilities)} labels "
-                       f"(highest: {top_label} {top_prob:.2f}, below the 0.5 operating point).")
-            findings.append(
-                FindingItem(
-                    name="CXR: No label above operating point",
-                    status=FindingStatus.ABSENT,
-                    confidence=round(1.0 - top_prob, 3),
-                    details={"highest_label": top_label, "highest_score": top_prob},
-                )
-            )
+            top_score, top_label = ranked[0]
+            summary = (f"Chest radiograph classifier is negative for all {len(scores)} findings "
+                       f"(highest: {top_label} {top_score:.2f}, below 0.5).")
+            findings.append(FindingItem(name="CXR: no finding above threshold", status=FindingStatus.ABSENT,
+                                        confidence=round(1.0 - top_score, 3)))
 
-
-        return ToolResult(
-            tool_name=self.name,
-            modality=self.modality,
-            findings=findings,
-            summary=summary,
-            raw_output={"probabilities": probabilities, "image_path": image_path},
-        )
+        return ToolResult(tool_name=self.name, modality=self.modality, findings=findings, summary=summary,
+                          raw_output={"probabilities": scores, "image_path": image_path})
